@@ -1,7 +1,7 @@
 #include "memblocks.h"
 #include <assert.h>
 
-using namespace sndass;
+using namespace flexse;
 
 memblocks::memblocks()
 {
@@ -40,8 +40,7 @@ memblocks::memblocks(const int* blocksize, const int* blocknum, const int catnum
 	{
 		WARNING("param error @ blocksize[%p] blocknum[%p] catnum[%d] < m_MemCatMaxnum[%d]",
 				blocksize, blocknum, catnum, m_MemCatMaxnum);
-		throw MyException("Param Error Failed in Mempool Construct",
-				__FILE__, __LINE__, __func__);
+		MyToolThrow("Param Error Failed in Mempool Construct");
 	}
 	m_catnum = catnum;
 	for (int i=0; i<m_catnum; i++)
@@ -50,15 +49,13 @@ memblocks::memblocks(const int* blocksize, const int* blocknum, const int catnum
 		{
 			WARNING("param error @ blocksize[%d]: %d blocknum[%d]: %d",
 					i, blocksize[i], i, blocknum[i]);
-			throw MyException("Param Error Failed in Mempool Construct",
-					__FILE__, __LINE__, __func__);
+			MyToolThrow("Param Error Failed in Mempool Construct");
 		}
 		if (i>0 && blocksize[i] < blocksize[i-1])
 		{
 			WARNING("blocksize order error @ blocksize[%d]: %d < blocknum[%d]: %d",
 					i, blocksize[i], i-1, blocksize[i-1]);
-			throw MyException("Param Error Failed in Mempool Construct",
-					__FILE__, __LINE__, __func__);
+			MyToolThrow("Param Error Failed in Mempool Construct");
 		}
 		m_mem_cat_info[i].size = blocksize[i];
 		m_mem_cat_info[i].count = blocknum[i];
@@ -70,8 +67,7 @@ memblocks::memblocks(const int* blocksize, const int* blocknum, const int catnum
 	if (m_mem == NULL)
 	{
 		WARNING("malloc failed. memsize[%d]", m_memsize);
-		throw MyException("MemAllocBad in Mempool Construct",
-				__FILE__, __LINE__, __func__);
+		MyToolThrow("MemAllocBad in Mempool Construct");
 	}
 	int memoffset = 0;
 	for (int i=0; i<m_catnum; i++)
