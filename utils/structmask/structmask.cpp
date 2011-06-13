@@ -17,7 +17,6 @@ structmask::structmask(const char* path, const char* name, const char* section)
 	if ( strlen(section) != (uint32_t)snprintf(m_section_name, sizeof(m_section_name), "%s", section) )
 	{
 		FATAL ("section[%s] too looooong for m_section_name[%u]", section, (uint32_t)sizeof(m_section_name));
-//		throw MyException("section too looooong", __FILE__, __LINE__, __func__);
 		MyToolThrow("section too looooong");
 	}
 	uint32_t bit_count  = 0;
@@ -33,12 +32,12 @@ structmask::structmask(const char* path, const char* name, const char* section)
 		if(2 != sscanf(strline, "%s %u", key, &seg) )
 		{
 			FATAL("SEG_LIST FORMAT ERROR. [%s]", strline);
-			throw MyException("SEG_LIST FORMAT ERROR.", __FILE__, __LINE__, __func__);
+			MyToolThrow("SEG_LIST FORMAT ERROR.");
 		}
 		if (seg == 0 || seg > 32 || ( bit_count + seg ) > 32)
 		{
 			FATAL("SEG_LIST CONFIG ERROR. key[%s] seg[%u]", key, seg);
-			throw MyException("SEG_LIST CONFIG ERROR.", __FILE__, __LINE__, __func__);
+			MyToolThrow("SEG_LIST CONFIG ERROR.");
 		}
 		// ¿¿¿¿
 		mask_item.item_mask = 0;
@@ -63,7 +62,7 @@ structmask::structmask(const char* path, const char* name, const char* section)
 	{
 		WARNING("map size = [%u]. section[%s] bit_count[%u] section_size[%u]",
 				(uint32_t)m_mask_map.size(), section, bit_count, m_section_size);
-		throw MyException("SEG_LIST CONFIG ERROR.", __FILE__, __LINE__, __func__);
+		MyToolThrow("SEG_LIST CONFIG ERROR.");
 	}
 }
 
