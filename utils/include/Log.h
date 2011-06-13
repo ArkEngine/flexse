@@ -4,27 +4,27 @@
 
 #define WARNING(fmt, msg ...) \
     do { \
-        fprintf(stderr, "WARNING (%s +%d %s) " fmt, __FILE__, __LINE__, __func__, ##msg); \
+        fprintf(stderr, "WARNING (%s +%d %s) " fmt "\n", __FILE__, __LINE__, __func__, ##msg); \
     } while (0)
 
 #define FATAL(fmt, msg ...) \
     do { \
-        fprintf(stderr, "FATAL (%s +%d %s) " fmt, __FILE__, __LINE__, __func__, ##msg); \
+        fprintf(stderr, "FATAL (%s +%d %s) " fmt "\n", __FILE__, __LINE__, __func__, ##msg); \
     } while (0)
 
 #define NOTICE(fmt, msg ...) \
     do { \
-        fprintf(stderr, "NOTICE (%s +%d %s) " fmt,__FILE__, __LINE__, __func__, ##msg); \
+        fprintf(stderr, "NOTICE (%s +%d %s) " fmt "\n", __FILE__, __LINE__, __func__, ##msg); \
     } while (0)
 
 #define TRACE(fmt, msg ...) \
     do { \
-        fprintf(stderr, "TRACE (%s +%d %s) " fmt,__FILE__, __LINE__, __func__, ##msg); \
+        fprintf(stderr, "TRACE (%s +%d %s) " fmt "\n", __FILE__, __LINE__, __func__, ##msg); \
     } while (0)
 
 #define DEBUG(fmt, msg ...) \
     do { \
-        fprintf(stderr, "DEBUG (%s +%d %s) " fmt,__FILE__, __LINE__, __func__, ##msg); \
+        fprintf(stderr, "DEBUG (%s +%d %s) " fmt "\n", __FILE__, __LINE__, __func__, ##msg); \
     } while (0)
 
 
