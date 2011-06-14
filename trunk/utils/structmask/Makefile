@@ -9,9 +9,9 @@ LIBOBJ= structmask.o
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./output/lib/ -lstructmask \
+MAINLIBS= -L ./lib/ -lstructmask -L ../../opensrc/jsoncpp/lib/ -ljson \
 
-INCS= -I ../include/
+INCS= -I ../include/ -I ../../opensrc/jsoncpp/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
@@ -24,11 +24,11 @@ all: clean $(LIB) $(MAIN)
 $(LIB): $(LIBOBJ)
 	ar cr $(LIB) $(LIBOBJ)
 	$(RANLIB) $(LIB)
-	rm -rf output
-	mkdir output/lib/ -p
-	mkdir output/include/
-	cp $(LIB) output/lib/
-	cp structmask.h output/include
+	rm -rf lib include
+	mkdir lib/
+	mkdir include/
+	cp $(LIB) lib/
+	cp structmask.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@
@@ -36,11 +36,10 @@ $(LIB): $(LIBOBJ)
 clean:
 	rm $(LIB) -f
 	rm *.o -f
-	rm output -rf
+	rm -rf lib/ include/
 
 LDFLAGS=  -g $(MAINLIBS) 
 
 $(MAIN): $(MAINOBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
-	cp test output/
 

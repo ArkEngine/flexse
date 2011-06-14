@@ -1,15 +1,22 @@
 #ifndef  __STRUCTMASK_H_
 #define  __STRUCTMASK_H_
 
-#define _GET_SOLO_VALUE_(puint,uint_offset,item_mask,move_count) \
-                (((((uint32_t*)puint)[uint_offset]) & (item_mask)) >> (move_count))
-#define _GET_LIST_VALUE_(puint,index,uint_count, uint_offset,item_mask,move_count) \
-                (((((uint32_t*)puint)[index*uint_count+uint_offset]) & (item_mask)) >> (move_count))
-#define _SET_SOLO_VALUE_(puint,uint_offset,item_mask,move_count,ivalue) \
-                (((uint32_t*)puint)[uint_offset] = (((uint32_t*)puint)[uint_offset] & (~item_mask)) | ((ivalue)<<(move_count)))
-#define _SET_LIST_VALUE_(puint,index,uint_count, uint_offset,item_mask,move_count,ivalue) \
-                ((uint32_t*)puint)[index*uint_count+uint_offset] = \
-                    (((uint32_t*)puint)[index*uint_count+uint_offset] & (~item_mask)) | (ivalue << move_count)
+#define _GET_SOLO_VALUE_(puint,mask_item) \
+                (((((uint32_t*)puint)[mask_item.uint_offset]) & (mask_item.item_mask)) >> (mask_item.move_count))
+
+#define _GET_LIST_VALUE_(puint,index,uint_count,mask_item) \
+                (((((uint32_t*)puint)[index*uint_count+mask_item.uint_offset]) &\
+                (mask_item.item_mask)) >> (mask_item.move_count))
+
+#define _SET_SOLO_VALUE_(puint,mask_item,ivalue) \
+                (((uint32_t*)puint)[mask_item.uint_offset] = \
+                (((uint32_t*)puint)[mask_item.uint_offset] & \
+                (~mask_item.item_mask)) | ((ivalue)<<(mask_item.move_count)))
+
+#define _SET_LIST_VALUE_(puint,index,uint_count,mask_item,ivalue) \
+                ((uint32_t*)puint)[index*uint_count+mask_item.uint_offset] = \
+                (((uint32_t*)puint)[index*uint_count+mask_item.uint_offset] &\
+                (~mask_item.item_mask)) | (ivalue << mask_item.move_count)
 
 #include <map>
 #include <string>
