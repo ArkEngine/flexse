@@ -23,7 +23,7 @@ int main(int argc, char** argv) try
         printf ("error\n");
         exit(1);
     }
-    structmask mymask("./conf/", "test.conf", "IMAGE_INDEX");
+    structmask mymask("./conf/", "test.conf", "document_attribute");
     printf ("uint32_t size[%u]\n", mymask.get_section_size());
     printf ("segment  size[%u]\n", mymask.get_segment_size());
     char name[128];
@@ -61,8 +61,6 @@ int main(int argc, char** argv) try
     gettimeofday(&btv, NULL);
     for (uint32_t i=0; i<SIZE; i++)
     {
-//        assert(ptest[i].id4 == _GET_VALUE_(puint, mask_item[4].uint_offset, mask_item[4].item_mask, mask_item[4].move_count));
-//        assert(ptest[i].id5 == _GET_VALUE_(puint, mask_item[5].uint_offset, mask_item[5].item_mask, mask_item[5].move_count));
         uint32_t k = 0;
         k += ptest[i].id0;
         k += ptest[i].id1;
@@ -84,19 +82,19 @@ int main(int argc, char** argv) try
     for (uint32_t i=0; i<SIZE; i++)
     {
         //        assert(ptest[i].id0 == ((puint[mask_item[0].uint_offset] & mask_item[0].item_mask) >> mask_item[0].move_count));
-//        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count));
-//        assert(ptest[i].id1 == _GET_VALUE_(puint, mask_item[1].uint_offset, mask_item[1].item_mask, mask_item[1].move_count));
-//        assert(ptest[i].id2 == _GET_VALUE_(puint, mask_item[2].uint_offset, mask_item[2].item_mask, mask_item[2].move_count));
-//        assert(ptest[i].id3 == _GET_VALUE_(puint, mask_item[3].uint_offset, mask_item[3].item_mask, mask_item[3].move_count));
-//        assert(ptest[i].id4 == _GET_VALUE_(puint, mask_item[4].uint_offset, mask_item[4].item_mask, mask_item[4].move_count));
-//        assert(ptest[i].id5 == _GET_VALUE_(puint, mask_item[5].uint_offset, mask_item[5].item_mask, mask_item[5].move_count));
+//        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0]));
+//        assert(ptest[i].id1 == _GET_VALUE_(puint, mask_item[1]));
+//        assert(ptest[i].id2 == _GET_VALUE_(puint, mask_item[2]));
+//        assert(ptest[i].id3 == _GET_VALUE_(puint, mask_item[3]));
+//        assert(ptest[i].id4 == _GET_VALUE_(puint, mask_item[4]));
+//        assert(ptest[i].id5 == _GET_VALUE_(puint, mask_item[5]));
         uint32_t k = 0;
-        k += _GET_SOLO_VALUE_(puint, mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count);
-        k += _GET_SOLO_VALUE_(puint, mask_item[1].uint_offset, mask_item[1].item_mask, mask_item[1].move_count);
-        k += _GET_SOLO_VALUE_(puint, mask_item[2].uint_offset, mask_item[2].item_mask, mask_item[2].move_count);
-        k += _GET_SOLO_VALUE_(puint, mask_item[3].uint_offset, mask_item[3].item_mask, mask_item[3].move_count);
-        k += _GET_SOLO_VALUE_(puint, mask_item[4].uint_offset, mask_item[4].item_mask, mask_item[4].move_count);
-        k += _GET_SOLO_VALUE_(puint, mask_item[5].uint_offset, mask_item[5].item_mask, mask_item[5].move_count);
+        k += _GET_SOLO_VALUE_(puint, mask_item[0]);
+        k += _GET_SOLO_VALUE_(puint, mask_item[1]);
+        k += _GET_SOLO_VALUE_(puint, mask_item[2]);
+        k += _GET_SOLO_VALUE_(puint, mask_item[3]);
+        k += _GET_SOLO_VALUE_(puint, mask_item[4]);
+        k += _GET_SOLO_VALUE_(puint, mask_item[5]);
         assert (k == 0 || k);
         puint += uint_count;;
     }
@@ -108,13 +106,13 @@ int main(int argc, char** argv) try
     puint = (uint32_t*) ptest;
     for (uint32_t i=0; i<SIZE; i++)
     {
-        _SET_SOLO_VALUE_(puint, mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count, i);
-        _SET_SOLO_VALUE_(puint, mask_item[1].uint_offset, mask_item[1].item_mask, mask_item[1].move_count, i);
-        _SET_SOLO_VALUE_(puint, mask_item[2].uint_offset, mask_item[2].item_mask, mask_item[2].move_count, i);
-        _SET_SOLO_VALUE_(puint, mask_item[3].uint_offset, mask_item[3].item_mask, mask_item[3].move_count, i);
-        _SET_SOLO_VALUE_(puint, mask_item[4].uint_offset, mask_item[4].item_mask, mask_item[4].move_count, i);
-        _SET_SOLO_VALUE_(puint, mask_item[5].uint_offset, mask_item[5].item_mask, mask_item[5].move_count, i);
-//        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count));
+        _SET_SOLO_VALUE_(puint, mask_item[0], i);
+        _SET_SOLO_VALUE_(puint, mask_item[1], i);
+        _SET_SOLO_VALUE_(puint, mask_item[2], i);
+        _SET_SOLO_VALUE_(puint, mask_item[3], i);
+        _SET_SOLO_VALUE_(puint, mask_item[4], i);
+        _SET_SOLO_VALUE_(puint, mask_item[5], i);
+//        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0]));
 //        assert(ptest[i].id0 == i);
         puint += uint_count;;
     }
@@ -125,12 +123,12 @@ int main(int argc, char** argv) try
     gettimeofday(&btv, NULL);
     for (uint32_t i=0; i<SIZE; i++)
     {
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[1].uint_offset, mask_item[1].item_mask, mask_item[1].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[2].uint_offset, mask_item[2].item_mask, mask_item[2].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[3].uint_offset, mask_item[3].item_mask, mask_item[3].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[4].uint_offset, mask_item[4].item_mask, mask_item[4].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[5].uint_offset, mask_item[5].item_mask, mask_item[5].move_count, i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[0], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[1], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[2], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[3], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[4], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[5], i);
     }
     gettimeofday(&etv, NULL);
     printf ("lcount: %u set-time-consumed: %lu us\n", SIZE,
@@ -138,14 +136,13 @@ int main(int argc, char** argv) try
 
     for (uint32_t i=0; i<SIZE; i++)
     {
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[1].uint_offset, mask_item[1].item_mask, mask_item[1].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[2].uint_offset, mask_item[2].item_mask, mask_item[2].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[3].uint_offset, mask_item[3].item_mask, mask_item[3].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[4].uint_offset, mask_item[4].item_mask, mask_item[4].move_count, i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[5].uint_offset, mask_item[5].item_mask, mask_item[5].move_count, i);
-        assert (ptest[i].id0 == _GET_LIST_VALUE_(ptest, i, uint_count,
-                    mask_item[0].uint_offset, mask_item[0].item_mask, mask_item[0].move_count));
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[0], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[1], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[2], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[3], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[4], i);
+        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[5], i);
+        assert (ptest[i].id0 == _GET_LIST_VALUE_(ptest, i, uint_count, mask_item[0]));
     }
 
 
