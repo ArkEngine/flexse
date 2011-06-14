@@ -1,4 +1,3 @@
-## $Id: Makefile,v 1.60 2010/03/09 09:31:18 xuirui01 Exp $
 CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib

@@ -2,15 +2,12 @@ CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib
 
-LIB= libstructmask.a
-LIBOBJ= structmask.o
+LIB= libcreat_sign.a
+LIBOBJ= creat_sign.o
 
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./lib/ -lstructmask -L ../../opensrc/jsoncpp/lib/ -ljson \
-
-INCS= -I ../include/ -I ../../opensrc/jsoncpp/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
@@ -27,7 +24,7 @@ $(LIB): $(LIBOBJ)
 	mkdir lib/
 	mkdir include/
 	cp $(LIB) lib/
-	cp structmask.h include
+	cp creat_sign.h include/
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@
@@ -36,8 +33,9 @@ clean:
 	rm $(LIB) -f
 	rm *.o -f
 	rm -rf lib/ include/
+	rm test -f
 
-LDFLAGS=  -g $(MAINLIBS) 
+LDFLAGS=  -g -L ./lib/ -lcreat_sign
 
 $(MAIN): $(MAINOBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
