@@ -32,7 +32,7 @@ $(LIB): $(LIBOBJ)
 	rm -rf lib include
 	mkdir lib/
 	mkdir include/
-	cp $(LIB) lib/
+	mv $(LIB) lib/
 	cp algo.h include
 
 %.o: %.cpp %.h

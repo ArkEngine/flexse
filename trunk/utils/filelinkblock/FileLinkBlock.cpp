@@ -1,6 +1,6 @@
 #include "FileLinkBlock.h"
 #include "MyException.h"
-#include "creat_sign_BKDR_AP.h"
+#include "creat_sign.h"
 #include "Log.h"
 #include <dirent.h>
 #include <string.h>
@@ -147,7 +147,7 @@ int FileLinkBlock:: check_and_repaire()
                 else
                 {
                     uint32_t sum1, sum2;
-                    creat_sign_BKDR_AP(phead->block_buff, phead->block_size, &sum1, &sum2);
+                    creat_sign_64(phead->block_buff, phead->block_size, &sum1, &sum2);
                     if (phead->check_sum1 == sum1 && phead->check_sum2 == sum2)
                     {
                         // 校验通过，这是最后一块正确
@@ -271,7 +271,7 @@ int FileLinkBlock::__write_message(const uint32_t log_id, const char* buff, cons
         myhead.timestamp  = time(NULL);
         myhead.log_id     = log_id;
         myhead.block_size = buff_size;
-        creat_sign_BKDR_AP (buff, buff_size, &myhead.check_sum1 , &myhead.check_sum2);
+        creat_sign_64 (buff, buff_size, &myhead.check_sum1 , &myhead.check_sum2);
 
         char extra_buf[4];
         uint32_t  extra_len = (4 - (buff_size % 4 )) % 4;

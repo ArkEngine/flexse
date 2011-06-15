@@ -17,17 +17,16 @@ all: clean $(LIB)
 $(LIB): $(LIBOBJ)
 	ar cr $(LIB) $(LIBOBJ)
 	$(RANLIB) $(LIB)
-	rm -rf output
-	mkdir output/lib/ -p
-	mkdir output/include/
-	cp $(LIB) output/lib/
-	cp *.h output/include
+	rm -rf lib/ include/
+	mkdir lib/
+	mkdir include/
+	mv $(LIB) lib/
+	cp memblocks.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $(INCS) $< -c -o $@
 
 clean:
-	rm $(LIB) -f
 	rm *.o -f
-	rm -rf output
+	rm -rf lib include
 

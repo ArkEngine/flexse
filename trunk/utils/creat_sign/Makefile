@@ -23,7 +23,7 @@ $(LIB): $(LIBOBJ)
 	rm -rf lib include
 	mkdir lib/
 	mkdir include/
-	cp $(LIB) lib/
+	mv $(LIB) lib/
 	cp creat_sign.h include/
 
 %.o: %.cpp %.h
