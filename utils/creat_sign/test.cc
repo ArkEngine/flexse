@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "creat_sign.h"
 
 void func(const char* str, uint32_t length)
