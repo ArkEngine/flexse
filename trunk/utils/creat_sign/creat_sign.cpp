@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "creat_sign.h"
 
 uint32_t BKDRHash(const char *str, const uint32_t length)
 {
