@@ -1,0 +1,34 @@
+{
+    "ATTR":
+    [
+        {"doc_id"      : 28},
+        {"qingxidu"    :  3},
+        {"delete_flag" :  1},
+        {"publish_time": 32},
+        {"update_time" : 32},
+        {"siteno"      : 20},
+        {"type"        :  6},
+        {"is_movie"    :  3},
+        {"movie_sub"   :  3},
+        {"is_tv_serial":  2},
+        {"serial_sub"  :  8},
+        {"duration"    : 10},
+        {"weight"      : 12}
+    ],
+
+    "POST":
+    [
+        {"doc_id"  : 28},
+        {"intitle" :  1},
+        {"reserved":  3},
+        {"idf"     :  8},
+        {"tf"      :  8},
+        {"unused"  : 16}
+    ],
+
+    "MERGE":
+    [
+        {"doc_id"   : 32},
+        {"weight"   : 32}
+    ]
+}

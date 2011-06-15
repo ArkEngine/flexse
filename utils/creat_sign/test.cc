@@ -23,6 +23,7 @@ int main()
     func("明天", 7);
     func("明天", 6);
     func("明天", 7);
+	malloc(8);
     return 0;
 }
 
