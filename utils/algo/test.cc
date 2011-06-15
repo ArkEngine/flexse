@@ -409,10 +409,10 @@ int main(int argc, char** argv)
         for (int32_t i=0; i<rst_num; i++)
         {
             uint32_t id = _GET_SOLO_VALUE_(post_list, doc_id_mask);
-            //            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count,
-            //                    mlogic.key_mask.uint_offset, mlogic.key_mask.item_mask, mlogic.key_mask.move_count);
-            //            printf("o[%u] m[%u] --\n", vv, mask/2);
-            //            assert (vv <= mask/2);
+            // uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count,
+            // mlogic.key_mask.uint_offset, mlogic.key_mask.item_mask, mlogic.key_mask.move_count);
+            // printf("o[%u] m[%u] --\n", vv, mask/2);
+            // assert (vv <= mask/2);
             post_list += post_uint_count;
             assert (!(pattr[id].qingxidu < big_ivalue));
             assert (!(pattr[id].is_movie > small_ivalue));
@@ -451,8 +451,6 @@ int main(int argc, char** argv)
     {
         _SET_SOLO_VALUE_(post_list_0, doc_id_mask, SIZE-i);
         _SET_SOLO_VALUE_(post_list_0, weight_mask, 1);
-//        printf("org: %u\n",
-//                _GET_SOLO_VALUE_(post_list_0, doc_id_mask.uint_offset, doc_id_mask.item_mask, doc_id_mask.move_count));
         post_list_0 += post_uint_count_new;
     }
 
@@ -460,8 +458,6 @@ int main(int argc, char** argv)
     {
         _SET_SOLO_VALUE_(post_list_1, doc_id_mask, SIZE-i);
         _SET_SOLO_VALUE_(post_list_1, weight_mask, 1);
-//        printf("org: %u\n",
-//                _GET_SOLO_VALUE_(post_list_1, doc_id_mask.uint_offset, doc_id_mask.item_mask, doc_id_mask.move_count));
         post_list_1 += post_uint_count_new;
     }
 
@@ -485,7 +481,6 @@ int main(int argc, char** argv)
     free(post_list_org_0);
     free(post_list_org_1);
     free(result_pair_lst);
-
 
     return 0;
 }
