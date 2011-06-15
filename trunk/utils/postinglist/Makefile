@@ -8,9 +8,13 @@ LIBOBJ= postinglist.o
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./lib/ -lstructmask -L ../../opensrc/jsoncpp/lib/ -ljson \
+MAINLIBS= -L ../structmask/lib/ -lstructmask \
+		  -L ../../opensrc/jsoncpp/lib/ -ljson \
 
-INCS= -I ../include/ -I ../../opensrc/jsoncpp/include/
+INCS= -I ../include/ \
+	  -I ../memblocks/include/
+#	  -I ../../opensrc/jsoncpp/include/
+
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
@@ -36,6 +40,7 @@ clean:
 	rm $(LIB) -f
 	rm *.o -f
 	rm -rf lib/ include/
+	rm test -f
 
 LDFLAGS=  -g $(MAINLIBS) 
 
