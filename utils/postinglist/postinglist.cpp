@@ -25,8 +25,29 @@ postinglist :: postinglist(const uint32_t posting_cell_size /*json config*/)
 
 int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t length)
 {
-    assert(key && buff && length);
-    return 0;
+	int32_t  result_num = 0;
+	uint32_t left_size = length;
+	const uint32_t bucket_no = (uint32_t)(key & m_bucket_mask);
+	uint32_t head_list_offset = m_bucket[bucket_no];
+	while(head_list_offset != END_OF_LIST)
+	{
+		term_head_t* phead = &m_headlist[head_list_offset];
+		if (phead->sign64 == key)
+		{
+			// 拷贝内存数据
+			mem_link_t* mem_link = phead->mem_link;
+			while(NULL != mem_link && (left_size >= mem_link->used_size))
+			{
+				memmove(buff, &mem_link[1], mem_link->used_size);
+				result_num += mem_link->used_size / m_postinglist_cell_size;
+				left_size  -= mem_link->used_size;
+				mem_link = mem_link->next;
+			}
+			break;
+		}
+	}
+
+    return result_num;
 }
 
 int32_t postinglist :: set (const uint64_t& key, char* buff)
@@ -42,7 +63,9 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 			found = true;
 			// 看看当前的memblock是否能够放下
 			uint32_t left_size = phead->mem_link->self_size - phead->mem_link->used_size;
-			if (left_size <= m_postinglist_cell_size)
+			// 去掉mem_link_t头部占用的大小
+			left_size -= sizeof(mem_link_t);
+			if (left_size >= m_postinglist_cell_size)
 			{
 				char* dest = &(((char*)&phead->mem_link[1])[phead->mem_link->used_size]);
 				memcpy(dest, buff, m_postinglist_cell_size);
@@ -55,7 +78,7 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 				// 判断一下是否需要merge内存
 				mem_link_t* new_memlink = (mem_link_t*)m_memblocks->AllocMem(m_memsize[0]);
 				MyThrowAssert(new_memlink != NULL);
-				new_memlink->used_size = m_memsize[0] - sizeof(mem_link_t);
+				new_memlink->used_size = 0;
 				new_memlink->self_size = m_memsize[0];
 				new_memlink->next_size = phead->mem_link->self_size;
 				new_memlink->next      = phead->mem_link;
@@ -75,7 +98,7 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 	if (! found)
 	{
 		// 分配一个 headlist cell
-		m_headlist++;
+		m_headlist_used++;
 		if (m_headlist_used == m_headlist_size)
 		{
 			// 冰冻住set操作，已经没有空余空间了。
@@ -84,6 +107,7 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 		}
 		else
 		{
+			// 设置 head
 			m_headlist[m_headlist_used].sign64 = key;
 			m_headlist[m_headlist_used].list_num = 1;
 			m_headlist[m_headlist_used].next = m_bucket[bucket_no];
@@ -92,12 +116,14 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 			mem_link_t* new_memlink = (mem_link_t*)m_memblocks->AllocMem(m_memsize[0]);
 			MyThrowAssert(new_memlink != NULL);
 			m_headlist[m_headlist_used].mem_link = new_memlink;
-			m_headlist[m_headlist_used].mem_link->used_size = m_memsize[0] - sizeof(mem_link_t);
+			m_headlist[m_headlist_used].mem_link->used_size = 0;
 			m_headlist[m_headlist_used].mem_link->self_size = m_memsize[0];
 			m_headlist[m_headlist_used].mem_link->next_size = 0;
+			m_headlist[m_headlist_used].mem_link->next      = NULL;
 			char* dest = &(((char*)&new_memlink[1])[new_memlink->used_size]);
 			memcpy(dest, buff, m_postinglist_cell_size);
 			m_headlist[m_headlist_used].mem_link->used_size += m_postinglist_cell_size;
+			m_bucket[bucket_no] = m_headlist_used;
 		}
 	}
 	return 0;
