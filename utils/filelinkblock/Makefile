@@ -19,7 +19,8 @@ READBLOCKLIBS= -L ./lib/ -lfilelinkblock \
 			   -L ../creat_sign/lib/ -lcreat_sign
 
 INCS= -I ../include/\
-	  -I ../creat_sign/
+	  -I ../creat_sign/include \
+	  -I ../MyException/include/
 
 CPPFLAGS= $(VERINFO)-g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror \

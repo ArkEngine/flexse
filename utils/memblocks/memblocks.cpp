@@ -9,7 +9,7 @@ memblocks::memblocks()
 	m_memsize = 0;
 	m_blocknum = 0;
 	m_mem = NULL;
-	for (unsigned int i=0; i<m_MemCatMaxnum; i++)
+	for (uint32_t i=0; i<m_MemCatMaxnum; i++)
 	{
 		m_mem_cat_info[i].memlisthead = NULL;
 		m_mem_cat_info[i].size = 0;
@@ -34,16 +34,16 @@ memblocks::~memblocks()
 	free(m_mem);
 }
 
-memblocks::memblocks(const int* blocksize, const int* blocknum, const int catnum)
+memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const uint32_t catnum)
 {
-	if (blocksize == NULL || blocknum == NULL || catnum <= 0 || catnum > (int)m_MemCatMaxnum)
+	if (blocksize == NULL || blocknum == NULL || catnum <= 0 || catnum > m_MemCatMaxnum)
 	{
 		WARNING("param error @ blocksize[%p] blocknum[%p] catnum[%d] < m_MemCatMaxnum[%d]",
 				blocksize, blocknum, catnum, m_MemCatMaxnum);
 		MyToolThrow("Param Error Failed in Mempool Construct");
 	}
 	m_catnum = catnum;
-	for (int i=0; i<m_catnum; i++)
+	for (uint32_t i=0; i<m_catnum; i++)
 	{
 		if (blocksize[i] <= 0 || blocknum[i] <= 0)
 		{
@@ -66,15 +66,15 @@ memblocks::memblocks(const int* blocksize, const int* blocknum, const int catnum
 	m_mem = (char*)malloc(m_memsize);
 	if (m_mem == NULL)
 	{
-		WARNING("malloc failed. memsize[%d]", m_memsize);
+		WARNING("malloc failed. memsize[%u]", m_memsize);
 		MyToolThrow("MemAllocBad in Mempool Construct");
 	}
 	int memoffset = 0;
-	for (int i=0; i<m_catnum; i++)
+	for (uint32_t i=0; i<m_catnum; i++)
 	{
 		m_mem_cat_info[i].bmem = &m_mem[memoffset];
 		m_mem_cat_info[i].emem = &m_mem[memoffset + m_mem_cat_info[i].count * m_mem_cat_info[i].size];
-		for(int j=0; j<m_mem_cat_info[i].count; j++)
+		for(uint32_t j=0; j<m_mem_cat_info[i].count; j++)
 		{
 			mem_link_t* tmpmlist = (mem_link_t*)&m_mem[memoffset];
 			tmpmlist->mem  = &m_mem[memoffset];
@@ -82,28 +82,28 @@ memblocks::memblocks(const int* blocksize, const int* blocknum, const int catnum
 			m_mem_cat_info[i].memlisthead = tmpmlist;
 			memoffset += m_mem_cat_info[i].size;
 		}
-		NOTICE("catidx[%d] blocksize[%d] blocknum[%d]",
+		NOTICE("catidx[%u] blocksize[%u] blocknum[%u]",
 				i, m_mem_cat_info[i].size, m_mem_cat_info[i].count);
 	}
 }
 
-void* memblocks::AllocMem(const int memsize)
+void* memblocks::AllocMem(const uint32_t memsize)
 {
 	if (m_mem == NULL)
 	{
 		FATAL("memblocks maybe Not be Inited");
 		return NULL;
 	}
-	if (memsize < 0)
+	if (memsize <= 0)
 	{
-		WARNING("Param error memsize[%d]", memsize);
+		WARNING("Param error memsize[%u]", memsize);
 		return NULL;
 	}
 	pthread_mutex_lock(&m_mutex);
 
 	void* tmpmem = NULL;
 	int memblocks_crupt = 0;
-	for (int i=0; i<m_catnum; i++)
+	for (uint32_t i=0; i<m_catnum; i++)
 	{
 		if (m_mem_cat_info[i].size >= memsize && m_mem_cat_info[i].freecount > 0)
 		{
@@ -152,7 +152,7 @@ int memblocks::FreeMem(void* mem)
 		return -1;
 	}
 	pthread_mutex_lock(&m_mutex);
-	int i;
+	uint32_t i;
 	for (i=0; i<m_catnum; i++)
 	{
 		if (mem >= m_mem_cat_info[i].bmem && mem < m_mem_cat_info[i].emem)
@@ -186,7 +186,7 @@ int memblocks::ExtraMemCount()
 
 void memblocks::MemStatus()
 {
-	for (int i=0; i<m_catnum; i++)
+	for (uint32_t i=0; i<m_catnum; i++)
 	{
 		TRACE("memcatidx[%d] blocksize[%8d] blocknum[%3d] free[%3d]",
 				i, m_mem_cat_info[i].size, m_mem_cat_info[i].count, m_mem_cat_info[i].freecount);

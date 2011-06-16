@@ -8,10 +8,14 @@ LIBOBJ= postinglist.o
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ../structmask/lib/ -lstructmask \
+MAINLIBS= -L ./lib/ -lpostinglist \
+		  -L ../MyException/lib -lMyException \
+		  -L ../structmask/lib/ -lstructmask \
+		  -L ../memblocks/lib/ -lmemblocks \
 		  -L ../../opensrc/jsoncpp/lib/ -ljson \
 
 INCS= -I ../include/ \
+	  -I ../MyException/include \
 	  -I ../memblocks/include/
 #	  -I ../../opensrc/jsoncpp/include/
 
