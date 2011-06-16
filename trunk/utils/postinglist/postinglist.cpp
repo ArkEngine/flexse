@@ -5,8 +5,9 @@
 
 postinglist :: postinglist(const uint32_t posting_cell_size /*json config*/)
 {
-	// 初始化bucket
+	// 以sizeof(u_char)为单位
     m_postinglist_cell_size = posting_cell_size;
+	// 初始化bucket
 	m_bucket_size = 0x100000;
 	m_bucket_mask = m_bucket_size - 1;
 	m_bucket = (uint32_t*)calloc(m_bucket_size, sizeof(uint32_t));
@@ -36,11 +37,18 @@ int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t leng
 		{
 			// 拷贝内存数据
 			mem_link_t* mem_link = phead->mem_link;
-			while(NULL != mem_link && (left_size >= mem_link->used_size))
+			while(NULL != mem_link)
 			{
-				memmove(buff, &mem_link[1], mem_link->used_size);
-				result_num += mem_link->used_size / m_postinglist_cell_size;
-				left_size  -= mem_link->used_size;
+				if (left_size == 0)
+				{
+					WARNING("key[%llu] buffer length[%u] is NOT enough.", key, length);
+					break;
+				}
+				uint32_t copy_length =
+					(left_size >= mem_link->used_size) ? mem_link->used_size: left_size;
+				memmove(buff, &mem_link[1], copy_length);
+				result_num += copy_length / m_postinglist_cell_size;
+				left_size  -= copy_length;
 				mem_link = mem_link->next;
 			}
 			break;
@@ -63,8 +71,9 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 			found = true;
 			// 看看当前的memblock是否能够放下
 			uint32_t left_size = phead->mem_link->self_size - phead->mem_link->used_size;
-			// 去掉mem_link_t头部占用的大小
+			// 继续去掉mem_link_t头部占用的大小
 			left_size -= sizeof(mem_link_t);
+
 			if (left_size >= m_postinglist_cell_size)
 			{
 				char* dest = &(((char*)&phead->mem_link[1])[phead->mem_link->used_size]);
@@ -87,6 +96,7 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
 				new_memlink->used_size += m_postinglist_cell_size;
 				phead->list_num++;
 				phead->list_buffer_size += m_memsize[0];
+				phead->mem_link = new_memlink;
 				break;
 			}
 		}
