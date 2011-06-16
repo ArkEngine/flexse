@@ -2,16 +2,10 @@ CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib
 
-LIB= libstructmask.a
-LIBOBJ= structmask.o
+LIB= libMyException.a
+LIBOBJ= MyException.o
 
-MAIN= test
-MAINOBJ= test.o
-
-MAINLIBS= -L ./lib/ -lstructmask -L ../../opensrc/jsoncpp/lib/ -ljson -L ../MyException/ -lMyException\
-
-INCS= -I ../include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
-CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
+CPPFLAGS= -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
@@ -27,7 +21,7 @@ $(LIB): $(LIBOBJ)
 	mkdir lib/
 	mkdir include/
 	cp $(LIB) lib/
-	cp structmask.h include
+	cp MyException.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@
@@ -36,9 +30,3 @@ clean:
 	rm $(LIB) -f
 	rm *.o -f
 	rm -rf lib/ include/
-
-LDFLAGS=  -g $(MAINLIBS) 
-
-$(MAIN): $(MAINOBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)
-

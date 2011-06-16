@@ -5,7 +5,9 @@ RANLIB=ranlib
 LIB= libfileblock.a
 LIBOBJ= fileblock.o
 
-INCS= -I ../include/
+INCS= -I ../include/\
+	  -I ../MyException/include/ \
+
 CPPFLAGS= -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \

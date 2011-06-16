@@ -1,6 +1,7 @@
 #ifndef  _MEMBLOCKS_H_
 #define  _MEM_H_
 #include <stdlib.h>
+#include <stdint.h>
 #include <pthread.h>
 #include "Log.h"
 #include "MyException.h"
@@ -25,7 +26,7 @@ class memblocks
 		 * @param[in] catnum    : const int  -- cat num (array num)
 		 * retval: excpetion
 		 */
-		memblocks(const int* blocksize, const int* blocknum, const int catnum);
+		memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const uint32_t catnum);
 
 		/*
 		 * @brief: Alloc memory by size;
@@ -35,7 +36,7 @@ class memblocks
 		 * NULL  fail
 		 * !NULL success
 		 */
-		void* AllocMem(const int memsize);
+		void* AllocMem(const uint32_t memsize);
 
 		/* 
 		 * @brief: free mem
@@ -48,7 +49,7 @@ class memblocks
 		 */
 		int FreeMem (void* mem);
 	private:
-		static const unsigned int m_MemCatMaxnum = 4;
+		static const unsigned int m_MemCatMaxnum = 16;
 		memblocks();
 		memblocks(const memblocks&);
 		struct mem_link_t
@@ -59,17 +60,17 @@ class memblocks
 		struct mem_category_info_t
 		{
 			mem_link_t* memlisthead;
-			int size;
-			int count;
-			int freecount;
+			uint32_t size;
+			uint32_t count;
+			uint32_t freecount;
 			char* bmem;
 			char* emem;
 		};
 		mem_category_info_t m_mem_cat_info[m_MemCatMaxnum];
 		mem_category_info_t m_mem_extra;
-		int m_catnum;
-		int m_memsize;
-		int m_blocknum;
+		uint32_t m_catnum;
+		uint32_t m_memsize;
+		uint32_t m_blocknum;
 		char* m_mem;
 		u_int m_mem_extra_tatol;
 		pthread_mutex_t m_mutex;
