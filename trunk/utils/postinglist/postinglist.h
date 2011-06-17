@@ -42,7 +42,7 @@ class postinglist
         postinglist(const uint32_t posting_cell_size);
         ~postinglist();
         int32_t get (const uint64_t& key, char* buff, const uint32_t length);
-        int32_t set (const uint64_t& key, char* buff);
+        int32_t set (const uint64_t& key, const char* buff);
         int32_t sort();
         int32_t dump();
         int32_t merge();
