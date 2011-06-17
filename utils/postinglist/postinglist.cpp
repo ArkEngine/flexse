@@ -58,11 +58,11 @@ int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t leng
                 uint32_t coffset = mem_link->self_size - mem_link->used_size;
                 char* src = &(((char*)&mem_link[1])[coffset]);
                 uint32_t copy_length =
-                    (left_size >= mem_link->used_size) ? mem_link->used_size: left_size;
-                memmove(&buff[length - copy_length], src, copy_length);
+                    (left_size > mem_link->used_size) ? mem_link->used_size: left_size;
+                memmove(&buff[length - left_size], src, copy_length);
                 result_num += copy_length / m_postinglist_cell_size;
                 left_size  -= copy_length;
-                DEBUG("mem_link[%p] next[%p]", mem_link, mem_link->next);
+                DEBUG("mem_link[%p] next[%p] bid[%u]", mem_link, mem_link->next, *(uint32_t*)src);
                 mem_link = mem_link->next;
             }
             break;
@@ -97,97 +97,101 @@ int32_t postinglist :: set (const uint64_t& key, char* buff)
                 phead->mem_link->used_size += m_postinglist_cell_size;
                 DEBUG("-next[%p]", phead->mem_link->next);
                 phead->list_num++;
-//                DEBUG("key[%llu] left_size[%u] cell_size[%u] mem_link_used[%u] list_num[%u] id[%u].",
-//                        key, left_size, m_postinglist_cell_size, phead->mem_link->used_size,
-//                        phead->list_num, *((uint32_t*)buff));
-                break;
-            }
-            else
-            {
-                // 判断一下是否需要merge内存
-                mem_link_t* new_memlink = (mem_link_t*)m_memblocks->AllocMem(m_memsize[0]);
-                MyThrowAssert(new_memlink != NULL);
-                new_memlink->used_size = 0;
-                new_memlink->self_size = m_memsize[0];
-                new_memlink->next_size = phead->mem_link->self_size;
-                new_memlink->next      = phead->mem_link;
-                uint32_t woffset = new_memlink->self_size - new_memlink->used_size - m_postinglist_cell_size;
-                char* tmp = (char*)(&new_memlink[1]);
-                char* dst = &tmp[woffset];
-                DEBUG("new mem _1_next[%p : %p] id[%u]", phead->mem_link->next, new_memlink->next, *((uint32_t*)buff));
-                memmove(dst, buff, m_postinglist_cell_size);
-                DEBUG("new mem _2_next[%p : %p] id[%u]", phead->mem_link->next, new_memlink->next, *((uint32_t*)buff));
-                phead->mem_link->next = NULL;
-                new_memlink->used_size += m_postinglist_cell_size;
-                phead->list_num++;
-                phead->list_buffer_size += m_memsize[0];
-                phead->mem_link = new_memlink;
-                break;
-            }
-        }
-        else
-        {
-            head_list_offset = phead->next;
-        }
-    }
-    if (! found)
-    {
-        // 分配一个 headlist cell
-        m_headlist_used++;
-        if (m_headlist_used == m_headlist_size)
-        {
-            // 冰冻住set操作，已经没有空余空间了。
-            // 以后可以考虑使用一个无穷hash的方式，就是需要排序时麻烦一点
-            // return sth.
-        }
-        else
-        {
-            // 设置 head
-            m_headlist[m_headlist_used].sign64 = key;
-            m_headlist[m_headlist_used].list_num = 1;
-            m_headlist[m_headlist_used].next = m_bucket[bucket_no];
-            m_headlist[m_headlist_used].list_buffer_size = m_memsize[0];
+				DEBUG(  "key[%llu] left_size[%u] cell_size[%u] "
+						"mem_link_used[%u] list_num[%u] id[%u].",
+						key, left_size, m_postinglist_cell_size,
+						phead->mem_link->used_size, phead->list_num, *((uint32_t*)buff));
+				break;
+			}
+			else
+			{
+				// 判断一下是否需要merge内存
+				mem_link_t* new_memlink = (mem_link_t*)m_memblocks->AllocMem(m_memsize[0]);
+				MyThrowAssert(new_memlink != NULL);
+				new_memlink->used_size = 0;
+				new_memlink->self_size = m_memsize[0];
+				new_memlink->next_size = phead->mem_link->self_size;
+				new_memlink->next      = phead->mem_link;
+				uint32_t woffset = new_memlink->self_size - new_memlink->used_size - m_postinglist_cell_size;
+				char* tmp = (char*)(&new_memlink[1]);
+				char* dst = &tmp[woffset];
+				DEBUG("new mem _1_next[%p : %p] id[%u] did[%u]",
+						phead->mem_link->next, new_memlink->next,
+						*((uint32_t*)buff), *((uint32_t*)dst));
+				memmove(dst, buff, m_postinglist_cell_size);
+				DEBUG("new mem _2_next[%p : %p] id[%u] did[%u]",
+						phead->mem_link->next, new_memlink->next,
+						*((uint32_t*)buff), *((uint32_t*)dst));
+				new_memlink->used_size += m_postinglist_cell_size;
+				phead->list_num++;
+				phead->list_buffer_size += m_memsize[0];
+				phead->mem_link = new_memlink;
+				break;
+			}
+		}
+		else
+		{
+			head_list_offset = phead->next;
+		}
+	}
+	if (! found)
+	{
+		// 分配一个 headlist cell
+		m_headlist_used++;
+		if (m_headlist_used == m_headlist_size)
+		{
+			// 冰冻住set操作，已经没有空余空间了。
+			// 以后可以考虑使用一个无穷hash的方式，就是需要排序时麻烦一点
+			// return sth.
+		}
+		else
+		{
+			// 设置 head
+			m_headlist[m_headlist_used].sign64 = key;
+			m_headlist[m_headlist_used].list_num = 1;
+			m_headlist[m_headlist_used].next = m_bucket[bucket_no];
+			m_headlist[m_headlist_used].list_buffer_size = m_memsize[0];
 
-            mem_link_t* new_memlink = (mem_link_t*)m_memblocks->AllocMem(m_memsize[0]);
-            MyThrowAssert(new_memlink != NULL);
-            new_memlink->used_size = 0;
-            new_memlink->self_size = m_memsize[0];
-            new_memlink->next_size = 0;
-            new_memlink->next      = NULL;
-            m_headlist[m_headlist_used].mem_link = new_memlink;
+			mem_link_t* new_memlink = (mem_link_t*)m_memblocks->AllocMem(m_memsize[0]);
+			MyThrowAssert(new_memlink != NULL);
+			new_memlink->used_size = 0;
+			new_memlink->self_size = m_memsize[0];
+			new_memlink->next_size = 0;
+			new_memlink->next      = NULL;
+			m_headlist[m_headlist_used].mem_link = new_memlink;
 
-            // 内存是倒着写的，先写尾部
-            uint32_t woffset = new_memlink->self_size - new_memlink->used_size - m_postinglist_cell_size;
-            char* dst = &(((char*)&new_memlink[1])[woffset]);
-            memcpy(dst, buff, m_postinglist_cell_size);
-            m_headlist[m_headlist_used].mem_link->used_size += m_postinglist_cell_size;
-            m_bucket[bucket_no] = m_headlist_used;
-        }
-    }
-    return 0;
+			// 内存是倒着写的，先写尾部
+			uint32_t woffset = new_memlink->self_size - new_memlink->used_size - m_postinglist_cell_size;
+			char* dst = &(((char*)&new_memlink[1])[woffset]);
+			memcpy(dst, buff, m_postinglist_cell_size);
+			m_headlist[m_headlist_used].mem_link->used_size += m_postinglist_cell_size;
+			m_bucket[bucket_no] = m_headlist_used;
+		}
+	}
+	return 0;
 }
 int32_t postinglist :: sort()
 {
-    return 0;
+	return 0;
 }
 int32_t postinglist :: dump()
 {
-    return 0;
+	return 0;
 }
 int32_t postinglist :: merge()
 {
-    return 0;
+	return 0;
 }
 int32_t postinglist :: begin()
 {
-    return 0;
+	return 0;
 }
 int32_t postinglist :: next(const uint64_t& key, char* buff, const uint32_t length)
 {
-    assert(key && buff && length);
-    return 0;
+	assert(key && buff && length);
+	return 0;
 }
 bool postinglist :: isend()
 {
-    return 0;
+	return 0;
 }
