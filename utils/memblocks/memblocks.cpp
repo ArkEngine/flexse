@@ -105,7 +105,9 @@ void* memblocks::AllocMem(const uint32_t memsize)
 	int memblocks_crupt = 0;
 	for (uint32_t i=0; i<m_catnum; i++)
 	{
-		if (m_mem_cat_info[i].size >= memsize && m_mem_cat_info[i].freecount > 0)
+        // if (m_mem_cat_info[i].size >= memsize && m_mem_cat_info[i].freecount > 0)
+        // 完全相等才分配，避免内存浪费
+		if (m_mem_cat_info[i].size == memsize && m_mem_cat_info[i].freecount > 0)
 		{
 			if (m_mem_cat_info[i].memlisthead == NULL)
 			{
