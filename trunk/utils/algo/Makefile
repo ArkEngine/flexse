@@ -9,13 +9,14 @@ MAIN= test
 MAINOBJ= test.o
 
 INCS= -I ../include/ \
-	  -I ./include/ \
-	  -I ../structmask/include/ \
-	  -I ../../opensrc/jsoncpp/include/
+      -I ./include/ \
+      -I ../structmask/include/ \
+      -I ../../opensrc/jsoncpp/include/
 
 LDBS= -L ../structmask -lstructmask \
-	  -L ../../opensrc/jsoncpp/lib/ -ljson\
-	  -L ./lib/ -lalgo
+      -L ../MyException/lib/ -lMyException\
+      -L ../../opensrc/jsoncpp/lib/ -ljson\
+      -L ./lib/ -lalgo
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
