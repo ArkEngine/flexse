@@ -1,4 +1,5 @@
 all:
+	make -C mylog/
 	make -C MyException/
 	make -C structmask/
 	make -C algo/
