@@ -29,4 +29,8 @@ $(LIB): $(LIBOBJ)
 clean:
 	rm $(LIB) -f
 	rm *.o -f
-	rm -rf lib/ include/
+	rm test -f
+	rm -rf lib/ include/ log/
+
+test:
+	g++ test.cc -o test -I ./include/ -L ./lib -lmylog

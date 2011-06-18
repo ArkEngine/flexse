@@ -14,9 +14,25 @@
 const char* const mylog::strLogName = "./log/default.log";
 const char* mylog::LevelTag[] = { "DEBUG", "ROUTN", "ALARM", "FATAL", };
 
-mylog :: mylog(const uint32_t level, const uint32_t size, const char* logname)
+mylog* mylog::m_mylog = new mylog();
+
+mylog :: mylog()
 {
 	pthread_mutex_init(&m_lock, NULL);
+    m_level = ROUTN;
+	m_file_size = 1073741824;
+	snprintf(m_path, sizeof(m_path), "%s", strLogName);
+	m_log_fd = -1;
+	LogFileCheckOpen();
+}
+
+mylog* mylog::getInstance()
+{
+    return m_mylog;
+}
+
+void mylog :: setlog(const uint32_t level, const uint32_t size, const char* logname)
+{
 	m_level = (level > (uint32_t)FATAL) ? (uint32_t)ROUTN : level;
 	m_file_size = size > 1073741824 ? 1073741824 : size;
 	const char* mylogname = (logname[0] != 0 ) ? logname : strLogName;
@@ -25,6 +41,7 @@ mylog :: mylog(const uint32_t level, const uint32_t size, const char* logname)
 	LogFileCheckOpen();
 	fprintf(stderr, "mylog Level[%u] OL[%u] Path[%s] Size[%u] fd[%d]\n",
 			m_level, level, m_path, m_file_size, m_log_fd);
+    return;
 }
 
 void mylog :: WriteNByte(const int fd, const char* buff, const uint32_t size)
