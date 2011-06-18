@@ -48,6 +48,7 @@ int main(const int argc, char** argv)
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey++)
     {
         int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
+        assert ((uint32_t)rnum == VLUSIZE);
 //        printf("rnum: %u\n", rnum);
         for (uint32_t i=0; i<VLUSIZE; i++)
         {

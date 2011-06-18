@@ -25,6 +25,7 @@ postinglist :: postinglist(
     m_headlist_size = headlist_size; // TODO
     m_headlist = (term_head_t*)malloc(m_headlist_size*sizeof(term_head_t));
     m_headlist_used = 0;
+    m_headlist_sort = NULL;
 
     uint32_t mem_base_min = m_postinglist_cell_size * 4 + sizeof(mem_link_t);
     for (uint32_t i=0; i<32; i++)
@@ -44,6 +45,7 @@ postinglist :: postinglist(
     m_memblocks = new memblocks(memsize, mblklist, mblklist_size);
     // because of END_OF_LIST == 0xFFFFFFFF
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
+    m_freeze = false;
 }
 
 postinglist :: ~postinglist()
@@ -200,7 +202,7 @@ int32_t postinglist :: set (const uint64_t& key, const char* buff)
     if (! found)
     {
         // 分配一个 headlist cell
-        if (m_headlist_used == m_headlist_size)
+        if ( m_freeze || (m_headlist_used == m_headlist_size))
         {
             // 冰冻住set操作，已经没有空余空间了。
             // 以后可以考虑使用一个无穷hash的方式，就是需要排序时麻烦一点
@@ -232,9 +234,10 @@ int32_t postinglist :: set (const uint64_t& key, const char* buff)
     }
     return OK;
 }
-int32_t postinglist :: sort()
+
+void postinglist :: set_freeze(bool freeze)
 {
-    return 0;
+    m_freeze = freeze;
 }
 int32_t postinglist :: dump()
 {
@@ -244,16 +247,54 @@ int32_t postinglist :: merge()
 {
     return 0;
 }
+
+int postinglist::key_compare(const void *p1, const void *p2)
+{
+    int64_t value = ((term_head_t*)p1)->sign64 - ((term_head_t*)p2)->sign64;
+    if (value < 0)
+    {
+        return -1;
+    }
+    else if (value > 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 int32_t postinglist :: begin()
 {
+    set_freeze(true);
+    if (m_headlist_sort != NULL)
+    {
+        free(m_headlist_sort);
+        m_headlist_sort = NULL;
+    }
+    m_headlist_sort = (term_head_t*)malloc(m_headlist_used * sizeof(term_head_t));
+    MyThrowAssert(m_headlist_sort != NULL);
+    memmove(m_headlist_sort, m_headlist, m_headlist_used * sizeof(term_head_t));
+    qsort(m_headlist_sort, m_headlist_used, sizeof(term_head_t), key_compare);
+    m_headlist_sort_it = 0;
     return 0;
 }
-int32_t postinglist :: next(const uint64_t& key, char* buff, const uint32_t length)
+int32_t postinglist :: next(uint64_t& key, char* buff, const uint32_t length)
 {
-    assert(key && buff && length);
-    return 0;
+    key = m_headlist_sort[m_headlist_sort_it].sign64;
+    return get(key, buff, length);
 }
 bool postinglist :: isend()
 {
+    return (m_headlist_sort_it == m_headlist_used);
+}
+int32_t postinglist :: finish()
+{
+    if (m_headlist_sort != NULL)
+    {
+        free(m_headlist_sort);
+        m_headlist_sort = NULL;
+    }
     return 0;
 }
