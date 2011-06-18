@@ -8,15 +8,16 @@ LIBOBJ= algo.o
 MAIN= test
 MAINOBJ= test.o
 
-INCS= -I ../include/ \
-      -I ./include/ \
+INCS= -I ./include/ \
+      -I ../mylog/include/ \
       -I ../structmask/include/ \
       -I ../../opensrc/jsoncpp/include/
 
 LDBS= -L ../structmask -lstructmask \
       -L ../MyException/lib/ -lMyException\
       -L ../../opensrc/jsoncpp/lib/ -ljson\
-      -L ./lib/ -lalgo
+      -L ./lib/ -lalgo\
+	  -L ../mylog/lib/ -lmylog\
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \

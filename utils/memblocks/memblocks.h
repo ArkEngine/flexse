@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
-#include "Log.h"
+#include "mylog.h"
 #include "MyException.h"
 
 class memblocks

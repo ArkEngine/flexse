@@ -13,11 +13,11 @@ MAINLIBS= -L ./lib/ -lpostinglist \
 		  -L ../structmask/lib/ -lstructmask \
 		  -L ../memblocks/lib/ -lmemblocks \
 		  -L ../../opensrc/jsoncpp/lib/ -ljson \
+		  -L ../mylog/lib/ -lmylog
 
-INCS= -I ../include/ \
+INCS= -I ../mylog/include/ \
 	  -I ../MyException/include \
 	  -I ../memblocks/include/
-#	  -I ../../opensrc/jsoncpp/include/
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \

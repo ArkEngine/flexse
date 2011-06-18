@@ -38,7 +38,7 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 {
 	if (blocksize == NULL || blocknum == NULL || catnum <= 0 || catnum > m_MemCatMaxnum)
 	{
-		WARNING("param error @ blocksize[%p] blocknum[%p] catnum[%d] < m_MemCatMaxnum[%d]",
+		ALARM("param error @ blocksize[%p] blocknum[%p] catnum[%d] < m_MemCatMaxnum[%d]",
 				blocksize, blocknum, catnum, m_MemCatMaxnum);
 		MyToolThrow("Param Error Failed in Mempool Construct");
 	}
@@ -47,13 +47,13 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 	{
 		if (blocksize[i] <= 0 || blocknum[i] <= 0)
 		{
-			WARNING("param error @ blocksize[%d]: %d blocknum[%d]: %d",
+			ALARM("param error @ blocksize[%d]: %d blocknum[%d]: %d",
 					i, blocksize[i], i, blocknum[i]);
 			MyToolThrow("Param Error Failed in Mempool Construct");
 		}
 		if (i>0 && blocksize[i] < blocksize[i-1])
 		{
-			WARNING("blocksize order error @ blocksize[%d]: %d < blocknum[%d]: %d",
+			ALARM("blocksize order error @ blocksize[%d]: %d < blocknum[%d]: %d",
 					i, blocksize[i], i-1, blocksize[i-1]);
 			MyToolThrow("Param Error Failed in Mempool Construct");
 		}
@@ -66,7 +66,7 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 	m_mem = (char*)malloc(m_memsize);
 	if (m_mem == NULL)
 	{
-		WARNING("malloc failed. memsize[%u]", m_memsize);
+		ALARM("malloc failed. memsize[%u]", m_memsize);
 		MyToolThrow("MemAllocBad in Mempool Construct");
 	}
 	int memoffset = 0;
@@ -82,7 +82,7 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 			m_mem_cat_info[i].memlisthead = tmpmlist;
 			memoffset += m_mem_cat_info[i].size;
 		}
-		NOTICE("catidx[%u] blocksize[%u] blocknum[%u]",
+		ROUTN("catidx[%u] blocksize[%u] blocknum[%u]",
 				i, m_mem_cat_info[i].size, m_mem_cat_info[i].count);
 	}
 }
@@ -96,7 +96,7 @@ void* memblocks::AllocMem(const uint32_t memsize)
 	}
 	if (memsize <= 0)
 	{
-		WARNING("Param error memsize[%u]", memsize);
+		ALARM("Param error memsize[%u]", memsize);
 		return NULL;
 	}
 	pthread_mutex_lock(&m_mutex);
@@ -133,7 +133,7 @@ void* memblocks::AllocMem(const uint32_t memsize)
 		{
 			m_mem_extra_tatol++;
 			m_mem_extra.count++;
-			WARNING("allocmem[%p] in extramem memsize[%d] blocknum[%d]",
+			ALARM("allocmem[%p] in extramem memsize[%d] blocknum[%d]",
 					tmpmem, memsize, m_mem_extra.count);
 		}
 	}
@@ -190,10 +190,10 @@ void memblocks::MemStatus()
 {
 	for (uint32_t i=0; i<m_catnum; i++)
 	{
-		TRACE("memcatidx[%d] blocksize[%8d] blocknum[%3d] free[%3d]",
+		DEBUG("memcatidx[%d] blocksize[%8d] blocknum[%3d] free[%3d]",
 				i, m_mem_cat_info[i].size, m_mem_cat_info[i].count, m_mem_cat_info[i].freecount);
 	}
-	TRACE("extramem total[%d] blocknum[%d]", m_mem_extra_tatol, m_mem_extra.count);
+	DEBUG("extramem total[%d] blocknum[%d]", m_mem_extra_tatol, m_mem_extra.count);
 }
 
 /* vim: set ts=4 sw=4 sts=4 tw=100 noet: */

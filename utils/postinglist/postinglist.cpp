@@ -51,7 +51,7 @@ int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t leng
             {
                 if (left_size == 0)
                 {
-                    WARNING("key[%llu] buffer length[%u] is NOT enough.",
+                    ALARM("key[%llu] buffer length[%u] is NOT enough.",
                             key, length);
                     break;
                 }

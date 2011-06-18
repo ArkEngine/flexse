@@ -1,6 +1,6 @@
 #include "algo.h"
 #include <algorithm>
-#include "Log.h"
+#include "mylog.h"
 #include <stdio.h>
 #include <string.h>
 #include <set>
@@ -38,7 +38,7 @@ int32_t filter(
     if (       NULL == pposting_list || NULL == pattrlist
             || NULL == logic_list || 0 == logic_num || 0 == nmemb )
     {
-		WARNING ("pposting_list[%p] pattrlist[%p] logic_list[%p] logic_num[%u] nmemb[%u], stop kidding me.\n",
+		ALARM ("pposting_list[%p] pattrlist[%p] logic_list[%p] logic_num[%u] nmemb[%u], stop kidding me.\n",
                 pposting_list, pattrlist, logic_list, logic_num, nmemb);
 		return -1;
     }
@@ -91,7 +91,7 @@ int32_t filter(
                     }
                     break;
                 default:
-                    WARNING("type[%u] KIDDING ME!", plogic->type);
+                    ALARM("type[%u] KIDDING ME!", plogic->type);
             }
 
         }
@@ -137,7 +137,7 @@ int32_t ranking(
     if (       NULL == pposting_list || NULL == pattrlist
             || NULL == logic_list || 0 == logic_num || 0 == nmemb )
     {
-		WARNING ("pposting_list[%p] pattrlist[%p] logic_list[%p] logic_num[%u] nmemb[%u], stop kidding me.\n",
+		ALARM ("pposting_list[%p] pattrlist[%p] logic_list[%p] logic_num[%u] nmemb[%u], stop kidding me.\n",
                 pposting_list, pattrlist, logic_list, logic_num, nmemb);
 		return -1;
     }
@@ -186,7 +186,7 @@ int32_t ranking(
                     }
                     break;
                 default:
-                    WARNING("type[%u] KIDDING ME!", plogic->type);
+                    ALARM("type[%u] KIDDING ME!", plogic->type);
             }
 
         }

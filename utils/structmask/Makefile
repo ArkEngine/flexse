@@ -8,9 +8,12 @@ LIBOBJ= structmask.o
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./lib/ -lstructmask -L ../../opensrc/jsoncpp/lib/ -ljson -L ../MyException/ -lMyException\
+MAINLIBS= -L ./lib/ -lstructmask \
+		  -L ../../opensrc/jsoncpp/lib/ -ljson \
+		  -L ../MyException/ -lMyException \
+		  -L ../mylog/lib/ -lmylog
 
-INCS= -I ../include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
+INCS= -I ../mylog/include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
