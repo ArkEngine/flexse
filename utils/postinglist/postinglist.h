@@ -13,6 +13,7 @@ class postinglist
         uint32_t   m_bucket_size;
         uint32_t   m_bucket_mask;
         uint32_t   m_mem_base_size;
+        bool       m_freeze;
 
 		struct mem_link_t
 		{
@@ -32,6 +33,8 @@ class postinglist
 		};
 
         term_head_t* m_headlist;
+        term_head_t* m_headlist_sort;
+        uint32_t   m_headlist_sort_it;
 		uint32_t   m_headlist_size;
 		uint32_t   m_headlist_used;
 
@@ -40,6 +43,7 @@ class postinglist
 
         void memlinkcopy(mem_link_t* mem_link, const void* buff, const uint32_t length);
         mem_link_t* memlinknew(const uint32_t memsiz, mem_link_t* next);
+        static int key_compare(const void *p1, const void *p2);
 
     public:
         enum
@@ -54,10 +58,11 @@ class postinglist
         ~postinglist();
         int32_t get (const uint64_t& key, char* buff, const uint32_t length);
         int32_t set (const uint64_t& key, const char* buff);
-        int32_t sort();
         int32_t dump();
         int32_t merge();
         int32_t begin();
-        int32_t next(const uint64_t& key, char* buff, const uint32_t length);
+        int32_t next(uint64_t& key, char* buff, const uint32_t length);
         bool    isend();
+        int32_t finish();
+        void    set_freeze(bool freeze);
 };
