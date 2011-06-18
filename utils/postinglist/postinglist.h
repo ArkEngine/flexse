@@ -12,7 +12,7 @@ class postinglist
         uint32_t   m_postinglist_cell_size;
         uint32_t   m_bucket_size;
         uint32_t   m_bucket_mask;
-        uint32_t   m_memsize[8];
+        uint32_t   m_mem_base_size;
 
 		struct mem_link_t
 		{
@@ -38,6 +38,9 @@ class postinglist
         postinglist();
         postinglist(const postinglist&);
 
+        void memlinkcopy(mem_link_t* mem_link, const void* buff, const uint32_t length);
+        mem_link_t* memlinknew(const uint32_t memsiz, mem_link_t* next);
+
     public:
         enum
         {
@@ -46,7 +49,8 @@ class postinglist
             FULL = 1,
         };
 
-        postinglist(const uint32_t posting_cell_size);
+        postinglist( const uint32_t  posting_cell_size, const uint32_t  bucket_size,
+                const uint32_t  headlist_size, const uint32_t* mblklist, const uint32_t  mblklist_size);
         ~postinglist();
         int32_t get (const uint64_t& key, char* buff, const uint32_t length);
         int32_t set (const uint64_t& key, const char* buff);

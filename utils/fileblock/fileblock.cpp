@@ -61,7 +61,7 @@ int32_t fileblock :: read(const uint32_t offset, char* buff, const uint32_t leng
     uint32_t inoffset = offset % m_max_num_per_file;
     if (length < m_cell_size)
     {
-        FATAL("length[%u] too short. m_cell_size[%u]",
+        ALARM("length[%u] too short. m_cell_size[%u]",
                 length, m_cell_size);
         return -1;
     }
