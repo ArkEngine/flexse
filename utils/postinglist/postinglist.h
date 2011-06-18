@@ -61,7 +61,7 @@ class postinglist
         int32_t dump();
         int32_t merge();
         int32_t begin();
-        int32_t next(uint64_t& key, char* buff, const uint32_t length);
+        int32_t get_and_next(uint64_t& key, char* buff, const uint32_t length);
         bool    isend();
         int32_t finish();
         void    set_freeze(bool freeze);

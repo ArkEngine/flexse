@@ -280,9 +280,9 @@ int32_t postinglist :: begin()
     m_headlist_sort_it = 0;
     return 0;
 }
-int32_t postinglist :: next(uint64_t& key, char* buff, const uint32_t length)
+int32_t postinglist :: get_and_next(uint64_t& key, char* buff, const uint32_t length)
 {
-    key = m_headlist_sort[m_headlist_sort_it].sign64;
+    key = m_headlist_sort[m_headlist_sort_it++].sign64;
     return get(key, buff, length);
 }
 bool postinglist :: isend()
