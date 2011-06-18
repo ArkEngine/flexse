@@ -55,6 +55,7 @@ namespace flexse
         } \
         else \
         { \
+            FATAL ("MyThrowAssert Failed. ["#expression"]");\
             throw flexse::MyException("MyThrowAssert Failed. ["#expression"]", __FILE__, __LINE__, __func__); \
         } \
     } \
