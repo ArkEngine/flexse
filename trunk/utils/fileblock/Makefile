@@ -13,7 +13,7 @@ CPPFLAGS= -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB)
+all: clean $(LIB) test
 	rm *.o -f
 
 $(LIB): $(LIBOBJ)
@@ -30,5 +30,8 @@ $(LIB): $(LIBOBJ)
 clean:
 	rm $(LIB) -f
 	rm *.o -f
+	rm test -f
 	rm lib/ -rf
 	rm include/ -rf
+test:
+	g++ test.cc -L ./lib/ -lfileblock -L ../mylog/lib/ -lmylog -L ../MyException/lib/ -lMyException -o test

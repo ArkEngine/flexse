@@ -37,7 +37,14 @@ int main(const int argc, char** argv)
 //    }
 
     uint32_t* ubuff = (uint32_t*)malloc(VLUSIZE* 2 * sizeof(uint32_t));
-    for (uint32_t ukey=0; ukey<KEYSIZE; ukey++)
+    for (uint32_t ukey=0; ukey<KEYSIZE; ukey+=2)
+    {
+        for (uint32_t i=0; i<VLUSIZE; i++)
+        {
+            mypostinglist.set(ukey, (char*)&i);
+        }
+    }
+    for (uint32_t ukey=1; ukey<KEYSIZE; ukey+=2)
     {
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
@@ -49,12 +56,28 @@ int main(const int argc, char** argv)
     {
         int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
         assert ((uint32_t)rnum == VLUSIZE);
-//        printf("rnum: %u\n", rnum);
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
             assert(ubuff[i] == (VLUSIZE - 1 - i));
         }
     }
+
+    mypostinglist.begin();
+    uint32_t count = 0;
+    while(!mypostinglist.isend())
+    {
+        uint64_t ukey;
+        int32_t rnum = mypostinglist.get_and_next(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
+//        printf("key: %llu\n", ukey);
+        assert(ukey == count);
+        count ++;
+        assert ((uint32_t)rnum == VLUSIZE);
+        for (uint32_t i=0; i<VLUSIZE; i++)
+        {
+            assert(ubuff[i] == (VLUSIZE - 1 - i));
+        }
+    }
+
     free(ubuff);
 
 //    const uint32_t ukey = 0;
