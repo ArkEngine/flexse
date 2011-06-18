@@ -157,12 +157,12 @@ int32_t postinglist :: set (const uint64_t& key, const char* buff)
 	if (! found)
 	{
 		// 分配一个 headlist cell
-		m_headlist_used++;
 		if (m_headlist_used == m_headlist_size)
 		{
 			// 冰冻住set操作，已经没有空余空间了。
 			// 以后可以考虑使用一个无穷hash的方式，就是需要排序时麻烦一点
 			// return sth.
+            return FULL;
 		}
 		else
 		{
@@ -193,8 +193,9 @@ int32_t postinglist :: set (const uint64_t& key, const char* buff)
             // 接入 bucket
 			m_bucket[bucket_no] = m_headlist_used;
 		}
+		m_headlist_used++;
 	}
-	return 0;
+	return OK;
 }
 int32_t postinglist :: sort()
 {
