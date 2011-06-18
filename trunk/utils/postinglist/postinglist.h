@@ -39,6 +39,13 @@ class postinglist
         postinglist(const postinglist&);
 
     public:
+        enum
+        {
+            FAIL = -1,
+            OK = 0,
+            FULL = 1,
+        };
+
         postinglist(const uint32_t posting_cell_size);
         ~postinglist();
         int32_t get (const uint64_t& key, char* buff, const uint32_t length);
