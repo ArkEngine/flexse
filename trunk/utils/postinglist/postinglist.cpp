@@ -18,9 +18,9 @@ postinglist :: postinglist(
     // 初始化bucket
     m_bucket_size = 1;
     MyThrowAssert(bucket_size < 32);
-    m_bucket_size <<= (bucket_size < 20 ) ? 20 : m_bucket_size;
+    m_bucket_size <<= (bucket_size < 20 ) ? 20 : bucket_size;
     m_bucket_mask = m_bucket_size - 1;
-    m_bucket = (uint32_t*)calloc(m_bucket_size, sizeof(uint32_t));
+    m_bucket = (uint32_t*)malloc(m_bucket_size*sizeof(uint32_t));
     // 初始化headlist
     m_headlist_size = headlist_size; // TODO
     m_headlist = (term_head_t*)malloc(m_headlist_size*sizeof(term_head_t));
@@ -29,7 +29,7 @@ postinglist :: postinglist(
     uint32_t mem_base_min = m_postinglist_cell_size * 4 + sizeof(mem_link_t);
     for (uint32_t i=0; i<32; i++)
     {
-        if ((1 << i) >= mem_base_min)
+        if (uint32_t(1 << i) >= mem_base_min)
         {
             m_mem_base_size = 1 << i;
             break;
@@ -48,7 +48,13 @@ postinglist :: postinglist(
 
 postinglist :: ~postinglist()
 {
+    // 你确认没人使用了postinglist哦，否则就 SIGNAL 11
     delete m_memblocks;
+    m_memblocks = NULL;
+    free(m_headlist);
+    m_headlist = NULL;
+    free(m_bucket);
+    m_bucket = NULL;
 }
 
 void postinglist :: memlinkcopy(mem_link_t* mem_link, const void* buff, const uint32_t length)
