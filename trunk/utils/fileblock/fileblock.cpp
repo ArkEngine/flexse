@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include "fileblock.h"
-#include "Log.h"
+#include "mylog.h"
 #include "MyException.h"
 
 fileblock :: fileblock (const char* dir, const char* filename, const uint32_t cell_size)

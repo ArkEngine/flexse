@@ -1,7 +1,7 @@
 #include "FileLinkBlock.h"
 #include "MyException.h"
 #include "creat_sign.h"
-#include "Log.h"
+#include "mylog.h"
 #include <dirent.h>
 #include <string.h>
 #include <ctype.h>
@@ -155,7 +155,7 @@ int FileLinkBlock:: check_and_repaire()
                         // 打开写句柄，把 offset 定位于追加写的位置
                         uint32_t woffset = readoff + step*4 +
                             sizeof(file_link_block_head) + (((phead->block_size+3) >> 2) << 2);
-                        NOTICE("Find normal end block. woffset[%u] filesize[%lu] block_id[%d]",
+                        ROUTN("Find normal end block. woffset[%u] filesize[%lu] block_id[%d]",
                                 woffset, dstat.st_size, phead->block_id);
                         MySuicideAssert(woffset <= (uint32_t)dstat.st_size);
                         m_flb_w_fd = open(last_file_name, O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -165,7 +165,7 @@ int FileLinkBlock:: check_and_repaire()
                     }
                     else
                     {
-                        WARNING("Verify Failed. buffsize[%d] sum1[%u] sum2[%u] headsum1[%u] headsum2[%u]",
+                        ALARM("Verify Failed. buffsize[%d] sum1[%u] sum2[%u] headsum1[%u] headsum2[%u]",
                                 phead->block_size, sum1, sum2, phead->check_sum1, phead->check_sum2);
                         continue;
                     }
@@ -245,14 +245,14 @@ int FileLinkBlock::__write_message(const uint32_t log_id, const char* buff, cons
     uint32_t wlen = (((buff_size+3)>>2)<<2) + sizeof(file_link_block_head);
     if ( wlen > BLOCK_MAX_SIZE)
     {
-        WARNING("buff_size[%d] too loooong. head[%u] wlen[%d]", buff_size, sizeof(file_link_block_head), wlen);
+        ALARM("buff_size[%d] too loooong. head[%u] wlen[%d]", buff_size, sizeof(file_link_block_head), wlen);
         return -1;
     }
     // 检查是否应该新建一个文件来写
     uint32_t cur_offset = lseek(m_flb_w_fd, 0, SEEK_CUR);
     if (cur_offset + wlen > FILE_MAX_SIZE)
     {
-        NOTICE("Need a New File. cur_file_no[%d] cur_offset[%d] wlen[%d]", m_last_file_no, cur_offset, wlen);
+        ROUTN("Need a New File. cur_file_no[%d] cur_offset[%d] wlen[%d]", m_last_file_no, cur_offset, wlen);
         close(m_flb_w_fd);
         m_flb_w_fd = -1;
 
@@ -346,7 +346,7 @@ int FileLinkBlock::seek_message(const uint32_t file_no, const uint32_t block_id)
         }
         if ((int)m_flb_read_offset == dstat.st_size)
         {
-            WARNING("File no[%u] size[%lu] Block ID[%u] to biiiiiiiiiig.", file_no, dstat.st_size, block_id);
+            ALARM("File no[%u] size[%lu] Block ID[%u] to biiiiiiiiiig.", file_no, dstat.st_size, block_id);
             MySuicideAssert(0);
         }
     }
@@ -463,7 +463,7 @@ int FileLinkBlock::readn(int fd, char* buf, const uint32_t size)
         if (len == -1 || len == 0)
         {
 
-            WARNING( "readfile failed. ERROR[%m]" );
+            ALARM( "readfile failed. ERROR[%m]" );
             continue;
         }
         left -= len;

@@ -16,9 +16,10 @@ VERINFO= -DPROJNAME="\"$(READBLOCK)\"" \
 		 -DCVSTAG="\"$(READBLOCK)_1-0-0-0_PD_BL\"" \
 
 READBLOCKLIBS= -L ./lib/ -lfilelinkblock \
-			   -L ../creat_sign/lib/ -lcreat_sign
+			   -L ../creat_sign/lib/ -lcreat_sign\
+			   -L ../mylog/lib/ -lmylog
 
-INCS= -I ../include/\
+INCS= -I ../mylog/include/\
 	  -I ../creat_sign/include \
 	  -I ../MyException/include/
 

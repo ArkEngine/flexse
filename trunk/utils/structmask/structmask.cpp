@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <json/json.h>
 #include "structmask.h"
-#include "Log.h"
+#include "mylog.h"
 #include "MyException.h"
 using namespace std;
 using namespace flexse;
@@ -84,7 +84,7 @@ structmask::structmask(const char* path, const char* name, const char* section)
 
     if (bit_count != 0 || m_mask_map.size() == 0)
     {
-        WARNING("map size = [%u]. section[%s] bit_count[%u] section_size[%u]",
+        ALARM("map size = [%u]. section[%s] bit_count[%u] section_size[%u]",
                 (uint32_t)m_mask_map.size(), section, bit_count, m_section_size);
         MyToolThrow("SEG_LIST CONFIG ERROR.");
     }
