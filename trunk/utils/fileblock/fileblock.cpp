@@ -14,11 +14,14 @@
 #include "mylog.h"
 #include "MyException.h"
 
+const char* const fileblock :: FORMAT_FILE = "%s.idx.";
+const char* const fileblock :: FORMAT_PATH = "%s/%s.idx.%u";
+
 fileblock :: fileblock (const char* dir, const char* filename, const uint32_t cell_size)
     : m_cell_size(cell_size)
 {
     snprintf(m_fb_dir,  sizeof(m_fb_dir),  "%s", dir);
-    snprintf(m_fb_name, sizeof(m_fb_name), "%s.idx", filename);
+    snprintf(m_fb_name, sizeof(m_fb_name), "%s", filename);
     int32_t max_file_no = detect_file();
     m_max_file_no = (max_file_no < 0) ? 1 : max_file_no + 1;
     char tmpstr[128];
@@ -28,7 +31,7 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
     }
     for (uint32_t i=0; i<m_max_file_no; i++)
     {
-        snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%u", m_fb_dir, m_fb_name, i);
+        snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, i);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[i] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         MyThrowAssert(m_fd[i] != -1);
@@ -49,7 +52,7 @@ int32_t fileblock :: write(const uint32_t offset, const char* buff)
     if (m_fd[file_no] == -1)
     {
         char tmpstr[128];
-        snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%d", m_fb_dir, m_fb_name, file_no);
+        snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, file_no);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         MyThrowAssert(m_fd[file_no] != -1);
@@ -75,7 +78,7 @@ int32_t fileblock :: read(const uint32_t offset, char* buff, const uint32_t leng
     if (m_fd[file_no] == -1)
     {
         char tmpstr[128];
-        snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%d", m_fb_dir, m_fb_name, file_no);
+        snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, file_no);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         MyThrowAssert(m_fd[file_no] != -1);
@@ -87,14 +90,14 @@ int32_t fileblock :: read(const uint32_t offset, char* buff, const uint32_t leng
     return pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
 
 }
-int32_t fileblock :: remove()
+int32_t fileblock :: clear()
 {
     for (uint32_t i=0; i<MAX_FILE_NO; i++)
     {
         if (m_fd[i] >= 0)
         {
             char tmpstr[128];
-            snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%u", m_fb_dir, m_fb_name, i);
+            snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, i);
             unlink(tmpstr);
             close(m_fd[i]);
             m_fd[i] = -1;
@@ -123,7 +126,7 @@ int32_t fileblock::detect_file()
     struct  dirent  *dirp;
 
     char prefix[128];
-    snprintf(prefix, sizeof(prefix), "%s.", m_fb_name);
+    snprintf(prefix, sizeof(prefix), FORMAT_FILE, m_fb_name);
 
     if((dp = opendir(m_fb_dir)) == NULL)
     {
