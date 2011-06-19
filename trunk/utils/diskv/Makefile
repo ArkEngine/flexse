@@ -38,7 +38,7 @@ clean:
 	rm *.o -f
 	rm -rf lib/ include/
 
-LDFLAGS=  -g $(MAINLIBS) 
+LDFLAGS= -L ./lib/ -ldiskv -g $(MAINLIBS)
 
 $(MAIN): $(MAINOBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)

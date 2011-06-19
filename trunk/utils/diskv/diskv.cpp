@@ -26,12 +26,7 @@ diskv :: diskv(const char* dir, const char* module)
     int detect_no = detect_file();
     m_max_file_no = (detect_no < 0) ? 1 : detect_no + 1;
     char full_name[MAX_PATH_LENGTH];
-    for (uint32_t i=0; i<m_max_file_no; i++)
-    {
-        snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, i);
-        m_read_fd[i] = open(full_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        MyThrowAssert(m_read_fd[i] != -1);
-    }
+
     snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, m_max_file_no - 1);
     m_last_file_offset = (0 == access(full_name, F_OK)) ? getfilesize(full_name) : 0;
     mode_t amode = (0 == access(full_name, F_OK)) ? O_WRONLY|O_APPEND : O_WRONLY|O_APPEND|O_CREAT;
@@ -137,6 +132,7 @@ int diskv :: set(diskv_idx_t& idx, const void* buff, const uint32_t length)
     idx.offset   = m_last_file_offset;
     idx.file_no  = m_max_file_no - 1;
     idx.data_len = length;
+    m_last_file_offset += length;
     return 0;
 }
 
