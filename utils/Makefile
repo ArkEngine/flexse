@@ -9,3 +9,5 @@ all:
 	make -C filelinkblock/
 	make -C memblocks/
 	make -C postinglist/
+	make -C indexer/
+	make -C detaildb/
