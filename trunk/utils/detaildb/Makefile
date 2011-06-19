@@ -8,8 +8,9 @@ LIBOBJ= detaildb.o
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ../fileblock/lib/ -lfileblock \
+MAINLIBS= -L ./lib/ -l detaildb \
 		  -L ../diskv/lib/ -ldiskv\
+		  -L ../fileblock/lib/ -lfileblock \
 		  -L ../MyException/lib/ -lMyException \
 		  -L ../mylog/lib/ -lmylog\
 
@@ -17,6 +18,7 @@ INCS= -I ../mylog/include/ \
 	  -I ../MyException/include/\
 	  -I ../fileblock/include/\
 	  -I ../diskv/include/\
+	  -I ../detaildb/include/\
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
