@@ -39,7 +39,7 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
     m_max_num_per_file = MAX_FILE_SIZE / m_cell_size;
 }
 
-int32_t fileblock :: write(const uint32_t offset, const char* buff)
+int32_t fileblock :: set(const uint32_t offset, const void* buff)
 {
     uint32_t file_no  = offset / m_max_num_per_file;
     uint32_t inoffset = offset % m_max_num_per_file;
@@ -57,9 +57,10 @@ int32_t fileblock :: write(const uint32_t offset, const char* buff)
         m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         MyThrowAssert(m_fd[file_no] != -1);
     }
-    return pwrite(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
+    MyThrowAssert(m_cell_size == pwrite(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size));
+    return 0;
 }
-int32_t fileblock :: read(const uint32_t offset, char* buff, const uint32_t length)
+int32_t fileblock :: get(const uint32_t offset, void* buff, const uint32_t length)
 {
     uint32_t file_no  = offset / m_max_num_per_file;
     uint32_t inoffset = offset % m_max_num_per_file;
@@ -109,15 +110,15 @@ void fileblock :: begin()
 {
     m_it = 0;
 }
-int32_t fileblock :: write_next(char* buff)
+int32_t fileblock :: write_next(void* buff)
 {
     uint32_t cur_it = m_it ++ ;
-    return write(cur_it, buff);
+    return set(cur_it, buff);
 }
-int32_t fileblock :: read_next(char* buff, const uint32_t length)
+int32_t fileblock :: read_next(void* buff, const uint32_t length)
 {
     uint32_t cur_it = m_it ++ ;
-    return read(cur_it, buff, length);
+    return get(cur_it, buff, length);
 }
 
 int32_t fileblock::detect_file()

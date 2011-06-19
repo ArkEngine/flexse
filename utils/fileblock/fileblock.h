@@ -20,10 +20,10 @@ class fileblock
         int32_t detect_file();
     public:
         fileblock(const char* dir, const char* filename, const uint32_t cell_size);
-        int32_t write(const uint32_t offset, const char* buff);
-        int32_t read(const uint32_t offset, char* buff, const uint32_t length);
+        int32_t set(const uint32_t offset, const void* buff);
+        int32_t get(const uint32_t offset, void* buff, const uint32_t length);
         int32_t clear();
         void begin();
-        int32_t write_next(char* buff);
-        int32_t read_next(char* buff, const uint32_t length);
+        int32_t write_next(void* buff);
+        int32_t read_next(void* buff, const uint32_t length);
 };
