@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,7 +18,7 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
     : m_cell_size(cell_size)
 {
     snprintf(m_fb_dir,  sizeof(m_fb_dir),  "%s", dir);
-    snprintf(m_fb_name, sizeof(m_fb_name), "%s", filename);
+    snprintf(m_fb_name, sizeof(m_fb_name), "%s.idx", filename);
     int32_t max_file_no = detect_file();
     m_max_file_no = (max_file_no < 0) ? 1 : max_file_no + 1;
     char tmpstr[128];
@@ -32,8 +31,7 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
         snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%u", m_fb_dir, m_fb_name, i);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[i] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        printf("file[%s] fd[%d] msg[%m]\n", tmpstr, m_fd[i]);
-        assert(m_fd[i] != -1);
+        MyThrowAssert(m_fd[i] != -1);
     }
     m_max_num_per_file = MAX_FILE_SIZE / m_cell_size;
 }
@@ -86,7 +84,6 @@ int32_t fileblock :: read(const uint32_t offset, char* buff, const uint32_t leng
             m_max_file_no = file_no + 1;
         }
     }
-    printf("fd[%d] fno[%u] offset[%u]\n", m_fd[file_no], file_no, inoffset * m_cell_size);
     return pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
 
 }
@@ -120,7 +117,7 @@ int32_t fileblock :: read_next(char* buff, const uint32_t length)
     return read(cur_it, buff, length);
 }
 
-int32_t fileblock::detect_file( )
+int32_t fileblock::detect_file()
 {
     DIR *dp;
     struct  dirent  *dirp;
