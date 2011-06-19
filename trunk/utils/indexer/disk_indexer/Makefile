@@ -2,25 +2,29 @@ CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib
 
-LIB= libstructmask.a
-LIBOBJ= structmask.o
+LIB= libdisk_indexer.a
+LIBOBJ= disk_indexer.o
 
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./lib/ -lstructmask \
-		  -L ../../opensrc/jsoncpp/lib/ -ljson \
-		  -L ../MyException/lib/ -lMyException \
-		  -L ../mylog/lib/ -lmylog
+MAINLIBS= -L ../../fileblock/lib/ -lfileblock \
+		  -L ../../MyException/lib/ -lMyException \
+		  -L ../../mylog/lib/ -lmylog\
 
-INCS= -I ../mylog/include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
+INCS= -I ../../mylog/include/ \
+	  -I ../../creat_sign/include/ \
+	  -I ../../MyException/include/\
+	  -I ../../fileblock/include/\
+	  -I ../../diskv/include/\
+	  -I ../
+
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
 all: clean $(LIB) $(MAIN)
-#all: clean $(LIB)
 	rm *.o -f
 
 $(LIB): $(LIBOBJ)
@@ -30,7 +34,7 @@ $(LIB): $(LIBOBJ)
 	mkdir lib/
 	mkdir include/
 	cp $(LIB) lib/
-	cp structmask.h include
+	cp disk_indexer.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@

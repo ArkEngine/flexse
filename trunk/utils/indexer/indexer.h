@@ -1,4 +1,17 @@
+#ifndef _INDEXER_H_
+#define _INDEXER_H_
 #include <stdint.h>
+
+struct ikey_t
+{
+    union{
+        uint64_t sign64;
+        struct{
+            uint32_t uint1;
+            uint32_t uint2;
+        };
+    };
+};
 
 class indexer
 {
@@ -6,7 +19,7 @@ class indexer
         indexer(const indexer&);
     public:
         indexer();
-        ~indexer();
-        int32_t get_posting_list(const string& strterm, char* buff, const uint32_t buff_length) = 0;
-        int32_t set_posting_list(const string& strterm, const char* buff) = 0;
+        virtual ~indexer();
+        virtual int32_t get_posting_list(const char* strTerm, char* buff, const uint32_t length) = 0;
 };
+#endif
