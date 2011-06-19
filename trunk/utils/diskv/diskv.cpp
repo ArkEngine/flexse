@@ -1,439 +1,181 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <string.h>
+#include "MyException.h"
+#include "mylog.h"
 #include "diskv.h"
-#include "assert.h"
 
-const char* const diskv :: FASTDI_DATA_FILE_FMT   = "%s/%s.dat.%d";
+const char* const diskv :: FORMAT_FILE = "%s.dat.";
+const char* const diskv :: FORMAT_PATH = "%s/%s.dat.%u";
 
-diskv::diskv(const char* mydi_path,const char* myidx_path,const char* mymodule,bool readonly,bool writesync)
-    m_fileblock(mydi_path, mymodule, sizeof(diskv_idx_t))
+diskv :: diskv(const char* dir, const char* module)
 {
-	snprintf( m_di_path,  sizeof(m_di_path),  "%s", mydi_path );
-	snprintf( m_idx_path, sizeof(m_idx_path), "%s", myidx_path);
-	snprintf( m_module,   sizeof(m_module),   "%s", mymodule);
-	m_iswritesync = writesync;
-	m_isreadonly  = readonly;
-	m_append_fd = -1;
-	for( uint32_t i=0; i<FASTDI_FD_MAXNUM; i++ )
-	{
-		m_rw_fd[i] = -1;
-	}
-
-	m_done              = false;
-	m_pdatabuf_idx      = NULL;
-	m_pdatabuf_di       = NULL;
-	m_pdatabuf_idx_size = 0;
-	m_pdatabuf_di_size  = 0;
-	m_idx_pfile         = NULL;
-	m_di_pfile          = NULL;
-	m_idx_curfno        = 0;
-	m_di_curfno         = 0;
-	m_iterator_id       = 0;
-	memset (&m_curidx, 0, sizeof(diskv_idx_t));
-
-	m_fnum = 1;
-	m_data_num = 0;
-	m_wdi_flen = 0;
-
-	char filename[FASTDI_PATH_MAXSIZE];
-	for( uint32_t i=0; i<FASTDI_FD_MAXNUM; i++ )
-	{
-		snprintf( filename, FASTDI_PATH_MAXSIZE, FASTDI_DATA_FILE_FMT, m_di_path, m_module, i );
-		if( isfileexist( filename ) )
-		{
-			m_fnum = i+1;
-			uint32_t filesize = getfilesize( filename );
-			m_wdi_flen  = filesize;
-		}
-	}
-
-	if (m_append_fd >= 0)
-	{
-		close (m_append_fd);
-		m_append_fd = -1;
-	}
-	if(!m_isreadonly && (m_append_fd=openfile(m_fnum-1, false ))<=0 )
-	{
-		ALARM("opendi:%d failed. msg[%m]", m_fnum-1 );
-		while(0 != raise(SIGKILL)){}
-	}
-	if( m_isreadonly )
-	{
-		m_append_fd = -1;
-	}
-	for( uint32_t i=0; i<m_fnum; i++ )
-	{
-		if (m_rw_fd[i] >= 0)
-		{
-			close (m_rw_fd[i]);
-			m_rw_fd[i] = -1;
-		}
-		if( (m_rw_fd[i] = openfile(i, m_isreadonly ))<=0 )
-		{
-			ALARM("opendi:%d failed. msg[%m]", i);
-			while(0 != raise(SIGKILL)){}
-		}
-	}
+    snprintf(m_dir,    sizeof(m_dir),    "%s", dir);
+    snprintf(m_module, sizeof(m_module), "%s", module);
+    for (uint32_t i=0; i<MAX_FILE_NO; i++)
+    {
+        m_read_fd[i] = -1;
+    }
+    int detect_no = detect_file();
+    m_max_file_no = (detect_no < 0) ? 1 : detect_no + 1;
+    char full_name[MAX_PATH_LENGTH];
+    for (uint32_t i=0; i<m_max_file_no; i++)
+    {
+        snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, i);
+        m_read_fd[i] = open(full_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        MyThrowAssert(m_read_fd[i] != -1);
+    }
+    snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, m_max_file_no - 1);
+    m_last_file_offset = (0 == access(full_name, F_OK)) ? getfilesize(full_name) : 0;
+    mode_t amode = (0 == access(full_name, F_OK)) ? O_WRONLY|O_APPEND : O_WRONLY|O_APPEND|O_CREAT;
+    m_append_fd = open(full_name, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    MyThrowAssert(m_append_fd != -1);
 }
 
-int diskv :: remove()
+diskv :: ~diskv()
 {
-	char filename[FASTDI_PATH_MAXSIZE];
-	if (m_append_fd>0) {
-		close(m_append_fd);
-		m_append_fd = -1;
-	}
-	for (uint32_t i=0; i<m_fnum; ++i) {
-		if(m_rw_fd[i]>0) {
-			close(m_rw_fd[i]);
-			m_rw_fd[i] = -1;
-		}
-		snprintf( filename, FASTDI_PATH_MAXSIZE, FASTDI_DATA_FILE_FMT, m_di_path, m_module, i );
-		remove(filename);
-	}	
-
-	if (m_fileblock.remove()<0 ) {
-		ALARM( "%s idx remove failed.  %m", m_module );
-		return -1;
-	}
-	return 0;
-}
-
-diskv :: ~diskv ()
-{
-	sync();
-	if (m_append_fd>0) {
-		close(m_append_fd);
-		m_append_fd = -1;
-	}
-	for (uint32_t i=0; i<m_fnum; ++i) {
-		if(m_rw_fd[i]>0) {
-			close(m_rw_fd[i]);
-			m_rw_fd[i] = -1;
-		}
-	}	
-
-	free (m_pdatabuf_idx);
-	m_pdatabuf_idx = NULL;
-	free (m_pdatabuf_di);
-	m_pdatabuf_di = NULL;
-}
-
-int diskv :: getdata(const diskv_idx_t* idx, char* data, const uint32_t datasize)
-{
-	if( datasize<=0 ||
-			idx->fno >= m_fnum || 
-			datasize < idx->dlen ||
-			m_rw_fd[idx->fno] < 0  ||
-			idx->dlen > FASTDI_ITEM_MAXSIZE || 
-			(idx->off + idx->dlen) > FASTDI_FILE_MAXSIZE )
-	{
-		ALARM("%s err param. fno:%d off:%d dlen:%d datasize:%d rfd:%d"
-                " DATAMAXLEN:%d FILE_MAXSIZE:%d fnum:%d",
-				m_module, idx->fno, idx->off, idx->dlen, datasize, m_rw_fd[idx->fno],
-                FASTDI_ITEM_MAXSIZE, FASTDI_FILE_MAXSIZE, m_fnum );
-		return -1;
-	}
-	if ( 0 == idx->dlen){
-		return 0;
-	}
-
-    // m_read[idx->fno] is OK?
-	u_int ret = pread( m_rw_fd[idx->fno], data, idx->dlen, idx->off);
-	if( ret!=idx->dlen )
-	{
-		ALARM("%s pread di data, failed. rfd[%d]:%d off:%u dlen:%u",
-				m_module, idx->fno, m_rw_fd[idx->fno], idx->off, idx->dlen );
-		return -1;
-	}
-	return idx->dlen;
-}
-
-int diskv :: append(diskv_idx_t* idx, const char* data, const uint32_t datasize)
-{
-	assert(idx != NULL && data != NULL );
-	if (datasize <0 || datasize > FASTDI_ITEM_MAXSIZE || m_append_fd < 0  ) {
-		ALARM("%s errdatasize:%d max: %u appendfd[%d]",
-				m_module, datasize, FASTDI_ITEM_MAXSIZE, m_append_fd);
-		return -1;
-	}
-
-	if( isneednewfile(datasize) )
-	{
-		int curnum=m_fnum;
-		int wfd=0, rfd=0;
-
-		if( (wfd = openfile(curnum, false))>0 && 
-				(rfd = openfile(curnum, true))>0 )
-		{
-			fsync( m_append_fd );
-			close( m_append_fd );
-			m_append_fd = wfd;
-			m_wdi_flen = 0;
-			m_rw_fd[curnum] = rfd;
-		}
-		else
-		{
-			ALARM("%s opendi:%d msg[%m]", m_module, curnum );
-			return -1;
-		}
-		m_fnum++;
-	}
-
-	if (0 == datasize) {
-		return 0;
-	}
-	int ret = pwrite( m_append_fd, data, datasize, idx->off);
-	if( (int)datasize == ret ){
-		m_data_num ++;
-		if( m_iswritesync )
+    for (uint32_t i=0; i<m_max_file_no; i++)
+    {
+        if (m_read_fd[i] >= 0)
         {
-			fdatasync( m_append_fd );
+            close(m_read_fd[i]);
+            m_read_fd[i] = -1;
         }
-        idx->fno = m_fnum-1;
-        idx->off = m_wdi_flen;
-        m_wdi_flen += datasize;
-        idx->dlen = datasize;
-        return datasize;
     }
-    else {
-        ALARM("%s write di data, failed. fno:%d dsize:%d msg[%m]",
-                m_module, idx->fno, datasize );
-        return -1;
-    }
-
-    return -1;
-}
-
-int diskv :: append(const uint64_t id, const char* data, const uint32_t datasize)
-{
-    diskv_idx_t idx;
-    memset (&idx, 0, sizeof(idx));
-    idx.sign64 = id;
-    int ret = 0;
-    ret = append(&idx, data, datasize);
-    if (ret != (int)datasize) {return ret;}
-    // how to do sign64?
-    return writeidx (id, &idx);
-}
-
-int diskv :: sync()
-{
-    fdatasync( m_append_fd );
-    return 0;
-}
-
-int diskv :: readidx(const uint32_t idx_id, diskv_idx_t* idx)
-{
-    return m_fileblock.read(idx_id, idx, sizeof(diskv_idx_t) );
-}
-
-int diskv :: writeidx(uint32_t idx_id, const diskv_idx_t* idx)
-{
-    return m_fileblock.write(idx_id, idx);
-}
-
-bool diskv :: isneednewfile(const uint32_t appendsize)
-{
-    return (m_wdi_flen + appendsize) > FASTDI_FILE_MAXSIZE;
-}
-
-bool diskv :: isfileexist( const char* filename )
-{
-    return 0 == access( filename, X_OK);
+    close (m_append_fd);
+    m_append_fd = -1;
 }
 
 uint32_t diskv :: getfilesize( const char* name )
 {
     struct stat fs;
-    if( 0!=stat( name, &fs ) )
-        return 0;
+    MyThrowAssert( 0 == stat( name, &fs ) );
     return fs.st_size;
 }
 
-uint32_t diskv :: getfilesize( FILE* fp )
+int diskv :: detect_file( )
 {
-    struct stat fs;
-    if( 0!=fstat( fileno(fp), &fs ) )
-        return 0;
-    return fs.st_size;
-}
+    DIR *dp;
+    struct  dirent  *dirp;
 
-int diskv :: openfile(const uint32_t fno, const bool readonly )
-{
-    if( fno >= FASTDI_FD_MAXNUM ) 
-    {
-        ALARM("%s fno:%d too large max: %u", m_module, fno, FASTDI_FD_MAXNUM);
-        return -1;
-    }
-    char filename[FASTDI_PATH_MAXSIZE];
-    snprintf( filename, FASTDI_PATH_MAXSIZE, FASTDI_DATA_FILE_FMT, m_di_path, m_module, fno );
-    int fd=open( filename, readonly?O_RDONLY:(O_CREAT|O_RDWR), S_IRWXU|S_IRWXG|S_IROTH );
-    if( fd<0 )
-    {
-        ALARM("%s open di file, failed. name:%s readonly:%d msg[%m]", 
-                m_module, filename, readonly );
-        while(0 != raise(SIGKILL)){}
-    }
-    return fd;
-}
+    char prefix[128];
+    snprintf(prefix, sizeof(prefix), FORMAT_FILE, m_module);
 
-void diskv :: begin()
-{
-    m_done = false;
-    m_iterator_id = 0;
-    m_pdatabuf_idx = (char*)malloc(FASTDI_DATABUF_SIZE);
-    if (NULL == m_pdatabuf_idx)
+    if((dp = opendir(m_dir)) == NULL)
     {
-        ALARM("module[%s] malloc iobuffer failed. size[%u] msg[%m]",
-                m_module, FASTDI_DATABUF_SIZE);
-        m_pdatabuf_idx_size = FASTDI_DATABUF_SIZE;
-    }
-    else
-    {
-        m_pdatabuf_idx_size = 0;
-    }
-    m_pdatabuf_di = (char*)malloc(FASTDI_DATABUF_SIZE);
-    if (NULL == m_pdatabuf_di)
-    {
-        ALARM("module[%s] malloc iobuffer failed. size[%u] msg[%m]",
-                m_module, FASTDI_DATABUF_SIZE);
-        m_pdatabuf_di_size = FASTDI_DATABUF_SIZE;
-    }
-    else
-    {
-        m_pdatabuf_di_size = 0;
+        FATAL( "can't open %s! msg[%m] ", m_dir);
+        MySuicideAssert(0);
     }
 
-    char namebuf[FASTDI_PATH_MAXSIZE];
-    for( int i=0; i<=m_idx_handle.mfiles._cur_logicfno; i++ )
+    int len = strlen(prefix);
+    int max = -1;
+
+    while((dirp = readdir(dp)) != NULL)
     {
-        snprintf( namebuf, sizeof(namebuf), DATAFILE_NAME_FMT, m_idx_handle.mfiles._filepath, i );
-        m_idx_pfile = fopen( namebuf, "r");
-        if( NULL == m_idx_pfile )
+        DEBUG( "%s", dirp->d_name);
+        char* pn = strstr(dirp->d_name, prefix);
+        if (pn != NULL)
         {
-            ALARM("module[%s] [%s:%u]open idx file failed. path:%s %m",
-                    m_module, __FILE__, __LINE__, namebuf);
-            continue;
-        }
-        else
-        {
-            m_idx_curfno = i;
-            m_iterator_id = m_idx_curfno * FBLOCK_PERBLOCK_IDX_SIZE;
-            setvbuf( m_idx_pfile, m_pdatabuf_idx, _IOFBF, m_pdatabuf_idx_size);
-            DEBUG( "module[%s] [%s:%u]open idx file. path:%s max[%u]",
-                    m_module, __func__, __LINE__, namebuf, m_idx_handle.mfiles._cur_logicfno);
-            return;
-        } 
-    }
-    m_done = true;
-    return;
-}
-
-int diskv :: next(uint32_t& id, diskv_idx_t& idx, void* buff, const uint32_t buffsize)
-{
-    if (m_done) {
-        return 0; 
-    }
-
-    char namebuf[FASTDI_PATH_MAXSIZE]; 
-    while (m_idx_pfile && fread( &m_curidx, sizeof(diskv_idx_t), 1, m_idx_pfile )!=1)
-    {
-        if (NULL != m_idx_pfile)
-        {
-            fclose( m_idx_pfile );
-            m_idx_pfile = NULL;
-        }
-
-        for( int i=m_idx_curfno+1; i<=m_idx_handle.mfiles._cur_logicfno; i++ )
-        {
-            snprintf( namebuf, sizeof(namebuf), DATAFILE_NAME_FMT, m_idx_handle.mfiles._filepath, i );
-            m_idx_pfile = fopen( namebuf, "r");
-            if( !m_idx_pfile )
+            const char* pp = &pn[len];
+            const char* cc = pp;
+            while (isdigit(*cc)) { cc++; }
+            if (*cc == '\0')
             {
-                ALARM("module[%s] [%s:%u]open idx file failed. path:%s %m",
-                        m_module, __FILE__, __LINE__, namebuf);
-                continue;
+                int n = atoi(&pn[len]);
+                DEBUG( "-- %d", n);
+                if (n > max)
+                {
+                    max = n;
+                }
             }
             else
             {
-                m_idx_curfno = i;
-                m_iterator_id = m_idx_curfno * FBLOCK_PERBLOCK_IDX_SIZE;
-                setvbuf( m_idx_pfile, m_pdatabuf_idx, _IOFBF, m_pdatabuf_idx_size);
-                DEBUG( "module[%s] [%s:%u]open idx file. path:%s max[%u]",
-                        m_module, __func__, __LINE__, namebuf, m_idx_handle.mfiles._cur_logicfno);
-                break;
+                DEBUG( "^^ invalid file name : %s", dirp->d_name);
             }
         }
     }
 
-    if (NULL == m_idx_pfile)
-    {
-        m_done = true;
-        return 0;
-    }
-
-    idx = m_curidx;
-    id = m_iterator_id++;
-    return iterator_read(buff, buffsize);
+    closedir(dp);
+    return max;
 }
 
-int diskv :: iterator_read(void* buff, const uint32_t buffsize)
+void diskv :: check_new_file(const uint32_t length)
 {
-    if (m_curidx.dlen > buffsize)
+    if (length + m_last_file_offset > MAX_FILE_SIZE)
     {
-        return -1;
+        // 开辟新的文件
+        char full_name[MAX_PATH_LENGTH];
+        snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, m_max_file_no);
+        mode_t amode = (0 == access(full_name, F_OK)) ? O_WRONLY|O_APPEND : O_WRONLY|O_APPEND|O_CREAT;
+        close(m_append_fd);
+        m_append_fd = open(full_name, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        MyThrowAssert(m_append_fd != -1);
+        m_max_file_no ++;
+        m_last_file_offset = 0;
     }
-    if (m_curidx.dlen == 0)
-    {
-        return 0;
-    }
-    if(m_di_curfno != m_curidx.fno || m_di_pfile == NULL)
-    {
-        if (NULL != m_di_pfile)
-        {
-            fclose(m_di_pfile);
-            m_di_pfile = NULL;
-        }
-        m_di_curfno = m_curidx.fno;
-        char namebuf[FASTDI_PATH_MAXSIZE];
-        snprintf( namebuf, FASTDI_PATH_MAXSIZE, FASTDI_DATA_FILE_FMT, m_di_path, m_module, m_di_curfno );
-        if(!isfileexist( namebuf ) )
-        {
-            ALARM("module[%s] file does not exist.path:%s %m", m_module, namebuf);
-            return -1;
-        }
-        m_di_pfile = fopen(namebuf,"r");
-        if (!m_di_pfile)
-        {
-            ALARM("module[%s] open di file failed.path:%s %m", m_module, namebuf);
-            return -1;
-        }
-        setvbuf( m_di_pfile, m_pdatabuf_di, _IOFBF, m_pdatabuf_di_size);
-    }
-
-    assert(m_di_pfile);
-    if ( 0 != fseek(m_di_pfile,m_curidx.off,SEEK_SET) ) //
-    {
-        ALARM("fseek err.%m");
-        return -1;
-    }
-    int ret = fread( buff, m_curidx.dlen,1, m_di_pfile  );
-    if( ret != 1 )
-    {
-        ALARM( "%s pread di data, failed. fno:%d off:%u dlen:%u ret:%u",
-                m_module, m_curidx.fno,  m_curidx.off, m_curidx.dlen,ret);
-        return -1;
-    }
-    return m_curidx.dlen;
 }
 
-bool diskv :: end()
+int diskv :: set(diskv_idx_t& idx, const void* buff, const uint32_t length)
 {
-    if (((int)m_idx_curfno == m_idx_handle.mfiles._cur_logicfno) &&
-            ((m_idx_pfile != NULL) && (ftell(m_idx_pfile) == (int)getfilesize(m_idx_pfile))))
+    if (length > MAX_DATA_SIZE || NULL == buff)
     {
-        m_done = true;
+        ALARM ("params error. length[%u] length_limit[%u] buff[%p]",
+                length, MAX_DATA_SIZE, buff);
+        return -1;
     }
 
-    return m_done;
+    check_new_file(length);
+    MyThrowAssert(m_last_file_offset == (uint32_t)lseek(m_append_fd, 0, SEEK_END));
+    MyThrowAssert(length == (uint32_t)write(m_append_fd, buff, length));
+    idx.offset   = m_last_file_offset;
+    idx.file_no  = m_max_file_no - 1;
+    idx.data_len = length;
+    return 0;
+}
+
+int diskv :: get(const diskv_idx_t& idx, void* buff, const uint32_t length)
+{
+    if (idx.file_no >= m_max_file_no
+            || idx.offset > MAX_FILE_SIZE
+            || idx.data_len > length
+            || NULL == buff
+            || ((idx.file_no == m_max_file_no - 1) && (idx.offset + idx.data_len > m_last_file_offset))
+       )
+    {
+        ALARM ("params error. idx.file_no[%u] idx.offset[%u] idx.data_len[%u] "
+                "max_file_no[%u] buff[%p] length[%u] limit_length[%u] cur_offset[%u]",
+                idx.file_no, idx.offset, idx.data_len,
+                m_max_file_no - 1, buff, length, MAX_FILE_SIZE, m_last_file_offset);
+        return -1;
+    }
+
+    if (m_read_fd[idx.file_no] == -1)
+    {
+        char full_name[MAX_PATH_LENGTH];
+        snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, idx.file_no);
+        m_read_fd[idx.file_no] = open(full_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    }
+    MyThrowAssert(m_read_fd[idx.file_no] != -1);
+    return pread(m_read_fd[idx.file_no], buff, idx.data_len, idx.offset);
+}
+
+void diskv :: clear()
+{
+    close(m_append_fd);
+    m_append_fd = -1;
+    for (uint32_t i=0; i<m_max_file_no; i++)
+    {
+        char full_name[MAX_PATH_LENGTH];
+        snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, i);
+        close(m_read_fd[i]);
+        m_read_fd[i] = -1;
+        remove(full_name);
+    }
 }

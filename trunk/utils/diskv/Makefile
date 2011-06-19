@@ -2,18 +2,16 @@ CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib
 
-LIB= libstructmask.a
-LIBOBJ= structmask.o
+LIB= libdiskv.a
+LIBOBJ= diskv.o
 
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./lib/ -lstructmask \
-		  -L ../../opensrc/jsoncpp/lib/ -ljson \
-		  -L ../MyException/ -lMyException \
+MAINLIBS= -L ../MyException/ -lMyException \
 		  -L ../mylog/lib/ -lmylog
 
-INCS= -I ../mylog/include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
+INCS= -I ../mylog/include/ -I ../fileblock/include/ -I ../MyException/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
@@ -30,7 +28,7 @@ $(LIB): $(LIBOBJ)
 	mkdir lib/
 	mkdir include/
 	cp $(LIB) lib/
-	cp structmask.h include
+	cp diskv.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@
