@@ -4,11 +4,14 @@
 #include "indexer.h"
 #include "fileblock.h"
 #include "diskv.h"
+#include <vector>
+using namespace std;
 
 class disk_indexer : public indexer
 {
     private:
-        // vars
+        static const char* const FORMAT_SECOND_INDEX;
+        static const uint32_t MAX_FILE_LENGTH = 128;
         fileblock m_fileblock;
         diskv     m_diskv;
 
@@ -18,8 +21,17 @@ class disk_indexer : public indexer
             diskv::diskv_idx_t idx;
         };
 
-        // methods
+        struct second_index_t
+        {
+            uint32_t  milestone;
+            ikey_t    ikey;
+        };
+
+        vector<second_index_t> second_index;
+
+        disk_indexer();
         disk_indexer(const disk_indexer&);
+        static bool mylesser (const second_index_t& si1, const second_index_t& si2);
     public:
         disk_indexer(const char* dir, const char* iname);
         ~disk_indexer();
