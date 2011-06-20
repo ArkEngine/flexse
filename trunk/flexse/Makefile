@@ -1,7 +1,7 @@
 CC= g++
 SHELL= /bin/sh
 
-OBJ= ServiceApp.o Config.o xHead.o equeue.o flexse.o
+OBJ= ServiceApp.o Config.o xHead.o equeue.o flexse.o ontime_thread.o update_thread.o merge_thread.o
 
 MAIN= flexse
 TEST= client
