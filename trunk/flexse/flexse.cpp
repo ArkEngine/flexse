@@ -199,8 +199,6 @@ int main(int argc, char* argv[])
         while(0 != raise(SIGKILL)){}
     }
     // init the logger
-    SETLOG(myConfig->LogLevel(),
-            myConfig->LogSize(), myConfig->LogPath());
     equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->ListenPort());
     // generate service-thread
     thread_data_t* ptd = ServiceThreadInit(myequeue);

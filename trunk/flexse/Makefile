@@ -8,9 +8,13 @@ TEST= client
 
 VERINFO= -DPROJNAME="\"$(MAIN)\"" -DVERSION="\"$(MAIN) 0.0.0.1\""
 
-INCS= -I ../utils/mylog/include/
+INCS= -I ../utils/mylog/include/ \
+	  -I ../utils/MyException/include/ \
+	  -I ../opensrc/jsoncpp/include/ \
 
-LDFLAGS= -L ../utils/mylog/lib/ -lmylog
+LDFLAGS= -L ../opensrc/jsoncpp/lib/ -ljson \
+		 -L ../utils/MyException/lib/ -lMyException \
+		 -L ../utils/mylog/lib/ -lmylog \
 
 CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror
