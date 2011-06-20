@@ -13,18 +13,35 @@ int main(int argc, char** argv)
     }
     const uint32_t SIZE = atoi(argv[1]);
     fileblock myfl("./data/", "myfl", sizeof(uint32_t));
-    myfl.begin();
-    for (uint32_t i=0; i<SIZE; i++)
+//    myfl.begin();
+//    for (uint32_t i=0; i<SIZE; i++)
+//    {
+//        myfl.write_next((char*)&i);
+//    }
+//    myfl.begin();
+//    for (uint32_t i=0; i<SIZE; i++)
+//    {
+//        uint32_t v = 0;
+//        int x = myfl.read_next((char*)&v, sizeof(uint32_t));
+//        assert(x == sizeof(uint32_t) && v == i);
+////        printf("x[%d] v[%u] msg[%m]\n", x, v);
+//    }
+
+    const uint32_t milestone = 1500;
+    uint32_t ulist[milestone];
+    const uint32_t loop = SIZE/milestone;
+    for (uint32_t i=0; i<loop; i++)
     {
-        myfl.write_next((char*)&i);
+        assert (milestone * sizeof(uint32_t) == myfl.get(i*milestone, milestone, &ulist, sizeof(ulist)));
+        for (uint32_t j=0; j<milestone; j++)
+        {
+            assert(ulist[j] == i*milestone + j);
+        }
     }
-    myfl.begin();
-    for (uint32_t i=0; i<SIZE; i++)
+    assert ((SIZE%milestone) * sizeof(uint32_t) == myfl.get(loop*milestone, milestone, &ulist, sizeof(ulist)));
+    for (uint32_t j=0; j<SIZE%milestone; j++)
     {
-        uint32_t v = 0;
-        int x = myfl.read_next((char*)&v, sizeof(uint32_t));
-        assert(x == sizeof(uint32_t) && v == i);
-//        printf("x[%d] v[%u] msg[%m]\n", x, v);
+        assert(ulist[j] == loop*milestone + j);
     }
     return 0;
 }
