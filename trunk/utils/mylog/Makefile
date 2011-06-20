@@ -5,12 +5,14 @@ RANLIB=ranlib
 LIB= libmylog.a
 LIBOBJ= mylog.o
 
-CPPFLAGS= -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
+INCS= -I ../MyException/include/
+
+CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB) $(MAIN)
+all: clean $(LIB) test
 #all: clean $(LIB)
 	rm *.o -f
 
@@ -33,4 +35,4 @@ clean:
 	rm -rf lib/ include/ log/
 
 test:
-	g++ test.cc -o test -I ./include/ -L ./lib -lmylog
+	g++ test.cc -o test -I ./include/ -L ./lib -lmylog -L ../MyException/lib/ -lMyException
