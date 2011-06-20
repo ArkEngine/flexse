@@ -29,11 +29,6 @@ disk_indexer :: ~disk_indexer()
 {
 }
 
-bool disk_indexer :: mylesser (const second_index_t& a, const second_index_t& b)
-{
-    return a.ikey.sign64 < b.ikey.sign64;
-}
-
 int32_t disk_indexer :: get_posting_list(const char* strTerm, char* buff, const uint32_t length)
 {
     int len = strlen(strTerm);
@@ -45,8 +40,8 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, char* buff, const 
 
     second_index_t si;
     creat_sign_64(strTerm, len, &si.ikey.uint1, &si.ikey.uint2);
-    pair<vector<int>::iterator,vector<int>::iterator> bounds;
-    bounds=equal_range (second_index.begin(), second_index.end(), 20, mylesser);
+    vector<second_index_t>::iterator bounds;
+    bounds = lower_bound (second_index.begin(), second_index.end(), si);
     return 0;
 }
 
