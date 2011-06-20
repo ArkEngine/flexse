@@ -15,7 +15,7 @@ class fileblock
         uint32_t       m_last_file_offset;
         char           m_fb_dir[128];
         char           m_fb_name[128];
-        int32_t        m_it;
+        uint32_t        m_it;
 
         fileblock();
         fileblock(const fileblock &);

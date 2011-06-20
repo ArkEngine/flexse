@@ -104,6 +104,53 @@ int32_t fileblock :: get(const uint32_t offset, void* buff, const uint32_t lengt
     return pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
 
 }
+
+int32_t fileblock :: get(const uint32_t offset, const uint32_t count, void* buff, const uint32_t length)
+{
+    uint32_t file_no  = offset / m_cell_num_per_file;
+    uint32_t inoffset = offset % m_cell_num_per_file;
+    if (length < count * m_cell_size || NULL == buff)
+    {
+        ALARM("length[%u] too short or buff[%p]. m_cell_size[%u] count[%u]",
+                length, buff, m_cell_size, count);
+        return -1;
+    }
+    if (file_no >= m_max_file_no)
+    {
+        ALARM("offset[%u] too big. m_cell_num_per_file[%u] max_file_no[%u]",
+                offset, m_cell_num_per_file, m_max_file_no);
+        return -1;
+    }
+    // 判断是否跨文件访问
+    memset(buff, 0, count*m_cell_size);
+    if ( inoffset + count > m_cell_num_per_file)
+    {
+        // 跨文件访问
+        // 递归调用
+        uint32_t count1 = m_cell_num_per_file - inoffset;
+        get(offset, count1, buff, count1 * m_cell_size);
+
+        int32_t retlen = get((file_no+1)*m_cell_num_per_file, count - count1,
+                &(((char*)buff)[count1*m_cell_size]), (count-count1)*m_cell_size);
+        ROUTN("offset1[%u] offset2[%u] count[%u] count1[%u] count2[%u]",
+                offset, (file_no+1)*m_cell_num_per_file, count, count1, count - count1);
+        return (retlen < 0) ? -1 : count1*m_cell_size + retlen;
+    }
+    else
+    {
+        if (m_fd[file_no] == -1)
+        {
+            char tmpstr[128];
+            snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, file_no);
+            mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
+            m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        }
+        MyThrowAssert(m_fd[file_no] != -1);
+        return pread(m_fd[file_no], buff, m_cell_size*count, inoffset * m_cell_size);
+    }
+}
+
+
 int32_t fileblock :: clear()
 {
     for (uint32_t i=0; i<MAX_FILE_NO; i++)
