@@ -18,7 +18,7 @@ const char* const fileblock :: FORMAT_FILE = "%s.idx.";
 const char* const fileblock :: FORMAT_PATH = "%s/%s.idx.%u";
 
 fileblock :: fileblock (const char* dir, const char* filename, const uint32_t cell_size)
-    : m_cell_size(cell_size)
+    : m_cell_size(cell_size), m_cell_num_per_file(MAX_FILE_SIZE/cell_size)
 {
     snprintf(m_fb_dir,  sizeof(m_fb_dir),  "%s", dir);
     snprintf(m_fb_name, sizeof(m_fb_name), "%s", filename);
@@ -34,19 +34,25 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
         snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, i);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[i] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        MyThrowAssert(m_fd[i] != -1);
+        if (m_fd[i] != -1)
+        {
+            MyThrowAssert(0 == getfilesize(tmpstr)%m_cell_size);
+        }
+        if (i == m_max_file_no - 1)
+        {
+            m_last_file_offset = getfilesize(tmpstr);
+        }
     }
-    m_max_num_per_file = MAX_FILE_SIZE / m_cell_size;
 }
 
 int32_t fileblock :: set(const uint32_t offset, const void* buff)
 {
-    uint32_t file_no  = offset / m_max_num_per_file;
-    uint32_t inoffset = offset % m_max_num_per_file;
+    uint32_t file_no  = offset / m_cell_num_per_file;
+    uint32_t inoffset = offset % m_cell_num_per_file;
     if (file_no > MAX_FILE_NO)
     {
-        FATAL("offset[%u] too big. m_max_num_per_file[%u] MAX_FILE_NO[%u]",
-                offset, m_max_num_per_file, MAX_FILE_NO);
+        FATAL("offset[%u] too big. m_cell_num_per_file[%u] MAX_FILE_NO[%u]",
+                offset, m_cell_num_per_file, MAX_FILE_NO);
         return -1;
     }
     if (m_fd[file_no] == -1)
@@ -55,39 +61,46 @@ int32_t fileblock :: set(const uint32_t offset, const void* buff)
         snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, file_no);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        MyThrowAssert(m_fd[file_no] != -1);
+        if (file_no == m_max_file_no)
+        {
+            m_max_file_no++;
+            m_last_file_offset = 0;
+        }
     }
-    MyThrowAssert(m_cell_size == pwrite(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size));
+    if((file_no == m_max_file_no -1) && (inoffset * m_cell_size == m_last_file_offset))
+    {
+        m_last_file_offset += m_cell_size;
+    }
+    MyThrowAssert(m_fd[file_no] != -1);
+    MyThrowAssert(m_cell_size == (uint32_t)pwrite(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size));
     return 0;
 }
 int32_t fileblock :: get(const uint32_t offset, void* buff, const uint32_t length)
 {
-    uint32_t file_no  = offset / m_max_num_per_file;
-    uint32_t inoffset = offset % m_max_num_per_file;
+    uint32_t file_no  = offset / m_cell_num_per_file;
+    uint32_t inoffset = offset % m_cell_num_per_file;
     if (length < m_cell_size)
     {
         ALARM("length[%u] too short. m_cell_size[%u]",
                 length, m_cell_size);
         return -1;
     }
-    if (file_no > MAX_FILE_NO)
+    if (file_no >= m_max_file_no)
     {
-        FATAL("offset[%u] too big. m_max_num_per_file[%u] MAX_FILE_NO[%u]",
-                offset, m_max_num_per_file, MAX_FILE_NO);
+        ALARM("offset[%u] too big. m_cell_num_per_file[%u] max_file_no[%u]",
+                offset, m_cell_num_per_file, m_max_file_no);
         return -1;
     }
+
     if (m_fd[file_no] == -1)
     {
         char tmpstr[128];
         snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, file_no);
         mode_t amode = (0 == access(tmpstr, F_OK)) ? O_RDWR : O_RDWR|O_CREAT;
         m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        MyThrowAssert(m_fd[file_no] != -1);
-        if (file_no >= m_max_file_no)
-        {
-            m_max_file_no = file_no + 1;
-        }
     }
+
+    MyThrowAssert(m_fd[file_no] != -1);
     return pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
 
 }
@@ -119,6 +132,11 @@ int32_t fileblock :: read_next(void* buff, const uint32_t length)
 {
     uint32_t cur_it = m_it ++ ;
     return get(cur_it, buff, length);
+}
+
+bool fileblock :: isend()
+{
+    return m_it == (m_max_file_no-1)*m_cell_num_per_file + m_last_file_offset/m_cell_size;
 }
 
 int32_t fileblock::detect_file()
@@ -167,3 +185,11 @@ int32_t fileblock::detect_file()
     closedir(dp);
     return max;
 }
+
+uint32_t fileblock :: getfilesize( const char* name )
+{
+    struct stat fs;
+    MyThrowAssert( 0 == stat( name, &fs ) );
+    return fs.st_size;
+}
+
