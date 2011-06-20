@@ -25,13 +25,16 @@ class disk_indexer : public indexer
         {
             uint32_t  milestone;
             ikey_t    ikey;
+            bool operator < (const second_index_t& right)
+            {
+                    return this->ikey.sign64 < right.ikey.sign64;
+            }
         };
 
         vector<second_index_t> second_index;
 
         disk_indexer();
         disk_indexer(const disk_indexer&);
-        static bool mylesser (const second_index_t& si1, const second_index_t& si2);
     public:
         disk_indexer(const char* dir, const char* iname);
         ~disk_indexer();
