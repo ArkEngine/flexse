@@ -39,7 +39,6 @@ void mylog :: setlog(const uint32_t level, const uint32_t size, const char* logn
     const char* mylogname = (logname[0] != 0 ) ? logname : strLogName;
     MyThrowAssert(NULL == strchr(mylogname, '/'));
     snprintf(m_path, sizeof(m_path), "./log/%s.log", mylogname);
-    m_log_fd = -1;
     LogFileCheckOpen();
     fprintf(stderr, "mylog Level[%u] OL[%u] Path[%s] Size[%u] fd[%d]\n",
             m_level, level, m_path, m_file_size, m_log_fd);

@@ -20,7 +20,7 @@ int main(int argc, char** argv) try
 {
     if (argc != 2)
     {
-        printf ("error\n");
+        printf ("./test SIZE\n");
         exit(1);
     }
     structmask mymask("./conf/", "test.conf", "document_attribute");
