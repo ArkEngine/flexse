@@ -31,12 +31,15 @@ class disk_indexer : public indexer
         static const uint32_t TERM_MILESTONE  = 1000;
         fileblock m_fileblock;
         diskv     m_diskv;
-        bool      m_freeze;                  /// true时表示只读状态，初始化时，如果没有二级索引则置为false
+        bool      m_freeze;                  ///< true时表示只读状态，初始化时，如果没有二级索引则置为false
         second_index_t m_last_si;            ///< set过程中记录最后一个二级索引
         vector<second_index_t> second_index; ///< 二级索引
+        char m_second_index_file[MAX_FILE_LENGTH];
+        fb_index_t* m_index_block;           ///< 用于每次存放索引分块
 
         disk_indexer();
         disk_indexer(const disk_indexer&);
+        static int ikey_comp (const void *m1, const void *m2);
     public:
         enum
         {
