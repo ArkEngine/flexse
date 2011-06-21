@@ -1,15 +1,17 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdint.h>
 
 #include "mylog.h"
 #include "utils.h"
+
 
 namespace flexse
 {
@@ -64,10 +66,30 @@ namespace flexse
         flags |= O_NONBLOCK;
         if(fcntl(fd, F_SETFL, flags)<0)
         {
-            assert(0);
             return -1;
         }
         return 0;
     }
 
+    void strspliter(char* str, vector<string>& vstr)
+    {
+        char* stri = str;
+        char* strb = str;
+        set<string> strset;
+        while(NULL != (strb=strchr(stri, ' ')))
+        {
+            *strb = '\0';
+            if (strset.end() == strset.find(string(stri)))
+            {
+                vstr.push_back(string(stri));
+                strset.insert(string(stri));
+            }
+            stri = strb + 1;
+            *strb = ' ';
+        }
+        if (strset.end() == strset.find(string(stri)))
+        {
+            vstr.push_back(string(stri));
+        }
+    }
 }

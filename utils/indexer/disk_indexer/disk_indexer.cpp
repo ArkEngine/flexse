@@ -57,7 +57,7 @@ int disk_indexer :: ikey_comp (const void *m1, const void *m2)
     }
 }
 
-int32_t disk_indexer :: get_posting_list(const char* strTerm, char* buff, const uint32_t length)
+int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
     // 一旦调用get方法，则变为只读状态
     m_freeze = (m_freeze) ? true: false;
@@ -104,7 +104,7 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, char* buff, const 
 }
 
 int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
-        const char* buff, const uint32_t length)
+        const void* buff, const uint32_t length)
 {
     if (m_freeze)
     {

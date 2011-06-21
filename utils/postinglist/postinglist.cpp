@@ -27,6 +27,7 @@ postinglist :: postinglist(
     m_headlist_used = 0;
     m_headlist_sort = NULL;
 
+    // 要求最小能放下 4 个cell
     uint32_t mem_base_min = m_postinglist_cell_size * 4 + sizeof(mem_link_t);
     for (uint32_t i=0; i<32; i++)
     {
@@ -81,7 +82,7 @@ postinglist::mem_link_t* postinglist :: memlinknew(const uint32_t memsiz, mem_li
     return memlink;
 }
 
-int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t length)
+int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t length)
 {
     int32_t  result_num = 0;
     uint32_t left_size = length;
@@ -107,7 +108,7 @@ int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t leng
                 char* src = &(((char*)&mem_link[1])[coffset]);
                 uint32_t copy_length =
                     (left_size > mem_link->used_size) ? mem_link->used_size: left_size;
-                memmove(&buff[length - left_size], src, copy_length);
+                memmove(&((char*)buff)[length - left_size], src, copy_length);
                 result_num += copy_length / m_postinglist_cell_size;
                 left_size  -= copy_length;
                 //                DEBUG("mem_link[%p] next[%p] bid[%u]", mem_link, mem_link->next, *(uint32_t*)src);
@@ -120,7 +121,7 @@ int32_t postinglist :: get (const uint64_t& key, char* buff, const uint32_t leng
     return result_num;
 }
 
-int32_t postinglist :: set (const uint64_t& key, const char* buff)
+int32_t postinglist :: set (const uint64_t& key, const void* buff)
 {
     const uint32_t bucket_no = (uint32_t)(key & m_bucket_mask);
     uint32_t head_list_offset = m_bucket[bucket_no];
@@ -239,14 +240,6 @@ void postinglist :: set_freeze(bool freeze)
 {
     m_freeze = freeze;
 }
-int32_t postinglist :: dump()
-{
-    return 0;
-}
-int32_t postinglist :: merge()
-{
-    return 0;
-}
 
 int postinglist::key_compare(const void *p1, const void *p2)
 {
@@ -297,4 +290,9 @@ int32_t postinglist :: finish()
         m_headlist_sort = NULL;
     }
     return 0;
+}
+
+int32_t postinglist :: reset()
+{
+    MyThrowAssert(0);
 }

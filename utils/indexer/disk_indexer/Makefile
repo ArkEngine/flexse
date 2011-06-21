@@ -17,7 +17,7 @@ INCS= -I ../../mylog/include/ \
 	  -I ../../MyException/include/\
 	  -I ../../fileblock/include/\
 	  -I ../../diskv/include/\
-	  -I ../
+	  -I ../base_indexer/include
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
