@@ -17,7 +17,8 @@ VERINFO= -DPROJNAME="\"$(READBLOCK)\"" \
 
 READBLOCKLIBS= -L ./lib/ -lfilelinkblock \
 			   -L ../creat_sign/lib/ -lcreat_sign\
-			   -L ../mylog/lib/ -lmylog
+			   -L ../mylog/lib/ -lmylog\
+			   -L ../MyException/lib/ -lMyException
 
 INCS= -I ../mylog/include/\
 	  -I ../creat_sign/include \

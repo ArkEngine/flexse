@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
     // init ontime thread
     MyThrowAssert ( 0 == pthread_create(&merge_thread_id, NULL, merge_thread, NULL));
 
-    equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->ListenPort());
+    equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->QueryPort());
     // generate service-thread
     thread_data_t* ptd = ServiceThreadInit(myequeue);
     ROUTN( "All Service Threads Init Ok");

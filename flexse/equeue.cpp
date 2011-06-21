@@ -11,8 +11,10 @@
 #include <errno.h>
 #include "equeue.h"
 #include "mylog.h"
+#include "utils.h"
 
 using namespace std;
+using namespace flexse;
 
 /*
  * equeue is my name.
@@ -43,7 +45,7 @@ equeue::equeue(const int epollsize, const int port)
         ROUTN( "create epoll[%u] on size[%u]", m_epollfd, m_epollsize);
     }
 
-    if (mylisten(m_port) < 0)
+    if ((m_listenfd = flexse::mylisten(m_port)) < 0)
     {
         while(0!=raise(SIGKILL)) {}
     }
@@ -76,7 +78,7 @@ void equeue::running()
                     ALARM( "accept client fail, don't fuck me. msg[%m]");
                     continue;
                 }
-                setnonblock(clientfd);
+                flexse :: setnonblock(clientfd);
                 int tcp_nodelay = 1;
                 setsockopt(clientfd, IPPROTO_TCP, TCP_NODELAY, &tcp_nodelay, sizeof(int));
                 ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
@@ -128,60 +130,6 @@ equeue::~equeue()
         close(m_listenfd);
         m_listenfd = -1;
     }
-}
-
-int equeue::setnonblock(int fd)
-{
-    int flags = fcntl(fd, F_GETFL);
-    if (flags < 0)
-    {
-        return flags;
-    }
-    flags |= O_NONBLOCK;
-    if(fcntl(fd, F_SETFL, flags)<0)
-    {
-        return -1;
-    }
-    return 0;
-}
-
-int equeue::mylisten(const int port)
-{
-    struct sockaddr_in adr_srv;
-    int len_adr;
-    const char* listeningip = "0.0.0.0";
-
-    len_adr = sizeof adr_srv;
-    memset (&adr_srv, 0, len_adr);
-    adr_srv.sin_family = AF_INET;
-    adr_srv.sin_port = htons (port);
-    adr_srv.sin_addr.s_addr = inet_addr (listeningip);
-    if (INADDR_NONE == adr_srv.sin_addr.s_addr)
-    {
-        FATAL( "bad address. ip[%s] port[%u]", listeningip, port);
-        return -1;
-    }
-
-    if ((m_listenfd = socket (AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        FATAL("socket() fail. msg[%m]");
-        return -1;
-    }
-
-    if (-1 == bind (m_listenfd, (struct sockaddr *) &adr_srv, len_adr))
-    {
-        FATAL( "bind() fail. port[%u] msg[%m]", port);
-        return -1;
-    }
-
-    if ( -1 == listen (m_listenfd, maxBackLog))
-    {
-        FATAL( "listen(listenfd[%u], backlog[%u]) fail. msg[%m]", m_listenfd, maxBackLog);
-        return -1;
-    }
-    int reuse_on = 1;
-    setsockopt( m_listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse_on, sizeof(reuse_on) );
-    return m_listenfd;
 }
 
 int equeue::fetch_socket()

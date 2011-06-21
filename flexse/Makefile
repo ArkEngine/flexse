@@ -1,7 +1,7 @@
 CC= g++
 SHELL= /bin/sh
 
-OBJ= ServiceApp.o Config.o xHead.o equeue.o flexse.o ontime_thread.o update_thread.o merge_thread.o
+OBJ= ServiceApp.o Config.o xHead.o equeue.o flexse.o ontime_thread.o update_thread.o merge_thread.o utils.o
 
 MAIN= flexse
 TEST= client
@@ -39,4 +39,4 @@ clean:
 	rm -rf bin/ log/
 
 client:
-	g++ client.cpp xHead.cpp -o $(TEST) $(CPPFLAGS)
+	g++ client.cpp xHead.cpp -o $(TEST) $(CPPFLAGS) -L ../utils/mylog/ -lmylog -L ../utils/MyException/lib/ -lMyException

@@ -37,8 +37,6 @@ class equeue
         enum {maxBackLog = 64, MAXESOCKQSIZE = 128,};
         equeue();
         equeue(const equeue&);
-        int mylisten(const int port);
-        int setnonblock(int fd);
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include "xHead.h"
+#include "mylog.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -10,6 +11,8 @@ int xrecv(int sock, xhead_t* xhead, const uint32_t buffsize,
 {
 	if (buffsize < sizeof(xhead_t) || sock < 0)
 	{
+        ALARM("buffsize[%d] sizeof_xhead_t[%u] sock[%u]",
+                buffsize, sizeof(xhead_t), sock);
 		return -1;
 	}
 	struct timeval timeout = {0, 0};
@@ -19,16 +22,20 @@ int xrecv(int sock, xhead_t* xhead, const uint32_t buffsize,
 	int ret = recv(sock, (char*)xhead, sizeof(xhead_t), MSG_WAITALL);
 	if (ret != sizeof(xhead_t))
 	{
+        ALARM("read xhead_t error. ret[%d] sizeof_xhead_t[%u] to_s[%u] to_us[%u] msg[%m]",
+                ret, sizeof(xhead_t), timeout.tv_sec, timeout.tv_usec);
 		return -2;
 	}
 	if (buffsize-sizeof(xhead_t) < xhead->detail_len)
 	{
-        fprintf(stderr, "buffsize[%d] detail[%d]\n", buffsize, xhead->detail_len);
+        ALARM("buffer too short. buffsize[%u] detail_len[%u]", buffsize, xhead->detail_len);
 		return -3;
 	}
-	ret = recv(sock, (char*)(xhead+1), xhead->detail_len, MSG_WAITALL);
+	ret = recv(sock, (char*)(&xhead[1]), xhead->detail_len, MSG_WAITALL);
 	if(ret != (int)xhead->detail_len)
 	{
+        ALARM("read detail error. logid[%u] ret[%d] detail_len[%u] to_s[%u] to_us[%u] msg[%m]",
+                xhead->log_id, ret, xhead->detail_len, timeout.tv_sec, timeout.tv_usec);
 		return -4;
 	}
 	return 0;
@@ -64,7 +71,7 @@ int xsend(int sock, const xhead_t* xhead, const uint32_t timeo_ms)
 	int ret = SendNByte(sock, (char*)xhead, size, 0);
 	if (ret != size)
 	{
-        fprintf(stderr, "size[%d] detail[%d] errno[%d]\n", size, xhead->detail_len, errno);
+        ALARM("size[%u] detail_len[%u] errno[%d] msg[%m]", size, xhead->detail_len, errno);
 		return -2;
 	}
 	return 0;
