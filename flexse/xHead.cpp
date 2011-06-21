@@ -22,10 +22,14 @@ int xrecv(int sock, xhead_t* xhead, const uint32_t buffsize,
 	int ret = recv(sock, (char*)xhead, sizeof(xhead_t), MSG_WAITALL);
 	if (ret != sizeof(xhead_t))
 	{
-        ALARM("read xhead_t error. ret[%d] sizeof_xhead_t[%u] to_s[%u] to_us[%u] msg[%m]",
-                ret, sizeof(xhead_t), timeout.tv_sec, timeout.tv_usec);
+        ALARM("read xhead_t error. ret[%d] errno[%d] sizeof_xhead_t[%u] to_s[%u] to_us[%u] msg[%m]",
+                ret, errno, sizeof(xhead_t), timeout.tv_sec, timeout.tv_usec);
 		return -2;
 	}
+    if (xhead->detail_len == 0)
+    {
+        return 0;
+    }
 	if (buffsize-sizeof(xhead_t) < xhead->detail_len)
 	{
         ALARM("buffer too short. buffsize[%u] detail_len[%u]", buffsize, xhead->detail_len);
@@ -34,8 +38,8 @@ int xrecv(int sock, xhead_t* xhead, const uint32_t buffsize,
 	ret = recv(sock, (char*)(&xhead[1]), xhead->detail_len, MSG_WAITALL);
 	if(ret != (int)xhead->detail_len)
 	{
-        ALARM("read detail error. logid[%u] ret[%d] detail_len[%u] to_s[%u] to_us[%u] msg[%m]",
-                xhead->log_id, ret, xhead->detail_len, timeout.tv_sec, timeout.tv_usec);
+        ALARM("read detail error. logid[%u] ret[%d] errno[%d] detail_len[%u] to_s[%u] to_us[%u] msg[%m]",
+                xhead->log_id, ret, errno, xhead->detail_len, timeout.tv_sec, timeout.tv_usec);
 		return -4;
 	}
 	return 0;

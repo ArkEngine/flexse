@@ -78,7 +78,7 @@ void equeue::running()
                     ALARM( "accept client fail, don't fuck me. msg[%m]");
                     continue;
                 }
-                flexse :: setnonblock(clientfd);
+//                flexse :: setnonblock(clientfd);
                 int tcp_nodelay = 1;
                 setsockopt(clientfd, IPPROTO_TCP, TCP_NODELAY, &tcp_nodelay, sizeof(int));
                 ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
