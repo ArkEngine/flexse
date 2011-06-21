@@ -38,6 +38,12 @@ void mylog :: setlog(const uint32_t level, const uint32_t size, const char* logn
     m_file_size = size > 1073741824 ? 1073741824 : size;
     const char* mylogname = (logname[0] != 0 ) ? logname : strLogName;
     MyThrowAssert(NULL == strchr(mylogname, '/'));
+    if (0 != strcmp(mylogname, strLogName))
+    {
+        close(m_log_fd);
+        m_log_fd = -1;
+        remove(m_path);
+    }
     snprintf(m_path, sizeof(m_path), "./log/%s.log", mylogname);
     LogFileCheckOpen();
     fprintf(stderr, "mylog Level[%u] OL[%u] Path[%s] Size[%u] fd[%d]\n",
@@ -113,7 +119,7 @@ void mylog :: LogFileCheckOpen()
     chdir(curpath);
     // 第二步，创建文件
     if (m_log_fd < 0) {
-        m_log_fd = open(m_path, O_WRONLY|O_CREAT|O_APPEND, S_IRWXU|S_IRWXG|S_IRWXO);
+        m_log_fd = open(m_path, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         if (m_log_fd < 0) {
             fprintf(stderr, "FILE[%s:%u] create logfile[%s] fail. msg[%m]\n",
                     __FILE__, __LINE__, m_path);

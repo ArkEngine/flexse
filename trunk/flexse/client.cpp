@@ -79,6 +79,7 @@ main (int argc, char **argv) {
               fprintf(stderr, "send err ret[%d] ind[%d] errno[%d] [%m]\n", ret, i, errno);
               exit(1);
           }
+          memset(resxhead, 0, 100000);
           if (0 != (ret = xrecv(sockfd, resxhead, sizeof(resbuff), 1000)))
           {
               fprintf(stderr, "recv err ret[%d] ind[%d] errno[%d] [%m]\n", ret, i, errno);
@@ -86,8 +87,8 @@ main (int argc, char **argv) {
           }
           else
           {
-//              printf ("count[%u] ind[%04u] rqlen[%d] logid[%u] name[%s] message[%s]\n",
-//                      count, i, reqxhead->detail_len,reqxhead->log_id, reqxhead->srvname, str);
+              printf ("count[%u] ind[%04u] rslen[%d] logid[%u] name[%s] message[%s]\n",
+                      count, i, resxhead->detail_len,resxhead->log_id, resxhead->srvname, (char*)&resxhead[1]);
           }
       }
 //      for (int i=0; i<count; i++)

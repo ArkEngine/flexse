@@ -21,7 +21,9 @@ void* update_thread(void*)
 {
     int32_t listenfd = mylisten(myConfig->UpdatePort());
     MyThrowAssert(listenfd != -1);
-    xhead_t* read_head = (xhead_t*)malloc(myConfig->UpdateReadBufferSize());
+    xhead_t* recv_head = (xhead_t*)malloc(myConfig->UpdateReadBufferSize());
+    xhead_t  send_head;
+    snprintf(send_head.srvname, sizeof(send_head.srvname), "%s", PROJNAME);
     while(1)
     {
         sockaddr_in cltaddr;
@@ -32,23 +34,32 @@ void* update_thread(void*)
             ALARM( "accept client fail, don't fuck me. msg[%m]");
             continue;
         }
-        setnonblock(clientfd);
+//        setnonblock(clientfd);
         int tcp_nodelay = 1;
         setsockopt(clientfd, IPPROTO_TCP, TCP_NODELAY, &tcp_nodelay, sizeof(int));
         int ret = 0;
-        while(0 == (ret = xrecv(clientfd, (xhead_t*)read_head,
-                        myConfig->UpdateReadBufferSize(), myConfig->UpdateReadTimeOutMS())))
+        while(0 == (ret = xrecv(clientfd, recv_head, myConfig->UpdateReadBufferSize(),
+                        myConfig->UpdateReadTimeOutMS())))
         {
-            ROUTN("client message[%s]", (char*)(&read_head[1]));
+            ROUTN("client[%s] ip[%s] message[%s]",
+                    recv_head->srvname, inet_ntoa (cltaddr.sin_addr), (char*)(&recv_head[1]));
             // 你该干点什么了
             // (1) 插入，自己分辨出什么是否需要更新 d-a 数据
             // (2) 删除
+            send_head.log_id = recv_head->log_id;
+            send_head.detail_len = 0;
+            if(0 != xsend(clientfd, &send_head, myConfig->UpdateReadTimeOutMS()))
+            {
+                ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
+                        ret, send_head.detail_len, myConfig->UpdateReadTimeOutMS());
+                break;
+            }
         }
-        ALARM("read socket error. ret[%d] buffsiz[%u] timeoutMS[%u] msg[%m]",
+        ALARM("recv socket error. ret[%d] buffsiz[%u] timeoutMS[%u] msg[%m]",
                 ret, myConfig->UpdateReadBufferSize(), myConfig->UpdateReadTimeOutMS());
         close(clientfd);
     }
-    free(read_head);
+    free(recv_head);
     close(listenfd);
     return NULL;
 }
