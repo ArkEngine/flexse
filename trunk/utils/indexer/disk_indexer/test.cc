@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-#include "indexer.h"
+#include "base_indexer.h"
 #include <vector>
 #include <algorithm>
 using namespace std;

@@ -1,13 +1,13 @@
 #ifndef _DISK_INDEXER_H_
 #define _DISK_INDEXER_H_
 #include <stdint.h>
-#include "indexer.h"
+#include "base_indexer.h"
 #include "fileblock.h"
 #include "diskv.h"
 #include <vector>
 using namespace std;
 
-class disk_indexer : public indexer
+class disk_indexer : public base_indexer
 {
     private:
         struct fb_index_t
@@ -36,6 +36,7 @@ class disk_indexer : public indexer
         vector<second_index_t> second_index; ///< 二级索引
         char m_second_index_file[MAX_FILE_LENGTH];
         fb_index_t* m_index_block;           ///< 用于每次存放索引分块
+        ///< 考虑使用tcm作为索引分块的cache. TODO
 
         disk_indexer();
         disk_indexer(const disk_indexer&);
@@ -54,9 +55,9 @@ class disk_indexer : public indexer
          * 一旦get之后，set接口就失效了。
          * 这相当于在磁盘上把索引生成之后，才可以使用这个索引。
          */
-        int32_t get_posting_list(const char* strTerm, char* buff, const uint32_t length);
+        int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
         /*这个接口只能用于连续写入*/
-        int32_t set_posting_list(const uint32_t id, const ikey_t& ikey, const char* buff, const uint32_t length);
+        int32_t set_posting_list(const uint32_t id, const ikey_t& ikey, const void* buff, const uint32_t length);
         void    set_finish();
 };
 #endif

@@ -26,12 +26,15 @@ class mylog
         static const char* LevelTag[];
         uint32_t m_level;
         uint32_t m_file_size;
+        uint32_t m_LastDayTime;
         char m_path[LogNameMaxLen];
         int m_log_fd;
         pthread_mutex_t m_lock;
         char m_timebuff[TimeBuffMaxLen];
+
+        uint32_t DayTimeNow();
         const char* GetTimeNow();
-        void LogFileSizeCheck();
+        void LogFileSwitchCheck();
         void LogFileCheckOpen(); // 如果不存在就创建
         void Mkdirs(const char* dir); // 递归的创建文件夹
         void WriteNByte(int fd, const char* buff, uint32_t size);

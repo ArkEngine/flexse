@@ -10,9 +10,18 @@ VERINFO= -DPROJNAME="\"$(MAIN)\"" -DVERSION="\"$(MAIN) 0.0.0.1\""
 
 INCS= -I ../utils/mylog/include/ \
 	  -I ../utils/MyException/include/ \
+	  -I ../utils/postinglist/include/ \
+	  -I ../utils/memblocks/include/ \
+	  -I ../utils/indexer/base_indexer/ \
+	  -I ../utils/indexer/mem_indexer/include/ \
 	  -I ../opensrc/jsoncpp/include/ \
 
 LDFLAGS= -L ../opensrc/jsoncpp/lib/ -ljson \
+		 -L ../utils/indexer/mem_indexer/lib/ -lmem_indexer \
+		 -L ../utils/indexer/base_indexer/lib/ -lbase_indexer \
+		 -L ../utils/postinglist/lib/ -lpostinglist \
+		 -L ../utils/memblocks/lib/ -lmemblocks \
+		 -L ../utils/creat_sign/lib/ -lcreat_sign \
 		 -L ../utils/MyException/lib/ -lMyException \
 		 -L ../utils/mylog/lib/ -lmylog \
 

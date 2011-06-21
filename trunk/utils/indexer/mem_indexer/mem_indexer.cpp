@@ -13,7 +13,7 @@ mem_indexer :: ~mem_indexer()
 {
 }
 
-int32_t mem_indexer :: get_posting_list(const char* strTerm, char* buff, const uint32_t length)
+int32_t mem_indexer :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
     int len = strlen(strTerm);
     if (0 == len || NULL == buff || length == 0)
@@ -26,7 +26,7 @@ int32_t mem_indexer :: get_posting_list(const char* strTerm, char* buff, const u
     return m_postinglist.get(ikey.sign64, buff, length);
 }
 
-int32_t mem_indexer :: set_posting_list(const char* strTerm, const char* buff)
+int32_t mem_indexer :: set_posting_list(const char* strTerm, const void* buff)
 {
     int len = strlen(strTerm);
     if (0 == len || NULL == buff)

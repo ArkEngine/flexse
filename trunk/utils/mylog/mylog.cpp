@@ -24,6 +24,7 @@ mylog :: mylog()
     m_file_size = 1073741824;
     snprintf(m_path, sizeof(m_path), "./log/%s.log", strLogName);
     m_log_fd = -1;
+    m_LastDayTime = DayTimeNow();
     LogFileCheckOpen();
 }
 
@@ -42,12 +43,14 @@ void mylog :: setlog(const uint32_t level, const uint32_t size, const char* logn
     {
         close(m_log_fd);
         m_log_fd = -1;
-        remove(m_path);
+        char  logpath[LogNameMaxLen];
+        snprintf(logpath, sizeof(logpath), "%s.%d", m_path, m_LastDayTime);
+        remove(logpath);
     }
     snprintf(m_path, sizeof(m_path), "./log/%s.log", mylogname);
     LogFileCheckOpen();
-    fprintf(stderr, "mylog Level[%u] OL[%u] Path[%s] Size[%u] fd[%d]\n",
-            m_level, level, m_path, m_file_size, m_log_fd);
+    fprintf(stderr, "mylog Level[%u] SetLevel[%u] Path[%s] Size[%u]\n",
+            m_level, level, m_path, m_file_size);
     return;
 }
 
@@ -69,7 +72,8 @@ void mylog :: WriteLog(const uint32_t mylevel, const char* file,
         const uint32_t line, const char* func, const char *format, ...)
 {
     pthread_mutex_lock(&m_lock);
-    LogFileCheckOpen();
+    //    LogFileCheckOpen();
+    LogFileSwitchCheck();
     va_list args;
     va_start(args, format);
     char buff[LogContentMaxLen];
@@ -101,11 +105,11 @@ void mylog :: LogFileCheckOpen()
         fprintf(stderr, "Get Current Dir Fail.\n");
         return;
     }
+    char  logpath[LogNameMaxLen];
+    snprintf(logpath, sizeof(logpath), "%s.%d", m_path, DayTimeNow());
     char* p = NULL;
-    // 不存在就创建日志文件, 兼顾初始化和运行时的状态
-    // 第一步，创建文件夹
-    if (0 != access(m_path,F_OK)) {
-        snprintf(tmppath, sizeof(tmppath), "%s", m_path);
+    if (0 != access(logpath,F_OK)) {
+        snprintf(tmppath, sizeof(tmppath), "%s", logpath);
         p = strrchr(tmppath, '/');
         if (p) {
             *p = '\0';
@@ -117,24 +121,31 @@ void mylog :: LogFileCheckOpen()
         }
     }
     chdir(curpath);
-    // 第二步，创建文件
     if (m_log_fd < 0) {
-        m_log_fd = open(m_path, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        m_log_fd = open(logpath, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         if (m_log_fd < 0) {
             fprintf(stderr, "FILE[%s:%u] create logfile[%s] fail. msg[%m]\n",
-                    __FILE__, __LINE__, m_path);
+                    __FILE__, __LINE__, logpath);
             while(0 != raise(SIGKILL)){}
         }
     }
 }
 
-void mylog :: LogFileSizeCheck()
+void mylog :: LogFileSwitchCheck()
 {
-    struct stat st;
-    fstat(m_log_fd, &st);
-    if (st.st_size + LogContentMaxLen > m_file_size)
+    char  curpath[LogNameMaxLen];
+    uint32_t timenow = DayTimeNow();
+    if (timenow != m_LastDayTime)
     {
-        ftruncate(m_log_fd, 0);
+        close(m_log_fd);
+        snprintf(curpath, sizeof(curpath), "%s.%d", m_path, timenow);
+        m_log_fd = open(curpath, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        if (m_log_fd < 0)
+        {
+            fprintf(stderr, "FILE[%s:%u] create logfile[%s] fail. msg[%m]\n", __FILE__, __LINE__, curpath);
+            while(0 != raise(SIGKILL)){}
+        }
+        m_LastDayTime = timenow;
     }
 }
 
@@ -178,4 +189,18 @@ void mylog :: Mkdirs(const char* dir)
         return;
     }
     Mkdirs(p + 1);
+}
+
+uint32_t mylog :: DayTimeNow()
+{
+    time_t now;
+    struct tm mytm;
+    uint32_t timenow = 0;
+
+    time(&now);
+    localtime_r(&now, &mytm);
+    mytm.tm_year += 1900;
+    // 2011122915
+    timenow = mytm.tm_year*1000000 + (mytm.tm_mon+1)*10000 + mytm.tm_mday*100 + mytm.tm_hour;
+    return  timenow;
 }

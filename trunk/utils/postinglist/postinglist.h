@@ -48,21 +48,19 @@ class postinglist
     public:
         enum
         {
-            FAIL = -1,
+            FULL = -1,
             OK = 0,
-            FULL = 1,
         };
 
         postinglist( const uint32_t  posting_cell_size, const uint32_t  bucket_size,
                 const uint32_t  headlist_size, const uint32_t* mblklist, const uint32_t  mblklist_size);
         ~postinglist();
-        int32_t get (const uint64_t& key, char* buff, const uint32_t length);
-        int32_t set (const uint64_t& key, const char* buff);
-        int32_t dump();
-        int32_t merge();
+        int32_t get (const uint64_t& key, void* buff, const uint32_t length);
+        int32_t set (const uint64_t& key, const void* buff);
         int32_t begin();
         int32_t get_and_next(uint64_t& key, char* buff, const uint32_t length);
         bool    isend();
         int32_t finish();
         void    set_freeze(bool freeze);
+        int32_t reset(); // 清理掉postinglist中的数据，恢复到初始化的状态
 };
