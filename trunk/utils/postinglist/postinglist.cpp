@@ -99,8 +99,7 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
             {
                 if (left_size == 0)
                 {
-                    ALARM("key[%llu] buffer length[%u] is NOT enough.",
-                            key, length);
+                    ALARM("key[%llu] buffer length[%u] is NOT enough.", key, length);
                     break;
                 }
                 uint32_t coffset = mem_link->self_size - mem_link->used_size;
