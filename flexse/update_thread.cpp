@@ -113,7 +113,7 @@ void* update_thread(void*)
             }
             if (nearly_full && !have_swap)
             {
-                pindexer = myIndexGroup->swap_mem_indexer(pindexer);
+                pindexer = myIndexGroup->swap_mem_indexer();
                 ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
             }
             send_head.log_id = recv_head->log_id;

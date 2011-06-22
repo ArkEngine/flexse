@@ -54,14 +54,19 @@ void mem_indexer :: begin()
     m_postinglist.begin();
 }
 
-int32_t mem_indexer :: get_and_next(uint64_t& key, void* buff, const uint32_t length)
+int32_t mem_indexer :: itget(uint64_t& key, void* buff, const uint32_t length)
 {
-    return m_postinglist.get_and_next(key, buff, length);
+    return m_postinglist.itget(key, buff, length);
+}
+
+void mem_indexer :: next()
+{
+    m_postinglist.next();
 }
 
 bool mem_indexer :: is_end()
 {
-    return m_postinglist.isend();
+    return m_postinglist.is_end();
 }
 
 

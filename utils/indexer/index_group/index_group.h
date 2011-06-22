@@ -16,6 +16,7 @@ class index_group
     private:
 
         static const uint32_t MAX_PATH_LENGTH = 128;
+        static const uint32_t MAX_POSTINGLIST_SIZE = 1000000; ///> postinglist最多的cell个数
 
         static const char* const STR_INDEX_NAME;
         static const char* const STR_INDEX_CUR_NO_FILE;
@@ -42,6 +43,7 @@ class index_group
         vector<base_indexer*> m_index_list;
 
         uint32_t get_cur_no(const char* dir, const char* file);
+        void     set_cur_no(const char* dir, const char* file, const uint32_t cur);
 
         index_group (const index_group&);
         index_group();

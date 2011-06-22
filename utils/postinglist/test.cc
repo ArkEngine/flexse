@@ -64,10 +64,11 @@ int main(const int argc, char** argv)
 
     mypostinglist.begin();
     uint32_t count = 0;
-    while(!mypostinglist.isend())
+    while(!mypostinglist.is_end())
     {
         uint64_t ukey;
-        int32_t rnum = mypostinglist.get_and_next(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
+        int32_t rnum = mypostinglist.itget(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
+        mypostinglist.next();
 //        printf("key: %llu\n", ukey);
         assert(ukey == count);
         count ++;
