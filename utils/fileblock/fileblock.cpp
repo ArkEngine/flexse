@@ -64,14 +64,14 @@ int32_t fileblock :: set(const uint32_t offset, const void* buff)
         if (file_no == m_max_file_no)
         {
             m_max_file_no++;
-            m_last_file_offset = 0;
+            m_last_file_offset = (uint32_t)lseek(m_fd[file_no], 0, SEEK_END);
         }
     }
+    MyThrowAssert(m_fd[file_no] != -1);
     if((file_no == m_max_file_no -1) && (inoffset * m_cell_size == m_last_file_offset))
     {
         m_last_file_offset += m_cell_size;
     }
-    MyThrowAssert(m_fd[file_no] != -1);
     MyThrowAssert(m_cell_size == (uint32_t)pwrite(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size));
     return 0;
 }
@@ -164,6 +164,8 @@ int32_t fileblock :: clear()
             m_fd[i] = -1;
         }
     }
+    m_max_file_no = 0;
+    m_last_file_offset = 0;
     return 0;
 }
 void fileblock :: begin()

@@ -20,5 +20,7 @@ class mem_indexer : public base_indexer
         ~mem_indexer();
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
         int32_t set_posting_list(const char* strTerm, const void* buff);
+        void clear();
+        void set_readonly();
 };
 #endif

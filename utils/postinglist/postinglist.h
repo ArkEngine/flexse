@@ -13,7 +13,7 @@ class postinglist
         uint32_t   m_bucket_size;
         uint32_t   m_bucket_mask;
         uint32_t   m_mem_base_size;
-        bool       m_isfree;
+        bool       m_readonly;
 
 		struct mem_link_t
 		{
@@ -61,7 +61,7 @@ class postinglist
         int32_t get_and_next(uint64_t& key, char* buff, const uint32_t length);
         bool    isend();
         int32_t finish();
-        void    set_free(bool free_status);
-        bool    isfree();
-        int32_t reset(); // 清理掉postinglist中的数据，恢复到初始化的状态
+        void    set_readonly(bool readonly);
+        bool    iswritable();
+        void    clear(); // 清理掉postinglist中的数据，恢复到初始化的状态
 };

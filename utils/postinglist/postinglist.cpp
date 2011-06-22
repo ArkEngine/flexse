@@ -46,7 +46,7 @@ postinglist :: postinglist(
     m_memblocks = new memblocks(memsize, mblklist, mblklist_size);
     // because of END_OF_LIST == 0xFFFFFFFF
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
-    m_isfree = true;
+    m_readonly = false;
 }
 
 postinglist :: ~postinglist()
@@ -122,6 +122,10 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
 
 int32_t postinglist :: set (const uint64_t& key, const void* buff)
 {
+    if (m_readonly)
+    {
+        return FULL;
+    }
     const uint32_t bucket_no = (uint32_t)(key & m_bucket_mask);
     uint32_t head_list_offset = m_bucket[bucket_no];
     bool found = false;
@@ -202,11 +206,11 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
     if (! found)
     {
         // 分配一个 headlist cell
-        if ( ! m_isfree || (m_headlist_used == m_headlist_size))
+        if  (m_headlist_used == m_headlist_size)
         {
             // 冰冻住set操作，已经没有空余空间了。
             // 以后可以考虑使用一个无穷hash的方式，就是需要排序时麻烦一点
-            // return sth.
+            set_readonly(true);
             return FULL;
         }
         else
@@ -235,14 +239,14 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
     return OK;
 }
 
-void postinglist :: set_free(bool free_status)
+void postinglist :: set_readonly(bool readonly)
 {
-    m_isfree = free_status;
+    m_readonly = readonly;
 }
 
-bool postinglist :: isfree()
+bool postinglist :: iswritable()
 {
-    return m_isfree;
+    return m_readonly == false;
 }
 
 int postinglist::key_compare(const void *p1, const void *p2)
@@ -265,7 +269,7 @@ int postinglist::key_compare(const void *p1, const void *p2)
 int32_t postinglist :: begin()
 {
     // 设置为只读状态
-    set_free(false);
+    set_readonly(true);
     if (m_headlist_sort != NULL)
     {
         free(m_headlist_sort);
@@ -294,10 +298,11 @@ int32_t postinglist :: finish()
         free(m_headlist_sort);
         m_headlist_sort = NULL;
     }
+    // 不必要在改为readonly = false了，finish完之后，应该销毁的
     return 0;
 }
 
-int32_t postinglist :: reset()
+void postinglist :: clear()
 {
     // 调用者保证执行这段代码时，没有人读写这个对象
     // 在flexse中，当这个postinglist持久化之后，就不需要访问这个对象了，然后就reset掉好了。
@@ -318,6 +323,6 @@ int32_t postinglist :: reset()
 
     // 重置bucket
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
-    set_free(true);
+    set_readonly(false);
     // 我就是舍不得释放这些已经申请的内存啊，谁能理解我的苦衷呢
 }

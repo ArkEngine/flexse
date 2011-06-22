@@ -18,16 +18,16 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname)
     if (fd == -1)
     {
         ALARM("a new disk_indexer, set freeze as FALSE.");
-        m_freeze = false;
+        m_readonly = false;
     }
     else
     {
         second_index_t sindex;
         while(sizeof(sindex) == read(fd, &sindex, sizeof(sindex)))
         {
-            second_index.push_back(sindex);
+            m_second_index.push_back(sindex);
         }
-        m_freeze = (0 != second_index.size());
+        m_readonly = (0 != m_second_index.size());
     }
     close(fd);
     m_index_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
@@ -60,7 +60,7 @@ int disk_indexer :: ikey_comp (const void *m1, const void *m2)
 int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
     // 一旦调用get方法，则变为只读状态
-    m_freeze = (m_freeze) ? true: false;
+    set_readonly();
 
     int len = strlen(strTerm);
     if (0 == len || NULL == buff || length == 0)
@@ -70,19 +70,19 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     }
 
     // (1) 先读取二级索引，得到在fileblock中的第几块中
-    uint32_t last_offset = second_index.size()-1;
+    uint32_t last_offset = m_second_index.size()-1;
     second_index_t si;
     creat_sign_64(strTerm, len, &si.ikey.uint1, &si.ikey.uint2);
-    if (si.ikey.sign64 < second_index[0].ikey.sign64
-            || si.ikey.sign64 > second_index[last_offset].ikey.sign64)
+    if (si.ikey.sign64 < m_second_index[0].ikey.sign64
+            || si.ikey.sign64 > m_second_index[last_offset].ikey.sign64)
     {
         ALARM("strTerm[%s]'s sign[%llu] NOT in range[%llu : %llu].",
-                strTerm, si.ikey.sign64, second_index[0].ikey.sign64,
-                second_index[last_offset].ikey.sign64);
+                strTerm, si.ikey.sign64, m_second_index[0].ikey.sign64,
+                m_second_index[last_offset].ikey.sign64);
         return -1;
     }
     vector<second_index_t>::iterator bounds;
-    bounds = lower_bound (second_index.begin(), second_index.end(), si);
+    bounds = lower_bound (m_second_index.begin(), m_second_index.end(), si);
     // (2) 根据milestone读取fileblock中的连续块
     uint32_t block_no = (bounds->milestone == 0) ? 0 : bounds->milestone-TERM_MILESTONE;
     uint32_t rd_count = (bounds->milestone == m_last_si.milestone) ? m_last_si.milestone%TERM_MILESTONE : TERM_MILESTONE;
@@ -106,7 +106,7 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
 int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
         const void* buff, const uint32_t length)
 {
-    if (m_freeze)
+    if (m_readonly)
     {
         ALARM("disk_indexer is FREEZON, SO COLD.");
         return -1;
@@ -123,7 +123,7 @@ int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
     if (0 == (id % TERM_MILESTONE))
     {
         // set milestone
-        second_index.push_back(m_last_si);
+        m_second_index.push_back(m_last_si);
     }
     return 0;
 }
@@ -132,15 +132,32 @@ void disk_indexer :: set_finish()
 {
     if (0 != (m_last_si.milestone % TERM_MILESTONE))
     {
-        second_index.push_back(m_last_si);
+        m_second_index.push_back(m_last_si);
     }
-    // 把second_index写入磁盘
+    // 把m_second_index写入磁盘
     int fd = open(m_second_index_file, O_WRONLY|O_CREAT|O_TRUNC);
     MyThrowAssert (fd != -1);
-    for (uint32_t i=0; i<second_index.size(); i++)
+    for (uint32_t i=0; i<m_second_index.size(); i++)
     {
-        MyThrowAssert(sizeof(second_index_t) == write(fd, &second_index[i], sizeof(second_index_t)));
+        MyThrowAssert(sizeof(second_index_t) == write(fd, &m_second_index[i], sizeof(second_index_t)));
     }
     close(fd);
-    m_freeze = true;
+    m_readonly = true;
+}
+
+void disk_indexer :: clear()
+{
+    // 清掉cache
+    // 清掉m_index_block;
+    m_second_index.clear();
+    // 清掉磁盘上的index_block;
+    remove(m_second_index_file);
+    m_fileblock.clear();
+    m_diskv.clear();
+    m_readonly = false;
+}
+
+void disk_indexer :: set_readonly()
+{
+    m_readonly = true;
 }

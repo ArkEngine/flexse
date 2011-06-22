@@ -31,9 +31,9 @@ class disk_indexer : public base_indexer
         static const uint32_t TERM_MILESTONE  = 1000;
         fileblock m_fileblock;
         diskv     m_diskv;
-        bool      m_freeze;                  ///< true时表示只读状态，初始化时，如果没有二级索引则置为false
+        bool      m_readonly;                ///< true时表示只读状态，初始化时，如果没有二级索引则置为false
         second_index_t m_last_si;            ///< set过程中记录最后一个二级索引
-        vector<second_index_t> second_index; ///< 二级索引
+        vector<second_index_t> m_second_index; ///< 二级索引
         char m_second_index_file[MAX_FILE_LENGTH];
         fb_index_t* m_index_block;           ///< 用于每次存放索引分块
         ///< 考虑使用tcm作为索引分块的cache. TODO
@@ -59,5 +59,7 @@ class disk_indexer : public base_indexer
         /*这个接口只能用于连续写入*/
         int32_t set_posting_list(const uint32_t id, const ikey_t& ikey, const void* buff, const uint32_t length);
         void    set_finish();
+        void    set_readonly();
+        void    clear();
 };
 #endif

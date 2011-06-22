@@ -11,7 +11,6 @@ class fileblock
         const uint32_t m_cell_num_per_file;
         int32_t        m_fd[MAX_FILE_NO];
         uint32_t       m_max_file_no;
-        uint32_t       m_total_cell_count;
         uint32_t       m_last_file_offset;
         char           m_fb_dir[128];
         char           m_fb_name[128];
@@ -19,7 +18,7 @@ class fileblock
 
         fileblock();
         fileblock(const fileblock &);
-        int32_t detect_file();
+        int32_t  detect_file();
         uint32_t getfilesize( const char* name );
     public:
         fileblock(const char* dir, const char* filename, const uint32_t cell_size);
