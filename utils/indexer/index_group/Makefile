@@ -11,8 +11,12 @@ MAINOBJ= test.o
 INCS= -I ../mem_indexer/include \
 	  -I ../disk_indexer/include \
 	  -I ../base_indexer/include \
-	  -I ../mylog/include/\
-	  -I ../MyException/include/\
+	  -I ../../diskv/include/\
+	  -I ../../fileblock/include/\
+	  -I ../../memblocks/include/\
+	  -I ../../postinglist/include/\
+	  -I ../../mylog/include/\
+	  -I ../../MyException/include/\
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \

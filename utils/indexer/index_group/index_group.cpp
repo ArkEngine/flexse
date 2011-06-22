@@ -2,119 +2,136 @@
 #include "MyException.h"
 #include "mylog.h"
 #include <stdio.h>
+#include <string.h>
 
-const char* const STR_INDEX_NAME = "index";
-const char* const STR_INDEX_CUR_NO_FILE = "cur";
-const char* const STR_DAY_INDEX_DIR = "./data/day/";
-const char* const STR_HIS_INDEX_DIR = "./data/his/";
-const char* const STR_FMT_DAY_INDEX_PATH = "./data/day/%u/";
-const char* const STR_FMT_HIS_INDEX_PATH = "./data/his/%u/";
+const char* const index_group :: STR_INDEX_NAME = "index";
+const char* const index_group :: STR_INDEX_CUR_NO_FILE = "cur";
+const char* const index_group :: STR_DAY_INDEX_DIR = "./data/day/";
+const char* const index_group :: STR_HIS_INDEX_DIR = "./data/his/";
+const char* const index_group :: STR_FMT_DAY_INDEX_PATH = "./data/day/%u/";
+const char* const index_group :: STR_FMT_HIS_INDEX_PATH = "./data/his/%u/";
 
-index_group :: index_group()
+index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
+        const uint32_t headlist_size, const uint32_t* blocknum_list, const uint32_t blocknum_list_size)
 {
-    index_info_t index_info;
-
     // mem init
-    index_info.empty  = true;
-    index_info.pindex = &m_mem[m_mem_cur];
-    m_index_list[0] = index_info;
-    index_info.empty  = true;
-    index_info.pindex = &m_mem[1 - m_mem_cur];
-    m_index_list[1] = index_info;
+    m_cell_size = cell_size;
+    m_bucket_size = bucket_size;
+    m_headlist_size = headlist_size;
+    m_blocknum_list_size = blocknum_list_size;
+    memmove(m_blocknum_list, blocknum_list, sizeof(uint32_t)*blocknum_list_size);
+
+    m_mem[0] = new mem_indexer(m_cell_size, m_bucket_size, m_headlist_size,
+            m_blocknum_list, m_blocknum_list_size);
+    m_mem[1] = NULL;
+    m_index_list.push_back(m_mem[0]);
+    m_index_list.push_back(m_mem[1]);
 
     // day init
     // read cur file
     uint32_t day_cur = get_cur_no(STR_DAY_INDEX_DIR, STR_INDEX_CUR_NO_FILE);
-    index_info.empty  = true;
-    index_info.pindex = &m_day[day_cur];
-    m_index_list[2] = index_info;
+    char index_dir[MAX_PATH_LENGTH];
+    snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, day_cur);
+    m_day[0] = new disk_indexer(index_dir, STR_INDEX_NAME);
+    m_index_list.push_back(m_day[0]);
+    snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, 1 - day_cur);
+    m_day[1] = new disk_indexer(index_dir, STR_INDEX_NAME);
 
-    // mon init
+    // his init
     // read cur file
     uint32_t his_cur = get_cur_no(STR_HIS_INDEX_DIR, STR_INDEX_CUR_NO_FILE);
-    index_info.empty  = true;
-    index_info.pindex = &m_his[his_cur];
-    m_index_list[3] = index_info;
+    snprintf(index_dir, sizeof(index_dir), STR_FMT_HIS_INDEX_PATH, his_cur);
+    m_his[0] = new disk_indexer(index_dir, STR_INDEX_NAME);
+    m_index_list.push_back(m_his[0]);
+    snprintf(index_dir, sizeof(index_dir), STR_FMT_HIS_INDEX_PATH, 1 - his_cur);
+    m_his[1] = new disk_indexer(index_dir, STR_INDEX_NAME);
 
-    pthread_mutex_init(&m_mutex);
+    pthread_mutex_init(&m_mutex, NULL);
+    pthread_cond_init(&m_mem_dump_cond, NULL);
+    pthread_rwlock_init(&m_list_rwlock, NULL);
 }
 
 index_group :: ~index_group()
 {
 }
 
-mem_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
+base_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
 {
-    MyThrowAssert(m_index_list[0].pindex == pmem_indexer);
-    // 阻塞于等待 m_index_list[1].empty == true;
-    while(m_index_list[1].empty == true)
-    {
-        pthread_cond_wait(m_mem_dump_cond);
-    }
-    // -1- 调换位置
+    MyThrowAssert(m_index_list[0] == pmem_indexer);
+    // 阻塞于等待 m_index_list[1]清空
     pthread_mutex_lock(&m_mutex);
-    m_index_list[0].empty = false;
-    index_info_t tmp_index_info = m_index_list[0];
-    m_index_list[0] = m_index_list[1];
-    m_index_list[1] = tmp_index_info;
+    while(m_index_list[1] != NULL)
+    {
+        pthread_cond_wait(&m_mem_dump_cond, &m_mutex);
+    }
     pthread_mutex_unlock(&m_mutex);
+    // -1- 调换位置
+    pthread_rwlock_wrlock(&m_list_rwlock);
+    // 设置为只读状态
+    m_index_list[1] = m_index_list[0];
+    m_index_list[1]->set_readonly();
+    m_index_list[0] = new mem_indexer(m_cell_size, m_bucket_size, m_headlist_size,
+            m_blocknum_list, m_blocknum_list_size);
+    pthread_rwlock_unlock(&m_list_rwlock);
     // -2- 通知merge线程可以把mem持久化了
-    pthread_cond_signal(m_mem_dump_cond);
+    pthread_cond_signal(&m_mem_dump_cond);
     // -3- 返回一个新的mem
-    return m_index_list[0].pindex;
+    return m_index_list[0];
 }
 
 void index_group :: update_day_indexer(disk_indexer* pdisk_indexer)
 {
-    pthread_mutex_lock(&m_mutex);
-    MyThrowAssert(pdisk_indexer == &m_day[0] || pdisk_indexer == &m_day[1]);
-    MyThrowAssert(pdisk_indexer != &m_index_list[2].pindex);
-    m_index_list[1].reset();
-    m_index_list[1].empty = true;
-    m_index_list[2].reset();
-    m_index_list[2].pindex = pdisk_indexer;
-    pthread_mutex_unlock(&m_mutex);
+    MyThrowAssert(pdisk_indexer == m_day[0] || pdisk_indexer == m_day[1]);
+    MyThrowAssert(pdisk_indexer != m_index_list[2]);
+    pthread_rwlock_wrlock(&m_list_rwlock);
+    delete m_index_list[1];
+    m_index_list[1] = NULL;
+    m_index_list[2]->clear();
+    m_index_list[2] = pdisk_indexer;
+    // 通知 m_index_list[1] == NULL 了
+    pthread_cond_signal(&m_mem_dump_cond);
+    pthread_rwlock_unlock(&m_list_rwlock);
+    return;
 }
 
 void index_group :: update_his_indexer(disk_indexer* pdisk_indexer)
 {
-    pthread_mutex_lock(&m_mutex);
-    MyThrowAssert(pdisk_indexer == &m_his[0] || pdisk_indexer == &m_his[1]);
-    MyThrowAssert(pdisk_indexer != &m_index_list[3].pindex);
-    m_index_list[2].reset();
-    m_index_list[2].empty = true;
-    m_index_list[3].reset();
-    m_index_list[3].pindex = pdisk_indexer;
-    pthread_mutex_unlock(&m_mutex);
+    MyThrowAssert(pdisk_indexer == m_his[0] || pdisk_indexer == m_his[1]);
+    MyThrowAssert(pdisk_indexer != m_index_list[3]);
+    pthread_rwlock_wrlock(&m_list_rwlock);
+    m_index_list[2]->clear();
+    m_index_list[3]->clear();
+    m_index_list[3] = pdisk_indexer;
+    pthread_rwlock_unlock(&m_list_rwlock);
+    return;
 }
 
-mem_indexer*  index_group :: get_cur_mem_indexer()
+base_indexer*  index_group :: get_cur_mem_indexer()
 {
-    return m_index_list[0].pindex;
+    return m_index_list[0];
 }
-disk_indexer* index_group :: get_cur_day_indexer()
+base_indexer* index_group :: get_cur_day_indexer()
 {
-    return m_index_list[2].pindex;
+    return m_index_list[2];
 }
-disk_indexer* index_group :: get_cur_his_indexer()
+base_indexer* index_group :: get_cur_his_indexer()
 {
-    return m_index_list[3].pindex;
+    return m_index_list[3];
 }
 
 int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
     int32_t offset = 0;
     int32_t lstnum = 0;
-    pthread_mutex_lock(&m_mutex);
+    pthread_rwlock_rdlock(&m_list_rwlock);
     for (uint32_t i=0; i<m_index_list.size(); i++)
     {
-        if (m_index_list[i].empty)
+        if (m_index_list[i] != NULL)
         {
-            continue;
+            lstnum += m_index_list[i]->get_posting_list(strTerm, &((char*)buff)[offset], length-offset);
+            offset = lstnum * m_cell_size;
         }
-        lstnum += m_index_list[i].pindex->get_posting_list(strTerm, &((char*)buff)[offset], length-offset);
-        offset = lstnum * m_cell_size;
     }
-    pthread_mutex_unlock(&m_mutex);
+    pthread_rwlock_unlock(&m_list_rwlock);
     return lstnum;
 }
