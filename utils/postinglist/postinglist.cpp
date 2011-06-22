@@ -46,7 +46,7 @@ postinglist :: postinglist(
     m_memblocks = new memblocks(memsize, mblklist, mblklist_size);
     // because of END_OF_LIST == 0xFFFFFFFF
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
-    m_freeze = false;
+    m_isfree = true;
 }
 
 postinglist :: ~postinglist()
@@ -202,7 +202,7 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
     if (! found)
     {
         // 分配一个 headlist cell
-        if ( m_freeze || (m_headlist_used == m_headlist_size))
+        if ( ! m_isfree || (m_headlist_used == m_headlist_size))
         {
             // 冰冻住set操作，已经没有空余空间了。
             // 以后可以考虑使用一个无穷hash的方式，就是需要排序时麻烦一点
@@ -235,9 +235,14 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
     return OK;
 }
 
-void postinglist :: set_freeze(bool freeze)
+void postinglist :: set_free(bool free_status)
 {
-    m_freeze = freeze;
+    m_isfree = free_status;
+}
+
+bool postinglist :: isfree()
+{
+    return m_isfree;
 }
 
 int postinglist::key_compare(const void *p1, const void *p2)
@@ -259,7 +264,8 @@ int postinglist::key_compare(const void *p1, const void *p2)
 
 int32_t postinglist :: begin()
 {
-    set_freeze(true);
+    // 设置为只读状态
+    set_free(false);
     if (m_headlist_sort != NULL)
     {
         free(m_headlist_sort);
@@ -293,5 +299,25 @@ int32_t postinglist :: finish()
 
 int32_t postinglist :: reset()
 {
+    // 调用者保证执行这段代码时，没有人读写这个对象
+    // 在flexse中，当这个postinglist持久化之后，就不需要访问这个对象了，然后就reset掉好了。
     MyThrowAssert(0);
+    // 遍历所有的memblocks，释放内存
+    for (uint32_t head_list_offset=0; head_list_offset<m_headlist_used; head_list_offset++)
+    {
+        term_head_t* phead = &m_headlist[head_list_offset];
+        mem_link_t* mem_link = phead->mem_link;
+        MyThrowAssert(mem_link != NULL);
+        while(mem_link != NULL)
+        {
+            mem_link = mem_link->next;
+            mem_link_t* tmp_mem_link = mem_link;
+            m_memblocks->FreeMem(tmp_mem_link);
+        }
+    }
+
+    // 重置bucket
+    memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
+    set_free(true);
+    // 我就是舍不得释放这些已经申请的内存啊，谁能理解我的苦衷呢
 }
