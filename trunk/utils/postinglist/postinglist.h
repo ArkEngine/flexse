@@ -5,6 +5,10 @@ class postinglist
 {
     private:
         static const uint32_t END_OF_LIST = 0xFFFFFFFF;
+        // postinglist 的危险水位线，当还剩下 HEAD_LIST_WATER_LINE 个
+        // term空闲块时，返回 NEARLYFULL，用户可以选择继续插入，但是
+        // 已经快满了，需要考虑换个新的了。
+        static const uint32_t HEAD_LIST_WATER_LINE = 10000;
         uint32_t*  m_bucket;
         uint32_t*  m_sortlist;
         memblocks* m_memblocks;
@@ -48,6 +52,7 @@ class postinglist
     public:
         enum
         {
+            NEARLY_FULL = -2,
             FULL = -1,
             OK = 0,
         };
@@ -57,10 +62,9 @@ class postinglist
         ~postinglist();
         int32_t get (const uint64_t& key, void* buff, const uint32_t length);
         int32_t set (const uint64_t& key, const void* buff);
-        int32_t begin();
-        int32_t get_and_next(uint64_t& key, char* buff, const uint32_t length);
+        void     begin();
+        int32_t get_and_next(uint64_t& key, void* buff, const uint32_t length);
         bool    isend();
-        int32_t finish();
         void    set_readonly(bool readonly);
         bool    iswritable();
         void    clear(); // 清理掉postinglist中的数据，恢复到初始化的状态

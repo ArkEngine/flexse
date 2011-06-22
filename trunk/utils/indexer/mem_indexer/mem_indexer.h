@@ -22,5 +22,9 @@ class mem_indexer : public base_indexer
         int32_t set_posting_list(const char* strTerm, const void* buff);
         void clear();
         void set_readonly();
+
+        void begin();
+        int32_t get_and_next(uint64_t& key, void* buff, const uint32_t length);
+        bool is_end();
 };
 #endif

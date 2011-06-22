@@ -59,9 +59,8 @@ index_group :: ~index_group()
 {
 }
 
-mem_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
+mem_indexer* index_group :: swap_mem_indexer()
 {
-    MyThrowAssert(m_index_list[0] == pmem_indexer);
     // 阻塞于等待 m_index_list[1]清空
     pthread_mutex_lock(&m_mutex);
     while(m_index_list[1] != NULL)
@@ -83,10 +82,20 @@ mem_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
     return dynamic_cast<mem_indexer*>(m_index_list[0]);
 }
 
-void index_group :: update_day_indexer(disk_indexer* pdisk_indexer)
+void index_group :: update_day_indexer()
 {
-    MyThrowAssert(pdisk_indexer == m_day[0] || pdisk_indexer == m_day[1]);
-    MyThrowAssert(pdisk_indexer != m_index_list[2]);
+    disk_indexer* pdisk_indexer = dynamic_cast<disk_indexer*>((m_index_list[2] == m_day[0]) ? m_day[1] : m_day[0]);
+    pthread_mutex_lock(&m_mutex);
+    // 等到m_index_list[1]不为NULL时，执行合并过程
+    while(m_index_list[1] == NULL)
+    {
+        pthread_cond_wait(&m_mem_dump_cond, &m_mutex);
+    }
+    pthread_mutex_unlock(&m_mutex);
+
+    // 执行合并过程
+
+    // 执行合并完毕
     pthread_rwlock_wrlock(&m_list_rwlock);
     delete m_index_list[1];
     m_index_list[1] = NULL;
@@ -98,10 +107,10 @@ void index_group :: update_day_indexer(disk_indexer* pdisk_indexer)
     return;
 }
 
-void index_group :: update_his_indexer(disk_indexer* pdisk_indexer)
+void index_group :: update_his_indexer()
 {
-    MyThrowAssert(pdisk_indexer == m_his[0] || pdisk_indexer == m_his[1]);
-    MyThrowAssert(pdisk_indexer != m_index_list[3]);
+    // 对day的索引进行一些判空，避免空合并
+    disk_indexer* pdisk_indexer = dynamic_cast<disk_indexer*>((m_index_list[3] == m_his[0]) ? m_his[1] : m_his[0]);
     pthread_rwlock_wrlock(&m_list_rwlock);
     m_index_list[2]->clear();
     m_index_list[3]->clear();
@@ -150,5 +159,6 @@ uint32_t index_group :: get_cur_no(const char* dir, const char* name)
     MyThrowAssert(1 <= read(read_rd, filename, sizeof(filename)));
     int cur = atoi(filename);
     MyThrowAssert(cur == 0 || cur == 1);
+    close(read_rd);
     return cur;
 }

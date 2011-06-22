@@ -18,12 +18,11 @@ class Config
 
         static const char* const m_StrUpdatePort;
         static const char* const m_StrUpdateReadBufferSize;
-        static const char* const m_StrUpdateReadTimeOutMS;
+        static const char* const m_StrUpdateSocketTimeOutMS;
 
         static const char* const m_StrCellSize;
         static const char* const m_StrBucketSize;
         static const char* const m_StrHeadListSize;
-        static const char* const m_StrMemBlockNumListSize;
         static const char* const m_StrMemBlockNumList;
 
 		// log config
@@ -42,7 +41,7 @@ class Config
         // update server config
         uint32_t m_update_port;
         uint32_t m_update_read_buffer_size;
-        uint32_t m_update_read_time_out_ms;
+        uint32_t m_update_socket_timeout_ms;
 
         // index config
         uint32_t m_cell_size;     // postinglist cell size
@@ -66,7 +65,7 @@ class Config
 
         uint16_t UpdatePort() { return m_update_port; } 
         uint32_t UpdateReadBufferSize() { return m_update_read_buffer_size; } 
-        uint32_t UpdateReadTimeOutMS()  { return m_update_read_time_out_ms; } 
+        uint32_t UpdateSocketTimeOutMS()  { return m_update_socket_timeout_ms; } 
 
         uint32_t CellSize() { return m_cell_size; }
         uint32_t BucketSize() { return m_bucket_size; }
