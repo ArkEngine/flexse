@@ -172,15 +172,18 @@ void fileblock :: begin()
 {
     m_it = 0;
 }
+void fileblock :: next()
+{
+    m_it ++;
+}
 int32_t fileblock :: set_and_next(void* buff)
 {
     uint32_t cur_it = m_it ++ ;
     return set(cur_it, buff);
 }
-int32_t fileblock :: get_and_next(void* buff, const uint32_t length)
+int32_t fileblock :: itget(void* buff, const uint32_t length)
 {
-    uint32_t cur_it = m_it ++ ;
-    return get(cur_it, buff, length);
+    return get(m_it, buff, length);
 }
 
 bool fileblock :: is_end()

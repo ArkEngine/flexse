@@ -167,12 +167,17 @@ void disk_indexer :: begin()
     m_fileblock.begin();
 }
 
-int32_t disk_indexer :: get_and_next(uint64_t& key, void* buff, const uint32_t length)
+int32_t disk_indexer :: itget(uint64_t& key, void* buff, const uint32_t length)
 {
     fb_index_t fbit;
-    MyThrowAssert ( sizeof(fbit) == m_fileblock.get_and_next(&fbit, sizeof(fbit)));
+    MyThrowAssert ( sizeof(fbit) == m_fileblock.itget(&fbit, sizeof(fbit)));
     key = fbit.ikey.sign64;
     return m_diskv.get(fbit.idx, buff, length);
+}
+
+void disk_indexer :: next()
+{
+    m_fileblock.next();
 }
 
 bool disk_indexer :: is_end()

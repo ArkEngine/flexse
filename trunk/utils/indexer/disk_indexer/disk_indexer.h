@@ -63,7 +63,8 @@ class disk_indexer : public base_indexer
         void    clear();
 
         void begin();
-        int32_t get_and_next(uint64_t& key, void* buff, const uint32_t length);
+        void next();
+        int32_t itget(uint64_t& key, void* buff, const uint32_t length);
         bool is_end();
 };
 #endif

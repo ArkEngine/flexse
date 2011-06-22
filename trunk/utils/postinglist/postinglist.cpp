@@ -282,13 +282,18 @@ void postinglist :: begin()
     m_headlist_sort_it = 0;
     return;
 }
-int32_t postinglist :: get_and_next(uint64_t& key, void* buff, const uint32_t length)
+int32_t postinglist :: itget(uint64_t& key, void* buff, const uint32_t length)
 {
     key = m_headlist_sort[m_headlist_sort_it].sign64;
-    m_headlist_sort_it++;
     return get(key, buff, length);
 }
-bool postinglist :: isend()
+
+void postinglist :: next()
+{
+    m_headlist_sort_it++;
+}
+
+bool postinglist :: is_end()
 {
     if (m_headlist_sort_it == m_headlist_used)
     {

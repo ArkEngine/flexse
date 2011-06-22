@@ -62,9 +62,10 @@ class postinglist
         ~postinglist();
         int32_t get (const uint64_t& key, void* buff, const uint32_t length);
         int32_t set (const uint64_t& key, const void* buff);
-        void     begin();
-        int32_t get_and_next(uint64_t& key, void* buff, const uint32_t length);
-        bool    isend();
+        void    begin();
+        void    next();
+        int32_t itget(uint64_t& key, void* buff, const uint32_t length);
+        bool    is_end();
         void    set_readonly(bool readonly);
         bool    iswritable();
         void    clear(); // 清理掉postinglist中的数据，恢复到初始化的状态
