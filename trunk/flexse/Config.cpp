@@ -14,20 +14,26 @@
 
 using namespace std;
 
-const char* Config::m_StrLogLevel = "LogLevel";
-const char* Config::m_StrLogSize  = "LogSize";
-const char* Config::m_StrLogName  = "LogName";
+const char* const Config::m_StrLogLevel = "LogLevel";
+const char* const Config::m_StrLogSize  = "LogSize";
+const char* const Config::m_StrLogName  = "LogName";
 
-const char* Config::m_StrQuerySendTimeOut = "SendTimeOut_MS";
-const char* Config::m_StrQueryRecvTimeOut = "RecvTimeOut_MS";
-const char* Config::m_StrQueryPort   = "QueryPort";
-const char* Config::m_StrServiceThreadNum = "ServiceThreadNum";
-const char* Config::m_StrThreadBufferSize = "ThreadBufferSize";
-const char* Config::m_StrEpollSize = "EpollSize";
+const char* const Config::m_StrQuerySendTimeOut = "SendTimeOut_MS";
+const char* const Config::m_StrQueryRecvTimeOut = "RecvTimeOut_MS";
+const char* const Config::m_StrQueryPort   = "QueryPort";
+const char* const Config::m_StrServiceThreadNum = "ServiceThreadNum";
+const char* const Config::m_StrThreadBufferSize = "ThreadBufferSize";
+const char* const Config::m_StrEpollSize = "EpollSize";
 
-const char* Config::m_StrUpdatePort = "UpdatePort";
-const char* Config::m_StrUpdateReadBufferSize = "ReadBufferSize";
-const char* Config::m_StrUpdateReadTimeOutMS  = "ReadTimeOutMS";
+const char* const Config::m_StrUpdatePort = "UpdatePort";
+const char* const Config::m_StrUpdateReadBufferSize = "ReadBufferSize";
+const char* const Config::m_StrUpdateReadTimeOutMS  = "ReadTimeOutMS";
+
+const char* const Config::m_StrCellSize = "PostingListCellSize";
+const char* const Config::m_StrBucketSize = "PostingBucketSize";
+const char* const Config::m_StrHeadListSize = "PostingHeadListSize";
+const char* const Config::m_StrMemBlockNumListSize = "PostingMemBlockNumListSize";
+const char* const Config::m_StrMemBlockNumList = "PostingMemBlockNumList";
 
 Config::Config(const char* configpath)
 {
@@ -48,6 +54,15 @@ Config::Config(const char* configpath)
     m_update_read_buffer_size = 10*1024*1024;
     m_update_read_time_out_ms = 1000;
 
+    m_cell_size = 4;
+    m_bucket_size = 20;
+    m_headlist_size = 0x1000000;
+    m_memblocknumlistsize = 8;
+    for (uint32_t i=0; i<8; i++)
+    {
+        m_memblocknumlist[i] = (i==0)? 4096: m_memblocknumlist[i-1]/2;
+    }
+
     // CUSTOMIZE CONFIG
     Json::Value root;
     Json::Reader reader;
@@ -56,7 +71,7 @@ Config::Config(const char* configpath)
     {
         FATAL("json format error. USING DEFAULT CONFIG.");
         return;
-//        MyToolThrow("json format error.");
+        //        MyToolThrow("json format error.");
     }
 
     Json::Value logConfig = root["LOG"];
@@ -87,4 +102,22 @@ Config::Config(const char* configpath)
         m_update_read_time_out_ms = uSrvConfig[m_StrUpdateReadTimeOutMS].isNull() ?
             m_update_read_time_out_ms : uSrvConfig[m_StrUpdateReadTimeOutMS].asInt();
     }
+
+    Json::Value indexConfig = root["INDEX"];
+    if (! indexConfig.isNull()) {
+        m_cell_size   = indexConfig[m_StrCellSize].isNull() ? m_cell_size : indexConfig[m_StrCellSize].asInt();
+        m_bucket_size = indexConfig[m_StrBucketSize].isNull() ? m_bucket_size : indexConfig[m_StrBucketSize].asInt();
+        m_headlist_size = indexConfig[m_StrHeadListSize].isNull() ? m_headlist_size : indexConfig[m_StrHeadListSize].asInt();
+        Json::Value memblocknumlist = indexConfig["MemBlockNumList"];
+        if (!memblocknumlist.isNull() && !memblocknumlist.isArray())
+        {
+            m_memblocknumlistsize = memblocknumlist.size();
+            for (uint32_t i=0; i<m_memblocknumlistsize; i++)
+            {
+                m_memblocknumlist[i] = memblocknumlist[i].asInt();
+                ROUTN("[%u] num[%u]", i, m_memblocknumlist[i]);
+            }
+        }
+    }
+
 }

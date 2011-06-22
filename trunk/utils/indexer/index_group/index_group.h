@@ -53,7 +53,7 @@ class index_group
         // -1- 把这个mem放入group中，调换mem的位置(保证各个索引的ID顺序)
         // -2- 返回另一个空闲的mem(swap到头部了)给update_thread继续写
         // -3- 启动持久化过程(直接dump或merge)
-        base_indexer* swap_mem_indexer(mem_indexer*);
+        mem_indexer* swap_mem_indexer(mem_indexer*);
         // 更新day_indexer时:
         // -1- 替换掉m_index_list[2]中的disk_indexer
         // -2- 把m_index_list[1]中的mem_index标记为free状态
@@ -63,9 +63,9 @@ class index_group
         // -2- 把m_index_list[2]中的disk_index标记为free状态
         // -3- 检查是否有mem需要直接写入day_indexer
         void update_his_indexer(disk_indexer*);
-        base_indexer* get_cur_mem_indexer();
-        base_indexer* get_cur_day_indexer();
-        base_indexer* get_cur_his_indexer();
+        mem_indexer*  get_cur_mem_indexer();
+        disk_indexer* get_cur_day_indexer();
+        disk_indexer* get_cur_his_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
 };

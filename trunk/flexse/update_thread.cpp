@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "xHead.h"
 #include "mem_indexer.h"
+#include "index_group.h"
 #include <json/json.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -16,6 +17,7 @@
 #include <arpa/inet.h>
 
 extern Config* myConfig;
+extern index_group* myIndexGroup;
 
 using namespace flexse;
 
@@ -58,15 +60,7 @@ void* update_thread(void*)
     xhead_t  send_head;
     snprintf(send_head.srvname, sizeof(send_head.srvname), "%s", PROJNAME);
 
-    const uint32_t cell_size     = sizeof(uint32_t);
-    const uint32_t bucket_size   = 20;
-    const uint32_t headlist_size = 0x1000000;
-    uint32_t blocknum_list[8];
-    for (uint32_t i=0; i<8; i++)
-    {
-        blocknum_list[i] = (i==0)? 4096: blocknum_list[i-1]/2;
-    }
-    mem_indexer mymem_indexer(cell_size, bucket_size, headlist_size, blocknum_list, 8);
+    mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
     while(1)
     {
@@ -101,9 +95,11 @@ void* update_thread(void*)
             }
             for (uint32_t i=0; i<vstr.size(); i++)
             {
-                if (postinglist::FULL == mymem_indexer.set_posting_list(vstr[i].c_str(), &doc_id))
+                if (postinglist::FULL == pindexer->set_posting_list(vstr[i].c_str(), &doc_id))
                 {
                     ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
+                    pindexer = myIndexGroup->swap_mem_indexer(pindexer);
+                    MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
                 }
             }
             send_head.log_id = recv_head->log_id;

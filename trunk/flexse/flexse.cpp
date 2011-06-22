@@ -17,6 +17,7 @@
 #include "Config.h"
 #include "mylog.h"
 #include "xHead.h"
+#include "index_group.h"
 #include "ThreadData.h"
 #include "MyException.h"
 #include "equeue.h"
@@ -25,6 +26,7 @@
 #include "merge_thread.h"
 
 Config* myConfig;
+index_group* myIndexGroup;
 
 int ServiceApp(thread_data_t* ptd);
 
@@ -203,6 +205,8 @@ int main(int argc, char* argv[])
     if (myConfig == NULL) {
         while(0 != raise(SIGKILL)){}
     }
+    myIndexGroup = new index_group(myConfig->CellSize(), myConfig->BucketSize(),
+            myConfig->HeadListSize(), myConfig->MemBlockNumList(), myConfig->MemBlockNumListSize());
     pthread_t ontime_thread_id;
     pthread_t update_thread_id;
     pthread_t merge_thread_id;
