@@ -3,6 +3,10 @@
 #include "mylog.h"
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 const char* const index_group :: STR_INDEX_NAME = "index";
 const char* const index_group :: STR_INDEX_CUR_NO_FILE = "cur";
@@ -55,7 +59,7 @@ index_group :: ~index_group()
 {
 }
 
-base_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
+mem_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
 {
     MyThrowAssert(m_index_list[0] == pmem_indexer);
     // 阻塞于等待 m_index_list[1]清空
@@ -76,7 +80,7 @@ base_indexer* index_group :: swap_mem_indexer(mem_indexer* pmem_indexer)
     // -2- 通知merge线程可以把mem持久化了
     pthread_cond_signal(&m_mem_dump_cond);
     // -3- 返回一个新的mem
-    return m_index_list[0];
+    return dynamic_cast<mem_indexer*>(m_index_list[0]);
 }
 
 void index_group :: update_day_indexer(disk_indexer* pdisk_indexer)
@@ -106,17 +110,17 @@ void index_group :: update_his_indexer(disk_indexer* pdisk_indexer)
     return;
 }
 
-base_indexer*  index_group :: get_cur_mem_indexer()
+mem_indexer*  index_group :: get_cur_mem_indexer()
 {
-    return m_index_list[0];
+    return dynamic_cast<mem_indexer*>(m_index_list[0]);
 }
-base_indexer* index_group :: get_cur_day_indexer()
+disk_indexer* index_group :: get_cur_day_indexer()
 {
-    return m_index_list[2];
+    return dynamic_cast<disk_indexer*>(m_index_list[2]);
 }
-base_indexer* index_group :: get_cur_his_indexer()
+disk_indexer* index_group :: get_cur_his_indexer()
 {
-    return m_index_list[3];
+    return dynamic_cast<disk_indexer*>(m_index_list[3]);
 }
 
 int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
@@ -134,4 +138,17 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
     }
     pthread_rwlock_unlock(&m_list_rwlock);
     return lstnum;
+}
+
+uint32_t index_group :: get_cur_no(const char* dir, const char* name)
+{
+    char filename[MAX_PATH_LENGTH];
+    snprintf(filename, sizeof(filename), "%s/%s", dir, name);
+    int read_rd = open(filename, O_RDONLY);
+    MyThrowAssert(read_rd != -1);
+    memset(filename, 0, sizeof(filename));
+    MyThrowAssert(1 <= read(read_rd, filename, sizeof(filename)));
+    int cur = atoi(filename);
+    MyThrowAssert(cur == 0 || cur == 1);
+    return cur;
 }
