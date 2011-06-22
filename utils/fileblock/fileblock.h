@@ -27,7 +27,7 @@ class fileblock
         int32_t get(const uint32_t offset, const uint32_t count, void* buff, const uint32_t length);
         int32_t clear();
         void begin();
-        int32_t write_next(void* buff);
-        int32_t read_next(void* buff, const uint32_t length);
-        bool isend();
+        int32_t set_and_next(void* buff);
+        int32_t get_and_next(void* buff, const uint32_t length);
+        bool is_end();
 };

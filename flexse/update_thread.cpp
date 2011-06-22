@@ -77,7 +77,7 @@ void* update_thread(void*)
         setsockopt(clientfd, IPPROTO_TCP, TCP_NODELAY, &tcp_nodelay, sizeof(int));
         int ret = 0;
         while(0 == (ret = xrecv(clientfd, recv_head, myConfig->UpdateReadBufferSize(),
-                        myConfig->UpdateReadTimeOutMS())))
+                        myConfig->UpdateSocketTimeOutMS())))
         {
             char* jsonstr = (char*)(&recv_head[1]);
             jsonstr[recv_head->detail_len] = 0;
@@ -93,21 +93,35 @@ void* update_thread(void*)
             {
                 break;
             }
+
+            bool have_swap = false;
+            bool nearly_full = false;
             for (uint32_t i=0; i<vstr.size(); i++)
             {
-                if (postinglist::FULL == pindexer->set_posting_list(vstr[i].c_str(), &doc_id))
+                int setret = pindexer->set_posting_list(vstr[i].c_str(), &doc_id);
+                if (postinglist::FULL == setret)
                 {
                     ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
-                    pindexer = myIndexGroup->swap_mem_indexer(pindexer);
+                    pindexer = myIndexGroup->swap_mem_indexer();
                     MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
+                    have_swap = true;
                 }
+                if (postinglist::NEARLY_FULL == setret)
+                {
+                    nearly_full = true;
+                }
+            }
+            if (nearly_full && !have_swap)
+            {
+                pindexer = myIndexGroup->swap_mem_indexer(pindexer);
+                ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
             }
             send_head.log_id = recv_head->log_id;
             send_head.detail_len = 0;
-            if(0 != xsend(clientfd, &send_head, myConfig->UpdateReadTimeOutMS()))
+            if(0 != xsend(clientfd, &send_head, myConfig->UpdateSocketTimeOutMS()))
             {
                 ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
-                        ret, send_head.detail_len, myConfig->UpdateReadTimeOutMS());
+                        ret, send_head.detail_len, myConfig->UpdateSocketTimeOutMS());
                 break;
             }
             // DEBUG
@@ -120,7 +134,7 @@ void* update_thread(void*)
 //            printf("\n");
         }
         ALARM("recv socket error. ret[%d] buffsiz[%u] timeoutMS[%u] msg[%m]",
-                ret, myConfig->UpdateReadBufferSize(), myConfig->UpdateReadTimeOutMS());
+                ret, myConfig->UpdateReadBufferSize(), myConfig->UpdateSocketTimeOutMS());
         close(clientfd);
     }
     free(recv_head);

@@ -23,5 +23,8 @@ class base_indexer
         virtual int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length) = 0;
         virtual void clear() = 0;
         virtual void set_readonly() = 0;
+        virtual void begin() = 0;
+        virtual int32_t get_and_next(uint64_t& key, void* buff, const uint32_t length) = 0;
+        virtual bool is_end() = 0;
 };
 #endif

@@ -1,0 +1,30 @@
+{
+    "LOG":
+    {
+        "LogLevel" : 0,           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
+        "LogSize"  : 1073741824,  // default 1G
+        "LogName"  : "flexse"     // extend to "./log/%s.log" default = "flexse"
+    },
+    "QUERY_SERVER":
+    {
+        "EpollSize"        : 128,     // default as 128
+        "SendTimeOut_MS"   : 1000,    // default as 1000
+        "RecvTimeOut_MS"   : 1000,    // default as 1000
+        "QueryPort"        : 1983,    // default as 1983
+        "ServiceThreadNum" : 10,      // default as 20
+        "ThreadBufferSize" : 10485760 // default as 10M
+    },
+    "UPDATE_SERVER":
+    {
+        "UpdatePort"       : 1984,    // default as 1983
+        "SocketTimeOut_MS" : 1000,    // default as 10M
+        "ReadBufferSize"   : 10485760 // default as 20
+    },
+    "INDEX":
+    {
+        "PostingListCellSize"  : 4,        // default as 1983
+        "PostingBucketSize"    : 20,       // N begin 20 and 24, bucket_size = 1<<N
+        "PostingHeadListSize"  : 16777216, // default as 20
+        "PostingHeadList"      : [8012, 4096, 2048, 1024, 512, 256, 128, 64]
+    }
+}

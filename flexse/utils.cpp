@@ -39,6 +39,9 @@ namespace flexse
             return -1;
         }
 
+        int reuse_on = 1;
+        setsockopt( listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse_on, sizeof(reuse_on) );
+
         if (-1 == bind (listenfd, (struct sockaddr *) &adr_srv, len_adr))
         {
             FATAL( "bind() fail. port[%u] msg[%m]", port);
@@ -51,8 +54,6 @@ namespace flexse
             FATAL( "listen(listenfd[%u], backlog[%u]) fail. msg[%m]", listenfd, maxBackLog);
             return -1;
         }
-        int reuse_on = 1;
-        setsockopt( listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse_on, sizeof(reuse_on) );
         return listenfd;
     }
 

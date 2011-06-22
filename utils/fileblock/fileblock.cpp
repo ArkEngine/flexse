@@ -172,18 +172,18 @@ void fileblock :: begin()
 {
     m_it = 0;
 }
-int32_t fileblock :: write_next(void* buff)
+int32_t fileblock :: set_and_next(void* buff)
 {
     uint32_t cur_it = m_it ++ ;
     return set(cur_it, buff);
 }
-int32_t fileblock :: read_next(void* buff, const uint32_t length)
+int32_t fileblock :: get_and_next(void* buff, const uint32_t length)
 {
     uint32_t cur_it = m_it ++ ;
     return get(cur_it, buff, length);
 }
 
-bool fileblock :: isend()
+bool fileblock :: is_end()
 {
     return m_it == (m_max_file_no-1)*m_cell_num_per_file + m_last_file_offset/m_cell_size;
 }

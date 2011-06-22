@@ -27,12 +27,11 @@ const char* const Config::m_StrEpollSize = "EpollSize";
 
 const char* const Config::m_StrUpdatePort = "UpdatePort";
 const char* const Config::m_StrUpdateReadBufferSize = "ReadBufferSize";
-const char* const Config::m_StrUpdateReadTimeOutMS  = "ReadTimeOutMS";
+const char* const Config::m_StrUpdateSocketTimeOutMS  = "SocketTimeOut_MS";
 
 const char* const Config::m_StrCellSize = "PostingListCellSize";
 const char* const Config::m_StrBucketSize = "PostingBucketSize";
 const char* const Config::m_StrHeadListSize = "PostingHeadListSize";
-const char* const Config::m_StrMemBlockNumListSize = "PostingMemBlockNumListSize";
 const char* const Config::m_StrMemBlockNumList = "PostingMemBlockNumList";
 
 Config::Config(const char* configpath)
@@ -51,8 +50,8 @@ Config::Config(const char* configpath)
     m_thread_buffer_size = 10*1024*1024;
 
     m_update_port = 1984;
-    m_update_read_buffer_size = 10*1024*1024;
-    m_update_read_time_out_ms = 1000;
+    m_update_read_buffer_size  = 10*1024*1024;
+    m_update_socket_timeout_ms = 1000;
 
     m_cell_size = 4;
     m_bucket_size = 20;
@@ -99,8 +98,8 @@ Config::Config(const char* configpath)
         m_update_port = uSrvConfig[m_StrUpdatePort].isNull() ? m_update_port : uSrvConfig[m_StrUpdatePort].asInt();
         m_update_read_buffer_size = uSrvConfig[m_StrUpdateReadBufferSize].isNull() ?
             m_update_read_buffer_size : uSrvConfig[m_StrUpdateReadBufferSize].asInt();
-        m_update_read_time_out_ms = uSrvConfig[m_StrUpdateReadTimeOutMS].isNull() ?
-            m_update_read_time_out_ms : uSrvConfig[m_StrUpdateReadTimeOutMS].asInt();
+        m_update_socket_timeout_ms = uSrvConfig[m_StrUpdateSocketTimeOutMS].isNull() ?
+            m_update_socket_timeout_ms : uSrvConfig[m_StrUpdateSocketTimeOutMS].asInt();
     }
 
     Json::Value indexConfig = root["INDEX"];

@@ -48,3 +48,20 @@ void mem_indexer :: set_readonly()
 {
     m_postinglist.set_readonly(true);
 }
+
+void mem_indexer :: begin()
+{
+    m_postinglist.begin();
+}
+
+int32_t mem_indexer :: get_and_next(uint64_t& key, void* buff, const uint32_t length)
+{
+    return m_postinglist.get_and_next(key, buff, length);
+}
+
+bool mem_indexer :: is_end()
+{
+    return m_postinglist.isend();
+}
+
+

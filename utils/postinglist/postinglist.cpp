@@ -236,7 +236,7 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
         }
         m_headlist_used++;
     }
-    return OK;
+    return (m_headlist_size - m_headlist_used) > HEAD_LIST_WATER_LINE ? OK : NEARLY_FULL;
 }
 
 void postinglist :: set_readonly(bool readonly)
@@ -266,7 +266,7 @@ int postinglist::key_compare(const void *p1, const void *p2)
     }
 }
 
-int32_t postinglist :: begin()
+void postinglist :: begin()
 {
     // 设置为只读状态
     set_readonly(true);
@@ -280,26 +280,27 @@ int32_t postinglist :: begin()
     memmove(m_headlist_sort, m_headlist, m_headlist_used * sizeof(term_head_t));
     qsort(m_headlist_sort, m_headlist_used, sizeof(term_head_t), key_compare);
     m_headlist_sort_it = 0;
-    return 0;
+    return;
 }
-int32_t postinglist :: get_and_next(uint64_t& key, char* buff, const uint32_t length)
+int32_t postinglist :: get_and_next(uint64_t& key, void* buff, const uint32_t length)
 {
-    key = m_headlist_sort[m_headlist_sort_it++].sign64;
+    key = m_headlist_sort[m_headlist_sort_it].sign64;
+    m_headlist_sort_it++;
     return get(key, buff, length);
 }
 bool postinglist :: isend()
 {
-    return (m_headlist_sort_it == m_headlist_used);
-}
-int32_t postinglist :: finish()
-{
-    if (m_headlist_sort != NULL)
+    if (m_headlist_sort_it == m_headlist_used)
     {
         free(m_headlist_sort);
         m_headlist_sort = NULL;
+        // 不必要在改为readonly = false了，finish完之后，应该销毁的
+        return true;
     }
-    // 不必要在改为readonly = false了，finish完之后，应该销毁的
-    return 0;
+    else
+    {
+        return false;
+    }
 }
 
 void postinglist :: clear()
