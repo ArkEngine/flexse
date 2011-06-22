@@ -38,3 +38,13 @@ int32_t mem_indexer :: set_posting_list(const char* strTerm, const void* buff)
     creat_sign_64(strTerm, len, &ikey.uint1, &ikey.uint2);
     return m_postinglist.set(ikey.sign64, buff);
 }
+
+void mem_indexer :: clear()
+{
+    m_postinglist.clear();
+}
+
+void mem_indexer :: set_readonly()
+{
+    m_postinglist.set_readonly(true);
+}

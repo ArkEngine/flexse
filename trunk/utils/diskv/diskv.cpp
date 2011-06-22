@@ -103,17 +103,21 @@ int diskv :: detect_file( )
 
 void diskv :: check_new_file(const uint32_t length)
 {
-    if (length + m_last_file_offset > MAX_FILE_SIZE)
+    if (length + m_last_file_offset > MAX_FILE_SIZE 
+            || m_append_fd < 0)
     {
         // 开辟新的文件
         char full_name[MAX_PATH_LENGTH];
         snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, m_max_file_no);
         mode_t amode = (0 == access(full_name, F_OK)) ? O_WRONLY|O_APPEND : O_WRONLY|O_APPEND|O_CREAT;
-        close(m_append_fd);
+        if (m_append_fd >= 0)
+        {
+            close(m_append_fd);
+        }
         m_append_fd = open(full_name, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         MyThrowAssert(m_append_fd != -1);
         m_max_file_no ++;
-        m_last_file_offset = 0;
+        m_last_file_offset = (uint32_t)lseek(m_append_fd, 0, SEEK_END);
     }
 }
 
@@ -174,4 +178,6 @@ void diskv :: clear()
         m_read_fd[i] = -1;
         remove(full_name);
     }
+    m_max_file_no = 0;
+    m_last_file_offset = 0;
 }
