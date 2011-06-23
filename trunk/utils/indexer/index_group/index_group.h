@@ -42,8 +42,9 @@ class index_group
 
         vector<base_indexer*> m_index_list;
 
-        uint32_t get_cur_no(const char* dir, const char* file);
         void     set_cur_no(const char* dir, const char* file, const uint32_t cur);
+        uint32_t get_cur_no(const char* dir, const char* file);
+        uint32_t merger(base_indexer* src1_indexer, base_indexer* src2_indexer, disk_indexer* dest_indexer);
 
         index_group (const index_group&);
         index_group();
@@ -66,8 +67,6 @@ class index_group
         // -3- 检查是否有mem需要直接写入day_indexer
         void update_his_indexer();
         mem_indexer*  get_cur_mem_indexer();
-        disk_indexer* get_cur_day_indexer();
-        disk_indexer* get_cur_his_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
 };

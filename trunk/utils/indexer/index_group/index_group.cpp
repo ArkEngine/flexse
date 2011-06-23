@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
+#include <sys/time.h>
 
 const char* const index_group :: STR_INDEX_NAME = "index";
 const char* const index_group :: STR_INDEX_CUR_NO_FILE = "cur";
@@ -82,6 +84,80 @@ mem_indexer* index_group :: swap_mem_indexer()
     return dynamic_cast<mem_indexer*>(m_index_list[0]);
 }
 
+uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
+        src2_indexer, disk_indexer* dest_indexer)
+{
+    // 按照key的升序写入磁盘索引
+    const uint32_t length = MAX_POSTINGLIST_SIZE * m_cell_size;
+    void* src1_list = malloc(length);
+    void* src2_list = malloc(length);
+    MyThrowAssert(src1_list != NULL && src2_list != NULL);
+    ikey_t key1;
+    ikey_t key2;
+    src1_indexer->begin();
+    src2_indexer->begin();
+    dest_indexer->begin();
+    uint32_t id = 0;
+    while((!src1_indexer->is_end()) && (! src2_indexer->is_end()))
+    {
+        int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
+        int32_t num2 = src2_indexer->itget(key2.sign64, src1_list, length);
+        MyThrowAssert (num1 > 0 && num2 > 0);
+        if (key1.sign64 < key2.sign64)
+        {
+            if (num1 > 0)
+            {
+                dest_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
+                id++;
+            }
+            src1_indexer->next();
+        }
+        else if (key1.sign64 > key2.sign64)
+        {
+            if (num2 > 0)
+            {
+                dest_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
+                id++;
+            }
+            src2_indexer->next();
+        }
+        else
+        {
+            memmove(&(((char*)src1_list)[num1*m_cell_size]), src2_list, num2*m_cell_size);
+            dest_indexer->set_posting_list(id, key1, src1_list, (num1+num2)*m_cell_size);
+            id++;
+            src1_indexer->next();
+            src2_indexer->next();
+        }
+    }
+
+    while (!src1_indexer->is_end())
+    {
+        int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
+        if (num1 > 0)
+        {
+            dest_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
+            id++;
+        }
+        src1_indexer->next();
+    }
+    while (!src2_indexer->is_end())
+    {
+        int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
+        if (num2 > 0)
+        {
+            dest_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
+            id++;
+        }
+        src2_indexer->next();
+    }
+
+    dest_indexer->set_finish();
+    free(src1_list);
+    free(src2_list);
+    return id;
+}
+
 void index_group :: update_day_indexer()
 {
     pthread_mutex_lock(&m_mutex);
@@ -92,76 +168,22 @@ void index_group :: update_day_indexer()
     }
     pthread_mutex_unlock(&m_mutex);
 
-    // 执行合并过程
-    // -1- 找当当前的disk_indexer和空闲的disk_indexer
+    // 合并过程:
+    // -1- 设置当前的disk_indexer和空闲的disk_indexer
     disk_indexer* psrc_indexer = dynamic_cast<disk_indexer*>(m_index_list[2]);
     disk_indexer* pdst_indexer = dynamic_cast<disk_indexer*>((psrc_indexer == m_day[0]) ? m_day[1] : m_day[0]);
-    const uint32_t length = MAX_POSTINGLIST_SIZE * m_cell_size;
-    void* src1_list = malloc(length);
-    void* src2_list = malloc(length);
-    MyThrowAssert(src1_list != NULL && src2_list != NULL);
-    ikey_t key1;
-    ikey_t key2;
-    m_index_list[1]->begin();
-    m_index_list[2]->begin();
-    uint32_t id = 0;
-    while((!m_index_list[1]->is_end()) && (! m_index_list[2]->is_end()))
-    {
-        // get_and_next 并不适合迭代，把这两个操作分开
-        int32_t num1 = m_index_list[1]->itget(key1.sign64, src1_list, length);
-        int32_t num2 = m_index_list[2]->itget(key2.sign64, src1_list, length);
-        if (key1.sign64 < key2.sign64)
-        {
-            if (num1 > 0)
-            {
-                pdst_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
-                id++;
-            }
-            m_index_list[1]->next();
-        }
-        else if (key1.sign64 > key2.sign64)
-        {
-            if (num2 > 0)
-            {
-                pdst_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
-                id++;
-            }
-            m_index_list[2]->next();
-        }
-        else
-        {
-            MyThrowAssert (num1 > 0 && num2 > 0);
-            memmove(&(((char*)src1_list)[num1*m_cell_size]), src2_list, num2*m_cell_size);
-            pdst_indexer->set_posting_list(id, key1, src1_list, (num1+num2)*m_cell_size);
-        }
-    }
 
-    while (!m_index_list[1]->is_end())
-    {
-        int32_t num1 = m_index_list[1]->itget(key1.sign64, src1_list, length);
-        if (num1 > 0)
-        {
-            pdst_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
-        }
-        m_index_list[1]->next();
-        id++;
-    }
-    while (!m_index_list[2]->is_end())
-    {
-        int32_t num2 = m_index_list[2]->itget(key2.sign64, src2_list, length);
-        if (num2 > 0)
-        {
-            pdst_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
-        }
-        id++;
-        m_index_list[2]->next();
-    }
+    // -2- 执行合并
+    struct   timeval btv;
+    struct   timeval etv;
+    gettimeofday(&btv, NULL);
+    uint32_t id_count_merged = merger(m_index_list[1], psrc_indexer, pdst_indexer);
+    gettimeofday(&etv, NULL);
+    ROUTN ("DayMerger termCount[%u] time-consumed[%u]s\n", id_count_merged, (etv.tv_sec - btv.tv_sec));
 
-    // 执行合并完毕, 设置cur文件
+    // -3- 设置cur文件
     uint32_t cur = (pdst_indexer == m_day[0]) ? 0 : 1;
     set_cur_no(STR_DAY_INDEX_DIR, STR_INDEX_CUR_NO_FILE, cur);
-    free(src1_list);
-    free(src2_list);
 
     pthread_rwlock_wrlock(&m_list_rwlock);
     delete m_index_list[1];
@@ -178,76 +200,22 @@ void index_group :: update_his_indexer()
 {
     // 对day的索引进行一些判空，避免空合并 TODO
 
-    // 执行合并过程
-    // -1- 找当当前的disk_indexer和空闲的disk_indexer
+    // 合并过程:
+    // -1- 设置当前的disk_indexer和空闲的disk_indexer
     disk_indexer* psrc_indexer = dynamic_cast<disk_indexer*>(m_index_list[3]);
     disk_indexer* pdst_indexer = dynamic_cast<disk_indexer*>((psrc_indexer == m_his[0]) ? m_his[1] : m_his[0]);
-    const uint32_t length = MAX_POSTINGLIST_SIZE * m_cell_size;
-    void* src1_list = malloc(length);
-    void* src2_list = malloc(length);
-    MyThrowAssert(src1_list != NULL && src2_list != NULL);
-    ikey_t key1;
-    ikey_t key2;
-    m_index_list[2]->begin();
-    m_index_list[3]->begin();
-    uint32_t id = 0;
-    while((!m_index_list[2]->is_end()) && (! m_index_list[3]->is_end()))
-    {
-        // get_and_next 并不适合迭代，把这两个操作分开
-        int32_t num1 = m_index_list[2]->itget(key1.sign64, src1_list, length);
-        int32_t num2 = m_index_list[3]->itget(key2.sign64, src1_list, length);
-        if (key1.sign64 < key2.sign64)
-        {
-            if (num1 > 0)
-            {
-                pdst_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
-                id++;
-            }
-            m_index_list[2]->next();
-        }
-        else if (key1.sign64 > key2.sign64)
-        {
-            if (num2 > 0)
-            {
-                pdst_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
-                id++;
-            }
-            m_index_list[3]->next();
-        }
-        else
-        {
-            MyThrowAssert (num1 > 0 && num2 > 0);
-            memmove(&(((char*)src1_list)[num1*m_cell_size]), src2_list, num2*m_cell_size);
-            pdst_indexer->set_posting_list(id, key1, src1_list, (num1+num2)*m_cell_size);
-        }
-    }
 
-    while (!m_index_list[2]->is_end())
-    {
-        int32_t num1 = m_index_list[2]->itget(key1.sign64, src1_list, length);
-        if (num1 > 0)
-        {
-            pdst_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
-        }
-        m_index_list[2]->next();
-        id++;
-    }
-    while (!m_index_list[3]->is_end())
-    {
-        int32_t num2 = m_index_list[3]->itget(key2.sign64, src2_list, length);
-        if (num2 > 0)
-        {
-            pdst_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
-        }
-        id++;
-        m_index_list[3]->next();
-    }
+    // -2- 执行合并
+    struct   timeval btv;
+    struct   timeval etv;
+    gettimeofday(&btv, NULL);
+    uint32_t id_count_merged = merger(m_index_list[2], psrc_indexer, pdst_indexer);
+    gettimeofday(&etv, NULL);
+    ROUTN ("HisMerger termCount[%u] time-consumed[%u]s\n", id_count_merged, (etv.tv_sec - btv.tv_sec));
 
-    // 执行合并完毕, 设置cur文件
+    // -3- 设置cur文件
     uint32_t cur = (pdst_indexer == m_his[0]) ? 0 : 1;
     set_cur_no(STR_HIS_INDEX_DIR, STR_INDEX_CUR_NO_FILE, cur);
-    free(src1_list);
-    free(src2_list);
 
     pthread_rwlock_wrlock(&m_list_rwlock);
     m_index_list[2]->clear();
@@ -260,14 +228,6 @@ void index_group :: update_his_indexer()
 mem_indexer*  index_group :: get_cur_mem_indexer()
 {
     return dynamic_cast<mem_indexer*>(m_index_list[0]);
-}
-disk_indexer* index_group :: get_cur_day_indexer()
-{
-    return dynamic_cast<disk_indexer*>(m_index_list[2]);
-}
-disk_indexer* index_group :: get_cur_his_indexer()
-{
-    return dynamic_cast<disk_indexer*>(m_index_list[3]);
 }
 
 int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)

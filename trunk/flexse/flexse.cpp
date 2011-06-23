@@ -23,7 +23,7 @@
 #include "equeue.h"
 #include "ontime_thread.h"
 #include "update_thread.h"
-#include "merge_thread.h"
+#include "merger_thread.h"
 
 Config* myConfig;
 index_group* myIndexGroup;
@@ -209,13 +209,13 @@ int main(int argc, char* argv[])
             myConfig->HeadListSize(), myConfig->MemBlockNumList(), myConfig->MemBlockNumListSize());
     pthread_t ontime_thread_id;
     pthread_t update_thread_id;
-    pthread_t merge_thread_id;
+    pthread_t merger_thread_id;
     // init update thread
     MyThrowAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, NULL));
-    // init merge  thread
+    // init merger thread
     MyThrowAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, NULL));
     // init ontime thread
-    MyThrowAssert ( 0 == pthread_create(&merge_thread_id, NULL, merge_thread, NULL));
+    MyThrowAssert ( 0 == pthread_create(&merger_thread_id, NULL, merger_thread, NULL));
 
     equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->QueryPort());
     // generate service-thread
@@ -229,6 +229,6 @@ int main(int argc, char* argv[])
     }
     pthread_join( ontime_thread_id, NULL );
     pthread_join( update_thread_id, NULL );
-    pthread_join( merge_thread_id, NULL );
+    pthread_join( merger_thread_id, NULL );
     return 0;
 }

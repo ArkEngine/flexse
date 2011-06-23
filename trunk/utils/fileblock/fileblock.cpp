@@ -29,6 +29,7 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
     {
         m_fd[i] = -1;
     }
+    m_last_file_offset = 0;
     for (uint32_t i=0; i<m_max_file_no; i++)
     {
         snprintf(tmpstr, sizeof(tmpstr), FORMAT_PATH, m_fb_dir, m_fb_name, i);
@@ -43,6 +44,7 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
             m_last_file_offset = getfilesize(tmpstr);
         }
     }
+    m_it = 0;
 }
 
 int32_t fileblock :: set(const uint32_t offset, const void* buff)
