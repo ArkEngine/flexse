@@ -179,7 +179,7 @@ void index_group :: update_day_indexer()
     gettimeofday(&btv, NULL);
     uint32_t id_count_merged = merger(m_index_list[1], psrc_indexer, pdst_indexer);
     gettimeofday(&etv, NULL);
-    ROUTN ("DayMerger termCount[%u] time-consumed[%u]s\n", id_count_merged, (etv.tv_sec - btv.tv_sec));
+    ROUTN ("DayMerger termCount[%u] time-consumed[%u]s", id_count_merged, (etv.tv_sec - btv.tv_sec));
 
     // -3- 设置cur文件
     uint32_t cur = (pdst_indexer == m_day[0]) ? 0 : 1;
@@ -211,7 +211,7 @@ void index_group :: update_his_indexer()
     gettimeofday(&btv, NULL);
     uint32_t id_count_merged = merger(m_index_list[2], psrc_indexer, pdst_indexer);
     gettimeofday(&etv, NULL);
-    ROUTN ("HisMerger termCount[%u] time-consumed[%u]s\n", id_count_merged, (etv.tv_sec - btv.tv_sec));
+    ROUTN ("HisMerger termCount[%u] time-consumed[%u]s", id_count_merged, (etv.tv_sec - btv.tv_sec));
 
     // -3- 设置cur文件
     uint32_t cur = (pdst_indexer == m_his[0]) ? 0 : 1;
