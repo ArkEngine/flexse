@@ -23,16 +23,13 @@ class postinglist
 		{
 			uint32_t    used_size; ///< 已经使用的内存大小，包括头部mem_link_t的大小
 			uint32_t    self_size; ///< 这个内存块本身大小
-			uint32_t    next_size; ///< 下个内存块的本身大小
 			mem_link_t* next;
 		};
 
 		struct term_head_t
 		{
 			uint64_t     sign64;
-			uint32_t     list_num;
 			uint32_t     next;
-			uint32_t     list_buffer_size;
 			mem_link_t*  mem_link;
 		};
 

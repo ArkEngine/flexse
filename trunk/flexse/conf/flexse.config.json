@@ -22,9 +22,9 @@
     },
     "INDEX":
     {
-        "PostingListCellSize"  : 4,        // default as 1983
+        "PostingListCellSize"  : 4,        // 
         "PostingBucketSize"    : 20,       // N begin 20 and 24, bucket_size = 1<<N
-        "PostingHeadListSize"  : 16777216, // default as 20
-        "PostingHeadList"      : [8012, 4096, 2048, 1024, 512, 256, 128, 64]
+        "PostingHeadListSize"  : 16777216, // default as 16777216,
+        "PostingHeadList"      : [1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192]
     }
 }

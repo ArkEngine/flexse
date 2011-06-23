@@ -15,6 +15,7 @@ postinglist :: postinglist(
     m_postinglist_cell_size = posting_cell_size;
     // merge内存块的前提，避免连续多次merge
     MyThrowAssert(m_postinglist_cell_size <= sizeof(mem_link_t));
+    MyThrowAssert(m_postinglist_cell_size > 0);
     // 初始化bucket
     m_bucket_size = 1;
     MyThrowAssert(bucket_size < 32);
@@ -22,7 +23,7 @@ postinglist :: postinglist(
     m_bucket_mask = m_bucket_size - 1;
     m_bucket = (uint32_t*)malloc(m_bucket_size*sizeof(uint32_t));
     // 初始化headlist
-    m_headlist_size = headlist_size; // TODO
+    m_headlist_size = headlist_size < 1000000 ? 0x1000000 : headlist_size; // TODO
     m_headlist = (term_head_t*)malloc(m_headlist_size*sizeof(term_head_t));
     m_headlist_used = 0;
     m_headlist_sort = NULL;
@@ -38,15 +39,21 @@ postinglist :: postinglist(
         }
     }
     uint32_t memsize[8];
+    uint32_t mem_total_size = 0;
     for (uint32_t i=0; i<mblklist_size; i++)
     {
         memsize[i] = (i == 0) ? m_mem_base_size : memsize[i-1]*2;
+        mem_total_size += memsize[i] * mblklist[i];
     }
     
     m_memblocks = new memblocks(memsize, mblklist, mblklist_size);
     // because of END_OF_LIST == 0xFFFFFFFF
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
     m_readonly = false;
+    ROUTN("cell_size[%u] bucket_size[%u] headlist_size[%u] "
+            "memblocks_min[%u] memblocks_num[%u] mem_total_size[%u]",
+            m_postinglist_cell_size, m_bucket_size, m_headlist_size,
+            m_mem_base_size, memsize[0], mem_total_size);
 }
 
 postinglist :: ~postinglist()
@@ -78,7 +85,6 @@ postinglist::mem_link_t* postinglist :: memlinknew(const uint32_t memsiz, mem_li
     memlink->used_size = 0;
     memlink->self_size = memsiz;
     memlink->next      = next_memlink;
-    memlink->next_size = (next_memlink == NULL) ? 0 : next_memlink->self_size;
     return memlink;
 }
 
@@ -143,7 +149,6 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
             if (left_size >= m_postinglist_cell_size)
             {
                 memlinkcopy(phead->mem_link, buff, m_postinglist_cell_size);
-                phead->list_num++;
             }
             else
             {
@@ -172,7 +177,6 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                     // set 数据
                     memlinkcopy(merge_memlink, buff, m_postinglist_cell_size);
 
-                    phead->list_num++;
                     // 把新的mem_link接入headlist
                     mem_link_t* toBeFree = phead->mem_link;
                     phead->mem_link = merge_memlink;
@@ -188,9 +192,6 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
 
                     // set 数据
                     memlinkcopy(new_memlink, buff, m_postinglist_cell_size);
-
-                    phead->list_num++;
-                    phead->list_buffer_size += m_mem_base_size;
 
                     // 把新的mem_link接入headlist
                     phead->mem_link = new_memlink;
@@ -217,26 +218,22 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
         {
             // 设置 head
             m_headlist[m_headlist_used].sign64 = key;
-            m_headlist[m_headlist_used].list_num = 0;
             m_headlist[m_headlist_used].next = m_bucket[bucket_no];
-            m_headlist[m_headlist_used].list_buffer_size = 0;
             m_headlist[m_headlist_used].mem_link = NULL;
 
             // 申请 mem_link
             mem_link_t* new_memlink = memlinknew(m_mem_base_size, m_headlist[m_headlist_used].mem_link);
-            m_headlist[m_headlist_used].list_buffer_size += m_mem_base_size;
             m_headlist[m_headlist_used].mem_link = new_memlink;
 
             // set 数据
             memlinkcopy(new_memlink, buff, m_postinglist_cell_size);
-            m_headlist[m_headlist_used].list_num ++;
 
             // 接入 bucket
             m_bucket[bucket_no] = m_headlist_used;
         }
         m_headlist_used++;
     }
-    return (m_headlist_size - m_headlist_used) > HEAD_LIST_WATER_LINE ? OK : NEARLY_FULL;
+    return (m_headlist_size - m_headlist_used) >= HEAD_LIST_WATER_LINE ? OK : NEARLY_FULL;
 }
 
 void postinglist :: set_readonly(bool readonly)
