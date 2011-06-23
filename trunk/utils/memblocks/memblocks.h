@@ -72,7 +72,8 @@ class memblocks
 		uint32_t m_memsize;
 		uint32_t m_blocknum;
 		char* m_mem;
-		u_int m_mem_extra_tatol;
+		uint32_t m_mem_extra_tatol;
+        uint32_t m_log_killer;
 		pthread_mutex_t m_mutex;
 };
 
