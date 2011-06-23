@@ -76,7 +76,8 @@ int main()
         di.next();
         it++;
     }
-    di.clear();
+    di.set_finish();
+//    di.clear();
 
     free(read_buff);
     return 0;

@@ -12,7 +12,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     const uint32_t SIZE = atoi(argv[1]);
-    fileblock myfl("./data/", "myfl", sizeof(uint32_t));
+    fileblock myfl("./data/", "test", sizeof(uint32_t));
 //    myfl.begin();
 //    for (uint32_t i=0; i<SIZE; i++)
 //    {

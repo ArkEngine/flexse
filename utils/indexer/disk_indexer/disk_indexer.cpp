@@ -145,7 +145,9 @@ void disk_indexer :: set_finish()
         m_second_index.push_back(m_last_si);
     }
     // 把m_second_index写入磁盘
-    int fd = open(m_second_index_file, O_WRONLY|O_CREAT|O_TRUNC);
+
+    mode_t amode = (0 == access(m_second_index_file, F_OK)) ? O_WRONLY|O_TRUNC : O_WRONLY|O_TRUNC|O_CREAT;
+    int fd = open(m_second_index_file, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     MyThrowAssert (fd != -1);
     for (uint32_t i=0; i<m_second_index.size(); i++)
     {
