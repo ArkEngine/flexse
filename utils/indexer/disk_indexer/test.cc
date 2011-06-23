@@ -16,7 +16,7 @@ int main()
 
     // WRITE AND READ
     disk_indexer di("./data/", "test");
-    assert( 0 == di.get_posting_list("NO_SUCH_TERM", read_buff, SIZE * sizeof(uint32_t)));
+    printf("NO_SUCH_TERM ret[%d]\n", di.get_posting_list("NO_SUCH_TERM", read_buff, SIZE * sizeof(uint32_t)));
     di.clear();
 
     for (uint32_t i=0; i<SIZE; i++)
@@ -44,6 +44,7 @@ int main()
         di.next();
         it++;
     }
+    di.set_finish();
 
     // fileblock跨文件
     di.clear();
@@ -77,7 +78,7 @@ int main()
         it++;
     }
     di.set_finish();
-//    di.clear();
+    di.clear();
 
     free(read_buff);
     return 0;
