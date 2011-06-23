@@ -1,0 +1,12 @@
+[L] merger执行时对各个indexer进行判空，避免空merge
+[M] disk_indexer中加入对index_block的缓存
+[H] query服务实现
+[H] bitmet实现
+[H] ID映射
+[H] 整理系统的限制说明:
+    -1- diskv的最大文档长度是32M，postinglist和detail不得超过这个长度
+    -2- hash的冲突率
+[H] NLP集成
+[H] 灵活索引的实现
+[H] 过滤算法集成
+[H] 调权算法集成(attr/term/offset)
