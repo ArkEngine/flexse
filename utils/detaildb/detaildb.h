@@ -19,6 +19,7 @@ class detaildb
 
         // methods
         detaildb(const detaildb&);
+        detaildb();
     public:
         detaildb(const char* dir, const char* iname);
         ~detaildb();

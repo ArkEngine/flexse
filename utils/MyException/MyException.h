@@ -25,6 +25,7 @@ namespace flexse
 
 		private:
 			static void * operator new(size_t);
+			MyException();
 
 		public:
 			MyException(const char * message, const char * filename, u_int32_t line, const char * method);

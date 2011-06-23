@@ -28,10 +28,13 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname)
             m_second_index.push_back(sindex);
         }
         m_readonly = (0 != m_second_index.size());
+        ALARM("set freeze as [%u].", m_readonly);
     }
     close(fd);
     m_index_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
     MyThrowAssert(NULL != m_index_block);
+    m_last_si.milestone = 0;
+    m_last_si.ikey.sign64 = 0;
 }
 
 disk_indexer :: ~disk_indexer()
@@ -67,6 +70,10 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     {
         ALARM("strTerm[%s] buff[%p] length[%u]", strTerm, buff, length);
         return -1;
+    }
+    if (0 == m_second_index.size())
+    {
+        return 0;
     }
 
     // (1) 先读取二级索引，得到在fileblock中的第几块中
@@ -111,8 +118,11 @@ int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
         ALARM("disk_indexer is FREEZON, SO COLD.");
         return -1;
     }
-    MyThrowAssert(id   > m_last_si.milestone);
-    MyThrowAssert(ikey.sign64 > m_last_si.ikey.sign64);
+    if (m_last_si.milestone > 0)
+    {
+        MyThrowAssert(id > m_last_si.milestone);
+        MyThrowAssert(ikey.sign64 > m_last_si.ikey.sign64);
+    }
     m_last_si.milestone = id;
     m_last_si.ikey      = ikey;
     fb_index_t fi;
@@ -154,6 +164,8 @@ void disk_indexer :: clear()
     remove(m_second_index_file);
     m_fileblock.clear();
     m_diskv.clear();
+    m_last_si.milestone = 0;
+    m_last_si.ikey.sign64 = 0;
     m_readonly = false;
 }
 
