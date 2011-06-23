@@ -1,7 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <time.h>
+#include <sys/time.h>
 #include "postinglist.h"
+
+// 省去格外headlist的代价是，有好几秒无法服务。。
+// ./test 16000000 4
+// termCount[16000000] set_time-consumed[7673880]us
+// termCount[16000000] get_time-consumed[3756470]us
+// termCount[16000000] srt_time-consumed[6508016]us
+// termCount[16000000] get_time-consumed[6124646]us
+// termCount[16000000] itg_time-consumed[6297213]us
 
 int main(const int argc, char** argv)
 {
@@ -22,14 +32,18 @@ int main(const int argc, char** argv)
     }
     postinglist mypostinglist(cell_size, bucket_size, headlist_size, blocknum_list, 8);
 
+    struct   timeval btv;
+    struct   timeval etv;
+    gettimeofday(&btv, NULL);
+
     uint32_t* ubuff = (uint32_t*)malloc(VLUSIZE* 2 * sizeof(uint32_t));
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey+=2)
     {
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
             mypostinglist.set(ukey, (char*)&i);
-//            int ret = mypostinglist.set(ukey, (char*)&i);
-//            printf("%d\n", ret);
+            //            int ret = mypostinglist.set(ukey, (char*)&i);
+            //            printf("%d\n", ret);
         }
     }
     for (uint32_t ukey=1; ukey<KEYSIZE; ukey+=2)
@@ -37,11 +51,16 @@ int main(const int argc, char** argv)
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
             mypostinglist.set(ukey, (char*)&i);
-//            int ret = mypostinglist.set(ukey, (char*)&i);
-//            printf("%d\n", ret);
+            //            int ret = mypostinglist.set(ukey, (char*)&i);
+            //            printf("%d\n", ret);
         }
     }
 
+    gettimeofday(&etv, NULL);
+    ROUTN ("termCount[%u] set_time-consumed[%u]us\n", KEYSIZE,
+            (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));
+
+    gettimeofday(&btv, NULL);
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey++)
     {
         int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
@@ -51,7 +70,11 @@ int main(const int argc, char** argv)
             assert(ubuff[i] == (VLUSIZE - 1 - i));
         }
     }
+    gettimeofday(&etv, NULL);
+    ROUTN ("termCount[%u] get_time-consumed[%u]us\n", KEYSIZE,
+            (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));
 
+    gettimeofday(&btv, NULL);
     mypostinglist.begin();
     uint32_t count = 0;
     while(!mypostinglist.is_end())
@@ -67,6 +90,9 @@ int main(const int argc, char** argv)
             assert(ubuff[i] == (VLUSIZE - 1 - i));
         }
     }
+    gettimeofday(&etv, NULL);
+    ROUTN ("termCount[%u] itg_time-consumed[%u]us\n", KEYSIZE,
+            (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));
 
     free(ubuff);
 

@@ -121,6 +121,10 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
             }
             break;
         }
+        else
+        {
+            head_list_offset = phead->next;
+        }
     }
 
     return result_num;

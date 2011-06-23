@@ -133,8 +133,8 @@ void* memblocks::AllocMem(const uint32_t memsize)
 		{
 			m_mem_extra_tatol++;
 			m_mem_extra.count++;
-			ALARM("allocmem[%p] in extramem memsize[%d] blocknum[%d]",
-					tmpmem, memsize, m_mem_extra.count);
+//			ALARM("allocmem[%p] in extramem memsize[%d] blocknum[%d]",
+//					tmpmem, memsize, m_mem_extra.count);
 		}
 	}
 	pthread_mutex_unlock(&m_mutex);
