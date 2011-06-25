@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+// 危险的是，没有fsync.
+
 class diskv
 {
     private:
