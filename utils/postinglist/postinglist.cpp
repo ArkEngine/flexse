@@ -59,6 +59,19 @@ postinglist :: postinglist(
 postinglist :: ~postinglist()
 {
     // 你确认没人使用了postinglist哦，否则就 SIGNAL 11
+    // 遍历所有的memblocks，释放内存
+    for (uint32_t head_list_offset=0; head_list_offset<m_headlist_used; head_list_offset++)
+    {
+        term_head_t* phead = &m_headlist[head_list_offset];
+        mem_link_t* mem_link = phead->mem_link;
+        MyThrowAssert(mem_link != NULL);
+        while(mem_link != NULL)
+        {
+            mem_link_t* tmp_mem_link = mem_link;
+            mem_link = mem_link->next;
+            m_memblocks->FreeMem(tmp_mem_link);
+        }
+    }
     delete m_memblocks;
     m_memblocks = NULL;
     free(m_headlist);
@@ -322,8 +335,8 @@ void postinglist :: clear()
         MyThrowAssert(mem_link != NULL);
         while(mem_link != NULL)
         {
-            mem_link = mem_link->next;
             mem_link_t* tmp_mem_link = mem_link;
+            mem_link = mem_link->next;
             m_memblocks->FreeMem(tmp_mem_link);
         }
     }

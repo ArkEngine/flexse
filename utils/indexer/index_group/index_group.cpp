@@ -59,6 +59,10 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
 
 index_group :: ~index_group()
 {
+    for (uint32_t i=0; i<m_index_list.size(); i++)
+    {
+        delete m_index_list[i];
+    }
 }
 
 mem_indexer* index_group :: swap_mem_indexer()

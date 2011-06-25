@@ -22,6 +22,7 @@ class fileblock
         uint32_t getfilesize( const char* name );
     public:
         fileblock(const char* dir, const char* filename, const uint32_t cell_size);
+        ~fileblock();
         int32_t set(const uint32_t offset, const void* buff);
         int32_t get(const uint32_t offset, void* buff, const uint32_t length);
         int32_t get(const uint32_t offset, const uint32_t count, void* buff, const uint32_t length);

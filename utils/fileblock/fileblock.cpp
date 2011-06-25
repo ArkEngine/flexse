@@ -47,6 +47,19 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
     m_it = 0;
 }
 
+fileblock :: ~fileblock()
+{
+    for (uint32_t i=0; i<MAX_FILE_NO; i++)
+    {
+        if (m_fd[i] >= 0)
+        {
+            fsync(m_fd[i]);
+            close(m_fd[i]);
+            m_fd[i] = -1;
+        }
+    }
+}
+
 int32_t fileblock :: set(const uint32_t offset, const void* buff)
 {
     uint32_t file_no  = offset / m_cell_num_per_file;
