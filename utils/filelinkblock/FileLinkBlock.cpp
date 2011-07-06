@@ -1,6 +1,7 @@
 #include "FileLinkBlock.h"
 #include "MyException.h"
 #include "mylog.h"
+#include "creat_sign.h"
 #include <dirent.h>
 #include <string.h>
 #include <ctype.h>
@@ -13,10 +14,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <assert.h>
-
-extern "C" {
-#include "creat_sign.h"
-}
 
 const char* const FileLinkBlock::BASE_DATA_PATH = "./data/";
 const char* const FileLinkBlock::BASE_OFFSET_PATH = "./offset/";
