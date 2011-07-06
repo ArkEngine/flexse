@@ -2,12 +2,13 @@
 
 uint32_t BKDRHash(const char *str, const uint32_t length)
 {
-    uint32_t seed = 131; // 31 131 1313 13131 131313 etc..
+    uint32_t seed = 131313; // 31 131 1313 13131 131313 etc..
     uint32_t hash = 0;
 
-    for (uint32_t i=0; i<length; i++)
+    uint32_t i=0;
+    for (i=0; i<length; i++)
     {
-        hash = hash * seed + (*str++);
+        hash = hash * seed + (uint8_t)(*str++);
     }
 
     return (hash & 0x7FFFFFFF);
@@ -16,17 +17,17 @@ uint32_t BKDRHash(const char *str, const uint32_t length)
 uint32_t APHash(const char *str, const uint32_t length)
 {
     uint32_t hash = 0;
-    uint32_t i;
 
+    uint32_t i;
     for (i=0; i<length; i++)
     {
         if ((i & 1) == 0)
         {
-            hash ^= ((hash << 7) ^ (*str++) ^ (hash >> 3));
+            hash ^= ((hash << 7) ^ (uint8_t)(*str++) ^ (hash >> 3));
         }
         else
         {
-            hash ^= (~((hash << 11) ^ (*str++) ^ (hash >> 5)));
+            hash ^= (~((hash << 11) ^ (uint8_t)(*str++) ^ (hash >> 5)));
         }
     }
 
