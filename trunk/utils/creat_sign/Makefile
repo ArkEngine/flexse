@@ -1,4 +1,4 @@
-CC= gcc
+CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib
 
@@ -14,7 +14,7 @@ MAINOBJ= test.o
 INCS= -I -fpic -I/usr/include/python2.7 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
-		  -Wwrite-strings -Wswitch -Wconversion -Wredundant-decls \
+		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
 all: clean $(LIB) $(PYEXT) $(MAIN)
