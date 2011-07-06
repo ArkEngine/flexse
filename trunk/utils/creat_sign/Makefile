@@ -1,19 +1,23 @@
-CC= g++
+CC= gcc
 SHELL= /bin/sh
 RANLIB=ranlib
 
 LIB= libcreat_sign.a
 LIBOBJ= creat_sign.o
 
+PYEXT= creat_sign.so
+PYEXTOBJ= creat_sign.o pycreat_sign.o
+
 MAIN= test
 MAINOBJ= test.o
 
+INCS= -I -fpic -I/usr/include/python2.7 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
-		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
+		  -Wwrite-strings -Wswitch -Wconversion -Wredundant-decls \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB) $(MAIN)
+all: clean $(LIB) $(PYEXT) $(MAIN)
 #all: clean $(LIB)
 	rm *.o -f
 
@@ -25,6 +29,10 @@ $(LIB): $(LIBOBJ)
 	mkdir include/
 	mv $(LIB) lib/
 	cp creat_sign.h include/
+
+$(PYEXT): $(PYEXTOBJ)
+	gcc -o $@ $^ -shared
+	mv creat_sign.so lib/
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@
