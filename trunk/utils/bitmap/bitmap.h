@@ -1,3 +1,7 @@
+/*
+ * bitmap 只处理1个bit的事情，这个bit要么是0，要么是1，就这么简单。
+ * 因此提供了三个接口，获取这个值，设置为0，设置为1.
+ */
 #ifndef _BITMAP_H_
 #define _BITMAP_H_
 #include <stdint.h>
