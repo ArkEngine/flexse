@@ -1,5 +1,5 @@
 #include "merger_thread.h"
-#include "Config.h"
+#include "config.h"
 #include "mylog.h"
 #include "index_group.h"
 #include <unistd.h>

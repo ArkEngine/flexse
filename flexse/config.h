@@ -32,14 +32,14 @@ class Config
 
         // query server config
         uint32_t m_pollsize; // socket pool size
-		uint32_t m_query_port;
+		uint16_t m_query_port;
 		uint32_t m_thread_buffer_size;
 		uint32_t m_service_thread_num;
 		uint32_t m_rtimeout_ms;
 		uint32_t m_wtimeout_ms;
 
         // update server config
-        uint32_t m_update_port;
+        uint16_t m_update_port;
         uint32_t m_update_read_buffer_size;
         uint32_t m_update_socket_timeout_ms;
 

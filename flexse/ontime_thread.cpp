@@ -1,5 +1,5 @@
 #include "ontime_thread.h"
-#include "Config.h"
+#include "config.h"
 #include "mylog.h"
 #include <unistd.h>
 

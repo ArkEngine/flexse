@@ -13,3 +13,4 @@ all:
 	make -C detaildb/
 	make -C bitmap/
 	make -C bitlist/
+	make -C xhead/

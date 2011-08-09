@@ -2,7 +2,7 @@
 #define  __THREADDATA_H_
 #include <stdint.h>
 #include "mylog.h"
-#include "xHead.h"
+#include "xhead.h"
 #include "equeue.h"
 #include <pthread.h>
 #include <sys/socket.h>

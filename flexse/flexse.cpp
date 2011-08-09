@@ -14,11 +14,11 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include "Config.h"
+#include "config.h"
 #include "mylog.h"
-#include "xHead.h"
+#include "xhead.h"
 #include "index_group.h"
-#include "ThreadData.h"
+#include "thread_data.h"
 #include "MyException.h"
 #include "equeue.h"
 #include "ontime_thread.h"

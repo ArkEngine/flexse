@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include "mylog.h"
 #include "MyException.h"
-#include "Config.h"
+#include "config.h"
 
 using namespace std;
 
