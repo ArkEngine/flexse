@@ -12,3 +12,4 @@ all:
 	make -C indexer/
 	make -C detaildb/
 	make -C bitmap/
+	make -C bitlist/
