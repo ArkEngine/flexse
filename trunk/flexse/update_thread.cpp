@@ -1,9 +1,9 @@
 #include "update_thread.h"
-#include "Config.h"
+#include "config.h"
 #include "MyException.h"
 #include "mylog.h"
-#include "utils.h"
-#include "xHead.h"
+#include "myutils.h"
+#include "xhead.h"
 #include "mem_indexer.h"
 #include "index_group.h"
 #include <json/json.h>

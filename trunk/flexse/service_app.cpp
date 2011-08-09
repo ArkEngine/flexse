@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <json/json.h>
 #include <sys/time.h>
-#include "ThreadData.h"
-#include "Config.h"
+#include "thread_data.h"
+#include "config.h"
 #include "mylog.h"
 #include "index_group.h"
-#include "xHead.h"
+#include "xhead.h"
 #include <string.h>
 
 #define TIME_US_COST(pre, cur) (((cur.tv_sec)-(pre.tv_sec))*1000000 + \

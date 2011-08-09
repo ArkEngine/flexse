@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include "xHead.h"
+#include "xhead.h"
 #include "mylog.h"
 #include <sys/types.h>
 #include <sys/socket.h>

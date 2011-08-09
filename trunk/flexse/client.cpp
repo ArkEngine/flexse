@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <assert.h>
-#include "xHead.h"
+#include "xhead.h"
 
 void
 bail (const char *on_what)

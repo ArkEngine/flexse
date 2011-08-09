@@ -1,7 +1,7 @@
 CC= g++
 SHELL= /bin/sh
 
-OBJ= ServiceApp.o Config.o xHead.o equeue.o flexse.o ontime_thread.o update_thread.o merger_thread.o utils.o
+OBJ= service_app.o config.o flexse.o ontime_thread.o update_thread.o merger_thread.o
 
 MAIN= flexse
 TEST= client
@@ -9,6 +9,9 @@ TEST= client
 VERINFO= -DPROJNAME="\"$(MAIN)\"" -DVERSION="\"$(MAIN) 0.0.0.1\""
 
 INCS= -I ../utils/mylog/include/ \
+	  -I ../utils/xhead/include/ \
+	  -I ../utils/equeue/include/ \
+	  -I ../utils/myutils/include/ \
 	  -I ../utils/MyException/include/ \
 	  -I ../utils/postinglist/include/ \
 	  -I ../utils/memblocks/include/ \
@@ -30,8 +33,11 @@ LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../utils/diskv/lib/                -ldiskv \
 		 -L ../utils/memblocks/lib/            -lmemblocks \
 		 -L ../utils/creat_sign/lib/           -lcreat_sign \
-		 -L ../utils/MyException/lib/          -lMyException \
+		 -L ../utils/equeue/lib/               -lequeue \
+		 -L ../utils/myutils/lib/              -lmyutils \
+		 -L ../utils/xhead/lib/                -lxhead \
 		 -L ../utils/mylog/lib/                -lmylog \
+		 -L ../utils/MyException/lib/          -lMyException \
 
 CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror
@@ -56,4 +62,4 @@ clean:
 	rm -rf bin/ log/
 
 client:
-	g++ client.cpp xHead.cpp -o $(TEST) $(CPPFLAGS) -L ../utils/mylog/ -lmylog -L ../utils/MyException/lib/ -lMyException
+	g++ client.cpp -o $(TEST) $(CPPFLAGS) $(LDFLAGS)
