@@ -25,7 +25,6 @@ main (int argc, char **argv) {
   int err;
   char *srvr_addr = NULL;
   int port_num;
-  struct sockaddr_in adr_srvr;	/* AF_INET */
   int len_inet;			/* length  */
   int sockfd;			/* Socket */
 
@@ -36,6 +35,8 @@ main (int argc, char **argv) {
 	  printf("usage:%s dst_ip dst_port cicle\n", argv[0]);
 	  bail("try again!");
   }
+
+  struct sockaddr_in adr_srvr;	/* AF_INET */
   len_inet = sizeof adr_srvr;
   memset (&adr_srvr, 0, len_inet);
   adr_srvr.sin_family = AF_INET;
