@@ -1,6 +1,7 @@
 all:
 	make -C MyException/
 	make -C mylog/
+	make -C myutils/
 	make -C structmask/
 	make -C algo/
 	make -C creat_sign/
@@ -15,4 +16,3 @@ all:
 	make -C bitlist/
 	make -C xhead/
 	make -C equeue/
-	make -C myutils/
