@@ -14,3 +14,5 @@ all:
 	make -C bitmap/
 	make -C bitlist/
 	make -C xhead/
+	make -C equeue/
+	make -C myutils/
