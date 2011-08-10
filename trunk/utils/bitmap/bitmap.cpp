@@ -14,7 +14,7 @@ bitmap :: bitmap (const char* dir, const char* file, const uint32_t filesize)
     char filename[MAX_FILENAME_LENGTH];
     snprintf(filename, sizeof(filename), "%s/%s", dir, file);
     mode_t amode = (0 == access(filename, F_OK)) ? O_RDWR : O_RDWR|O_CREAT ;
-    m_fd = open(filename, amode);
+    m_fd = open(filename, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     MyThrowAssert(m_fd != -1);
     MyThrowAssert (-1 != lseek(m_fd, filesize-1, SEEK_SET));
     MyThrowAssert ( 1 == write(m_fd, "", 1));
