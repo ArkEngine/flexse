@@ -10,18 +10,18 @@
 bitlist :: bitlist (const char* dir, const char* file,
 		const uint32_t cellsize, const uint32_t filesize)
 {
+    // cellsize means size of the cell by uint32_t
 	m_cellsize = cellsize;
 	m_filesize = filesize;
-	MyThrowAssert((0 == (m_filesize % m_cellsize))
-			&& (0 == (m_cellsize % sizeof(uint32_t)))
-			&& m_filesize > 0);
-	m_cellcount = m_filesize / m_cellsize;
+	MyThrowAssert((0 == (m_filesize % (m_cellsize*sizeof(uint32_t))))
+			&& m_filesize > 0 && m_cellsize > 0);
+	m_cellcount = m_filesize / (m_cellsize*sizeof(uint32_t));
 
 	char filename[MAX_FILENAME_LENGTH];
 	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
 
 	mode_t amode = (0 == access(filename, F_OK)) ? O_RDWR : O_RDWR|O_CREAT ;
-	m_fd = open(filename, amode);
+	m_fd = open(filename, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 	MyThrowAssert(m_fd != -1);
 	MyThrowAssert (-1 != lseek(m_fd, filesize-1, SEEK_SET));
 	MyThrowAssert ( 1 == write(m_fd, "", 1));
