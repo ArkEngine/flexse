@@ -9,17 +9,18 @@ MAIN= test
 MAINOBJ= test.o
 
 MAINLIBS= -L ./lib/ -lbitlist \
+		  -L ../structmask/lib/ -lstructmask \
 		  -L ../MyException/lib/ -lMyException \
 		  -L ../mylog/lib/ -lmylog
 
-INCS= -I ../mylog/include/ -I ../MyException/include/ -I ./include/
+INCS= -I ../mylog/include/ -I ../MyException/include/ -I ../structmask/include -I ./include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-#all: clean $(LIB) $(MAIN)
-all: clean $(LIB)
+all: clean $(LIB) $(MAIN)
+#all: clean $(LIB)
 	rm *.o -f
 
 $(LIB): $(LIBOBJ)
