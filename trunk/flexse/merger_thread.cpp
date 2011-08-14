@@ -2,12 +2,14 @@
 #include "config.h"
 #include "mylog.h"
 #include "index_group.h"
+#include "flexse_plugin.h"
 #include <unistd.h>
 
-extern index_group* myIndexGroup;
 
-void* merger_thread(void*)
+void* merger_thread(void* args)
 {
+    flexse_plugin* pflexse_plugin = (flexse_plugin*)args;
+    index_group* myIndexGroup = pflexse_plugin->getIndexGroup();
     while(1)
     {
         ROUTN("this is merger thread");

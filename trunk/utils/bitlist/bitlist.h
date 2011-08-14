@@ -6,16 +6,6 @@
 #define _BITLIST_H_
 #include <stdint.h>
 
-#define BIT_COUNT 32
-#define BIT_MASK  31
-
-#define _GET_BITMAP_(mybitlist, offset) \
-        (((mybitlist.puint[(offset)/BIT_COUNT]) >> (offset&BIT_MASK)) & 1)
-#define _SET_BITMAP_1_(mybitlist, offset) \
-        ((mybitlist.puint[(offset)/BIT_COUNT]) |= (1<<((offset)&BIT_MASK)))
-#define _SET_BITMAP_0_(mybitlist, offset) \
-        ((mybitlist.puint[(offset)/BIT_COUNT]) &= (~(1<<((offset)&BIT_MASK))))
-
 class bitlist
 {
     private:

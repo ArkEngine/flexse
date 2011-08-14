@@ -1,6 +1,7 @@
 #include "nlp_processor.h"
 #include <set>
 #include <string.h>
+#include <stdio.h>
 
 nlp_processor:: nlp_processor()
 {}
@@ -16,12 +17,17 @@ void nlp_processor:: split(char* str, vector<string>& vstr)
     while(NULL != (strb=strchr(str, ' ')))
     {
         *strb = '\0';
-        if (strset.end() == strset.find(string(stri)))
+        if (strset.end() == strset.find(string(str)))
         {
-            vstr.push_back(string(stri));
-            strset.insert(string(stri));
+            vstr.push_back(string(str));
+            strset.insert(string(str));
+//            printf("uni key: %s\n", str);
         }
-        stri = strb + 1;
+//        else
+//        {
+//            printf("dup key: %s - leftstring: %s --------\n", str, strb+1);
+//        }
+        str = strb + 1;
         *strb = ' ';
     }
     if (strset.end() == strset.find(string(stri)))

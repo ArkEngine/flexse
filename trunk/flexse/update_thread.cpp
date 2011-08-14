@@ -8,6 +8,7 @@
  */
 #include "update_thread.h"
 #include "config.h"
+#include "flexse_plugin.h"
 #include "MyException.h"
 #include "mylog.h"
 #include "myutils.h"
@@ -26,43 +27,12 @@
 #include <arpa/inet.h>
 
 extern Config* myConfig;
-extern index_group* myIndexGroup;
-nlp_processor mynlp_processor;
 using namespace flexse;
 
-int insert_process(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
+void* update_thread(void* args)
 {
-    Json::Value root;
-    Json::Reader reader;
-    if (! reader.parse(jsonstr, root))
-    {
-        ALARM("jsonstr format error. [%s]", jsonstr);
-        return -1;
-    }
-    if (root["DOC_ID"].isNull())
-    {
-        ALARM("jsonstr NOT contain 'DOC_ID'. [%s]", jsonstr);
-        return -1;
-    }
-    else
-    {
-        doc_id = root["DOC_ID"].asInt();
-    }
+    flexse_plugin* pflexse_plugin = (flexse_plugin*)args;
 
-    if (root["CONTENT"].isNull() || !root["CONTENT"].isString())
-    {
-        ALARM("jsonstr NOT contain 'CONTENT'. [%s]", jsonstr);
-        return -1;
-    }
-    else
-    {
-        mynlp_processor.split((char*)root["CONTENT"].asCString(), vstr);
-    }
-    return 0;
-}
-
-void* update_thread(void*)
-{
     int32_t listenfd = mylisten(myConfig->UpdatePort());
     MyThrowAssert(listenfd != -1);
     xhead_t* recv_head = (xhead_t*)malloc(myConfig->UpdateReadBufferSize());
@@ -71,8 +41,6 @@ void* update_thread(void*)
     snprintf(send_head.srvname, sizeof(send_head.srvname), "%s", PROJNAME);
     send_head.log_id = recv_head->log_id;
     send_head.detail_len = 0;
-
-    mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
     while(1)
     {
@@ -84,7 +52,7 @@ void* update_thread(void*)
             ALARM( "accept client fail, don't fuck me. msg[%m]");
             continue;
         }
-        //        setnonblock(clientfd);
+        // setnonblock(clientfd);
         int tcp_nodelay = 1;
         setsockopt(clientfd, IPPROTO_TCP, TCP_NODELAY, &tcp_nodelay, sizeof(int));
         int ret = 0;
@@ -101,41 +69,47 @@ void* update_thread(void*)
                 break;
             }
 
-            //            ROUTN("client[%s] ip[%s] message[%s]",
-            //                    recv_head->srvname, inet_ntoa (cltaddr.sin_addr), (char*)(&recv_head[1]));
-            // 你该干点什么了
-            // (1) 插入，自己分辨出什么是否需要更新 d-a 数据
-            // (2) 删除
-            vector<string> vstr;
-            uint32_t       doc_id;
-            int retp = insert_process(jsonstr, doc_id, vstr);
-            if (retp != 0)
+            if ( root["OPERATION"].isNull() || ! root["OPERATION"].isString() )
             {
+                ALARM("jsonstr NOT contain 'OPERATION'. [%s]", jsonstr);
                 break;
             }
 
-            bool have_swap = false;
-            bool nearly_full = false;
-            for (uint32_t i=0; i<vstr.size(); i++)
+            const char* str_operation = root["OPERATION"].asCString();
+            if (0 == strcmp(str_operation, "INSERT"))
             {
-                int setret = pindexer->set_posting_list(vstr[i].c_str(), &doc_id);
-                if (postinglist::FULL == setret)
+                if (0 != add(pflexse_plugin, jsonstr))
                 {
-                    ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
-                    pindexer = myIndexGroup->swap_mem_indexer();
-                    MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
-                    have_swap = true;
-                }
-                if (postinglist::NEARLY_FULL == setret)
-                {
-                    nearly_full = true;
+                    break;
                 }
             }
-            if (nearly_full && !have_swap)
+            else if (0 == strcmp(str_operation, "UPDATE"))
             {
-                pindexer = myIndexGroup->swap_mem_indexer();
-                ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
+                if (0 != mod(pflexse_plugin, jsonstr))
+                {
+                    break;
+                }
             }
+            else if (0 == strcmp(str_operation, "DELETE"))
+            {
+                if (0 != del(pflexse_plugin, jsonstr))
+                {
+                    break;
+                }
+            }
+            else if (0 == strcmp(str_operation, "RESTORE"))
+            {
+                if (0 != undel(pflexse_plugin, jsonstr))
+                {
+                    break;
+                }
+            }
+            else
+            {
+                ALARM("undefined OPERATION[%s].", str_operation);
+                break;
+            }
+
             if(0 != xsend(clientfd, &send_head, myConfig->UpdateSocketTimeOutMS()))
             {
                 ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
@@ -144,16 +118,8 @@ void* update_thread(void*)
             }
             else
             {
-                ROUTN("update OK! doc_id[%u] message[%s]", doc_id, jsonstr);
+                ROUTN("update OK! message[%s]", jsonstr);
             }
-            // DEBUG
-            //            uint32_t plist[1000];
-            //            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
-            //            for (int i=0; i<rnum; i++)
-            //            {
-            //                printf("[%u] ", plist[i]);
-            //            }
-            //            printf("\n");
         }
         ALARM("recv socket error. ret[%d] buffsiz[%u] timeoutMS[%u] msg[%m]",
                 ret, myConfig->UpdateReadBufferSize(), myConfig->UpdateSocketTimeOutMS());
@@ -162,4 +128,126 @@ void* update_thread(void*)
     free(recv_head);
     close(listenfd);
     return NULL;
+}
+
+int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
+{
+    vector<string> vstr;
+    uint32_t       doc_id;
+    int retp = pflexse_plugin->add(jsonstr, doc_id, vstr);
+    if (retp != 0)
+    {
+        return -1;
+    }
+
+    index_group* myIndexGroup = pflexse_plugin->getIndexGroup();
+    mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
+
+    bool have_swap = false;
+    bool nearly_full = false;
+    for (uint32_t i=0; i<vstr.size(); i++)
+    {
+        int setret = pindexer->set_posting_list(vstr[i].c_str(), &doc_id);
+        if (postinglist::FULL == setret)
+        {
+            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
+            pindexer = myIndexGroup->swap_mem_indexer();
+            MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
+            have_swap = true;
+        }
+        if (postinglist::NEARLY_FULL == setret)
+        {
+            nearly_full = true;
+        }
+    }
+    if (nearly_full && !have_swap)
+    {
+        pindexer = myIndexGroup->swap_mem_indexer();
+        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
+    }
+    // DEBUG
+    //            uint32_t plist[1000];
+    //            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
+    //            for (int i=0; i<rnum; i++)
+    //            {
+    //                printf("[%u] ", plist[i]);
+    //            }
+    //            printf("\n");
+    return 0;
+}
+
+int mod(flexse_plugin* pflexse_plugin, const char* jsonstr)
+{
+    vector<string> vstr;
+    uint32_t       doc_id;
+    int retp = pflexse_plugin->mod(jsonstr, doc_id, vstr);
+    if (retp != 0)
+    {
+        return -1;
+    }
+
+    index_group* myIndexGroup = pflexse_plugin->getIndexGroup();
+    mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
+
+    bool have_swap = false;
+    bool nearly_full = false;
+    for (uint32_t i=0; i<vstr.size(); i++)
+    {
+        int setret = pindexer->set_posting_list(vstr[i].c_str(), &doc_id);
+        if (postinglist::FULL == setret)
+        {
+            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
+            pindexer = myIndexGroup->swap_mem_indexer();
+            MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
+            have_swap = true;
+        }
+        if (postinglist::NEARLY_FULL == setret)
+        {
+            nearly_full = true;
+        }
+    }
+    if (nearly_full && !have_swap)
+    {
+        pindexer = myIndexGroup->swap_mem_indexer();
+        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
+    }
+    // DEBUG
+    //            uint32_t plist[1000];
+    //            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
+    //            for (int i=0; i<rnum; i++)
+    //            {
+    //                printf("[%u] ", plist[i]);
+    //            }
+    //            printf("\n");
+    return 0;
+}
+
+int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
+{
+    vector<uint32_t> id_list;
+    int retp = pflexse_plugin->del(jsonstr, id_list);
+    if (retp != 0)
+    {
+        return -1;
+    }
+
+    // update the del bitmap
+    // TODO
+
+    return 0;
+}
+
+int undel(flexse_plugin* pflexse_plugin, const char* jsonstr)
+{
+    vector<uint32_t> id_list;
+    int retp = pflexse_plugin->undel(jsonstr, id_list);
+    if (retp != 0)
+    {
+        return -1;
+    }
+
+    // update the del bitmap
+    // TODO
+
+    return 0;
 }

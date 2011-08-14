@@ -39,7 +39,7 @@ Config::Config(const char* configpath)
     // DEFAULT CONFIG
     m_log_level = mylog :: ROUTN;
     m_log_size  = 1 << 31;
-    m_log_name  = "flexse";
+    m_log_name  = PROJNAME;
     SETLOG(m_log_level, m_log_size, m_log_name);
 
     m_pollsize           = 128;
@@ -52,6 +52,9 @@ Config::Config(const char* configpath)
     m_update_port = 1984;
     m_update_read_buffer_size  = 10*1024*1024;
     m_update_socket_timeout_ms = 1000;
+
+    snprintf(m_plugin_config_path, sizeof(m_plugin_config_path),
+            "%s", "./conf/plugin.config.json");
 
     m_cell_size = 4;
     m_bucket_size = 20;
