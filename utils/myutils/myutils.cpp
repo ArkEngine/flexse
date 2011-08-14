@@ -71,26 +71,4 @@ namespace flexse
         }
         return 0;
     }
-
-    void strspliter(char* str, vector<string>& vstr)
-    {
-        char* stri = str;
-        char* strb = str;
-        set<string> strset;
-        while(NULL != (strb=strchr(stri, ' ')))
-        {
-            *strb = '\0';
-            if (strset.end() == strset.find(string(stri)))
-            {
-                vstr.push_back(string(stri));
-                strset.insert(string(stri));
-            }
-            stri = strb + 1;
-            *strb = ' ';
-        }
-        if (strset.end() == strset.find(string(stri)))
-        {
-            vstr.push_back(string(stri));
-        }
-    }
 }

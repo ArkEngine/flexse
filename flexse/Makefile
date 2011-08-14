@@ -9,6 +9,7 @@ TEST= client
 VERINFO= -DPROJNAME="\"$(MAIN)\"" -DVERSION="\"$(MAIN) 0.0.0.1\""
 
 INCS= -I ../utils/mylog/include/ \
+	  -I ../utils/nlp_processor/include/ \
 	  -I ../utils/xhead/include/ \
 	  -I ../utils/equeue/include/ \
 	  -I ../utils/myutils/include/ \
@@ -24,6 +25,7 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../opensrc/jsoncpp/include/ \
 
 LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
+		 -L ../utils/nlp_processor/lib/        -lnlp_processor \
 		 -L ../utils/indexer/index_group/lib/  -lindex_group \
 		 -L ../utils/indexer/mem_indexer/lib/  -lmem_indexer \
 		 -L ../utils/indexer/disk_indexer/lib/ -ldisk_indexer \
