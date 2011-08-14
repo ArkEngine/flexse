@@ -18,8 +18,7 @@ class FileLinkBlock
             uint32_t block_id;        ///< 本块中从0递增的序号
             uint32_t timestamp;       ///< 写入的时间点，可以用于回放时判断的依据
             uint32_t log_id;          ///< 用于追查问题
-            uint32_t check_sum1;      ///< 对block_buff这段内存的校验值
-            uint32_t check_sum2;      ///< 对block_buff这段内存的校验值
+            uint32_t check_sum[2];    ///< 对block_buff这段内存的校验值
             uint32_t reserved[2];     ///< 预留位
             uint32_t block_size;      ///< block_buff的长度
             char     block_buff[0];   ///< 块的内容，二进制结构
@@ -44,19 +43,20 @@ class FileLinkBlock
         FileLinkBlock();
         int __write_message(const uint32_t logid, const char* buff, const uint32_t buff_size);
         int newfile(const char* strfile);
-    public:
-        FileLinkBlock(const char* path, const char* name);
-        ~FileLinkBlock();
-        int check_and_repaire();
-        int write_message(const uint32_t logid, const char* buff, const uint32_t buff_size);
+        int detect_file();
         int seek_message(const uint32_t file_no, const uint32_t file_offset, const uint32_t block_id);
+        void check_and_repaire();
+        int  readn(int fd, char* buf, const uint32_t size);
+    public:
+        FileLinkBlock(const char* path, const char* name, bool readonly);
+        ~FileLinkBlock();
+        int write_message(const uint32_t logid, const char* buff, const uint32_t buff_size);
+
         int seek_message(const uint32_t file_no, const uint32_t block_id);
         int read_message(uint32_t& log_id, uint32_t& block_id, char* buff, const uint32_t buff_size);
-        int detect_file( );
         void set_channel(const char* channel_name);
-        void log_offset();
+        void save_offset();
         void load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& block_id);
-        int readn(int fd, char* buf, const uint32_t size);
 };
 
 
