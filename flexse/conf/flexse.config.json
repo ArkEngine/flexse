@@ -16,9 +16,9 @@
     },
     "UPDATE_SERVER":
     {
-        "UpdatePort"       : 1984,    // default as 1983
-        "SocketTimeOut_MS" : 1000,    // default as 10M
-        "ReadBufferSize"   : 10485760 // default as 20
+        "UpdatePort"       : 1984,    // default as 1984
+        "SocketTimeOut_MS" : 1000,    // default as 1s
+        "ReadBufferSize"   : 10485760 // default as 10M
     },
     "INDEX":
     {

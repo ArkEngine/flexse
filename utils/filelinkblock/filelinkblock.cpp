@@ -227,16 +227,16 @@ int FileLinkBlock::detect_file( )
             if (*cc == '\0')
             {
                 int n = atoi(&pn[len]);
-                DEBUG( "-- %d", n);
+//                DEBUG( "-- %d", n);
                 if (n > max)
                 {
                     max = n;
                 }
             }
-            else
-            {
-                DEBUG( "^^ invalid file name : %s", dirp->d_name);
-            }
+//            else
+//            {
+//                DEBUG( "^^ invalid file name : %s", dirp->d_name);
+//            }
         }
     }
 
