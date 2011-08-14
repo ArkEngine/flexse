@@ -29,11 +29,6 @@ const char* const Config::m_StrUpdatePort = "UpdatePort";
 const char* const Config::m_StrUpdateReadBufferSize = "ReadBufferSize";
 const char* const Config::m_StrUpdateSocketTimeOutMS  = "SocketTimeOut_MS";
 
-const char* const Config::m_StrCellSize = "PostingListCellSize";
-const char* const Config::m_StrBucketSize = "PostingBucketSize";
-const char* const Config::m_StrHeadListSize = "PostingHeadListSize";
-const char* const Config::m_StrMemBlockNumList = "PostingMemBlockNumList";
-
 Config::Config(const char* configpath)
 {
     // DEFAULT CONFIG
@@ -55,15 +50,6 @@ Config::Config(const char* configpath)
 
     snprintf(m_plugin_config_path, sizeof(m_plugin_config_path),
             "%s", "./conf/plugin.config.json");
-
-    m_cell_size = 4;
-    m_bucket_size = 20;
-    m_headlist_size = 0x1000000;
-    m_memblocknumlistsize = 8;
-    for (uint32_t i=0; i<8; i++)
-    {
-        m_memblocknumlist[i] = (i==0)? 4096: m_memblocknumlist[i-1]/2;
-    }
 
     // CUSTOMIZE CONFIG
     Json::Value root;
@@ -104,22 +90,4 @@ Config::Config(const char* configpath)
         m_update_socket_timeout_ms = uSrvConfig[m_StrUpdateSocketTimeOutMS].isNull() ?
             m_update_socket_timeout_ms : uSrvConfig[m_StrUpdateSocketTimeOutMS].asInt();
     }
-
-    Json::Value indexConfig = root["INDEX"];
-    if (! indexConfig.isNull()) {
-        m_cell_size   = indexConfig[m_StrCellSize].isNull() ? m_cell_size : indexConfig[m_StrCellSize].asInt();
-        m_bucket_size = indexConfig[m_StrBucketSize].isNull() ? m_bucket_size : indexConfig[m_StrBucketSize].asInt();
-        m_headlist_size = indexConfig[m_StrHeadListSize].isNull() ? m_headlist_size : indexConfig[m_StrHeadListSize].asInt();
-        Json::Value memblocknumlist = indexConfig["MemBlockNumList"];
-        if (!memblocknumlist.isNull() && !memblocknumlist.isArray())
-        {
-            m_memblocknumlistsize = memblocknumlist.size();
-            for (uint32_t i=0; i<m_memblocknumlistsize; i++)
-            {
-                m_memblocknumlist[i] = memblocknumlist[i].asInt();
-                ROUTN("[%u] num[%u]", i, m_memblocknumlist[i]);
-            }
-        }
-    }
-
 }
