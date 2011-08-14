@@ -19,12 +19,5 @@
         "UpdatePort"       : 1984,    // default as 1984
         "SocketTimeOut_MS" : 1000,    // default as 1s
         "ReadBufferSize"   : 10485760 // default as 10M
-    },
-    "INDEX":
-    {
-        "PostingListCellSize"    : 4,        // 
-        "PostingBucketSize"      : 20,       // N begin 20 and 24, bucket_size = 1<<N
-        "PostingHeadListSize"    : 16777216, // default as 16777216,
-        "PostingMemBlockNumList" : [1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192]
     }
 }

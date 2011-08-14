@@ -20,11 +20,6 @@ class Config
         static const char* const m_StrUpdateReadBufferSize;
         static const char* const m_StrUpdateSocketTimeOutMS;
 
-        static const char* const m_StrCellSize;
-        static const char* const m_StrBucketSize;
-        static const char* const m_StrHeadListSize;
-        static const char* const m_StrMemBlockNumList;
-
 		// log config
 		uint32_t  m_log_level; // DEBUG, ROUTN, ALARM, FATAL
 		uint32_t  m_log_size;  // max log size
@@ -43,13 +38,6 @@ class Config
         uint32_t m_update_read_buffer_size;
         uint32_t m_update_socket_timeout_ms;
 
-        // index config
-        uint32_t m_cell_size;     // postinglist cell size
-        uint32_t m_bucket_size;   // postinglist hash bucket size = 1 << m_bucket_size;
-        uint32_t m_headlist_size; // postinglist headlist size;
-        uint32_t m_memblocknumlist[32]; // postinglist memblocks config
-        uint32_t m_memblocknumlistsize;
-
         char m_plugin_config_path[128];
 
 		Config();
@@ -57,8 +45,6 @@ class Config
 	public:
 		Config(const char* configpath);
 		~Config(){}
-
-        const char* PluginConfigPath() { return m_plugin_config_path;}
 
 		uint32_t RTimeMS()  const { return m_rtimeout_ms; }
 		uint32_t WTimeMS()  const { return m_wtimeout_ms; }
@@ -71,11 +57,7 @@ class Config
         uint32_t UpdateReadBufferSize() { return m_update_read_buffer_size; } 
         uint32_t UpdateSocketTimeOutMS()  { return m_update_socket_timeout_ms; } 
 
-        uint32_t CellSize() { return m_cell_size; }
-        uint32_t BucketSize() { return m_bucket_size; }
-        uint32_t HeadListSize() { return m_headlist_size; }
-        const uint32_t* MemBlockNumList() { return m_memblocknumlist; }
-        uint32_t MemBlockNumListSize() { return m_memblocknumlistsize; }
+        const char* PluginConfigPath() { return m_plugin_config_path;}
 };
 
 #endif
