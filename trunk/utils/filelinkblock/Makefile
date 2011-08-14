@@ -3,7 +3,7 @@ SHELL= /bin/sh
 RANLIB=ranlib
 
 LIB= libfilelinkblock.a
-LIBOBJ= FileLinkBlock.o
+LIBOBJ= filelinkblock.o
 
 READBLOCK= readBlock
 READBLOCKOBJ= readBlock.o
@@ -40,7 +40,7 @@ $(LIB): $(LIBOBJ)
 	mkdir lib/
 	mkdir include/
 	mv $(LIB) lib/
-	cp FileLinkBlock.h include
+	cp filelinkblock.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $(INCS) $< -c -o $@

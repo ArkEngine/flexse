@@ -1,4 +1,4 @@
-#include "FileLinkBlock.h"
+#include "filelinkblock.h"
 #include "MyException.h"
 #include "mylog.h"
 #include "creat_sign.h"
@@ -17,7 +17,7 @@
 
 const char* const FileLinkBlock::BASE_DATA_PATH = "./data/";
 const char* const FileLinkBlock::BASE_OFFSET_PATH = "./offset/";
-FileLinkBlock::FileLinkBlock(const char* path, const char* name)
+FileLinkBlock::FileLinkBlock(const char* path, const char* name, bool readonly)
 {
     MySuicideAssert(0 < strlen(path) && 0 < strlen(name));
     snprintf(m_flb_path, sizeof(m_flb_path), "%s/%s/", BASE_DATA_PATH, path);
@@ -37,11 +37,16 @@ FileLinkBlock::FileLinkBlock(const char* path, const char* name)
 
     DEBUG ("path[%s] name[%s]", path, name);
     pthread_mutex_init(&m_mutex, NULL);
-    m_flb_w_fd     = -1;
-    m_last_file_no = 0;
-    m_block_id     = 0;
-    m_channel_name[0] = 0;
-    m_read_file_name[0] = 0;
+    m_flb_w_fd      = -1;
+    m_last_file_no  =  0;
+    m_block_id      =  0;
+    m_channel_name[0] =  0;
+    m_read_file_name[0] =  0;
+
+    if (!readonly)
+    {
+        check_and_repaire();
+    }
 }
 
 FileLinkBlock::~FileLinkBlock()
@@ -68,7 +73,7 @@ int FileLinkBlock:: newfile (const char* strfile)
     return m_flb_w_fd;
 }
 
-int FileLinkBlock:: check_and_repaire()
+void FileLinkBlock:: check_and_repaire()
 {
     // 需要检查出当前文件夹的最后一个文件
     // (1) 如果按照大小切分，扫描当前文件夹，找到 name.n 中最大的那个文件
@@ -105,7 +110,7 @@ int FileLinkBlock:: check_and_repaire()
         {
             // 如果没有超过 head 的大小，肯定是要新建文件的
             m_flb_w_fd = newfile(last_file_name);
-            return 0;
+            return;
         }
 
         // >>2<<2是为了去掉文件末尾的多余字符(当文件大小不能被4整除时)
@@ -146,9 +151,9 @@ int FileLinkBlock:: check_and_repaire()
                 }
                 else
                 {
-                    uint32_t sum1, sum2;
-                    creat_sign_64(phead->block_buff, phead->block_size, &sum1, &sum2);
-                    if (phead->check_sum1 == sum1 && phead->check_sum2 == sum2)
+                    uint32_t sum0, sum1;
+                    creat_sign_64(phead->block_buff, phead->block_size, &sum0, &sum1);
+                    if (phead->check_sum[0] == sum0 && phead->check_sum[1] == sum1)
                     {
                         // 校验通过，这是最后一块正确
                         m_block_id = phead->block_id + 1;
@@ -166,7 +171,7 @@ int FileLinkBlock:: check_and_repaire()
                     else
                     {
                         ALARM("Verify Failed. buffsize[%d] sum1[%u] sum2[%u] headsum1[%u] headsum2[%u]",
-                                phead->block_size, sum1, sum2, phead->check_sum1, phead->check_sum2);
+                                phead->block_size, sum0, sum1, phead->check_sum[0], phead->check_sum[1]);
                         continue;
                     }
                 }
@@ -190,7 +195,7 @@ int FileLinkBlock:: check_and_repaire()
         close(flb_r_fd);
         free (tmpbuf);
     }
-    return 0;
+    return;
 }
 int FileLinkBlock::detect_file( )
 {
@@ -271,7 +276,7 @@ int FileLinkBlock::__write_message(const uint32_t log_id, const char* buff, cons
         myhead.timestamp  = time(NULL);
         myhead.log_id     = log_id;
         myhead.block_size = buff_size;
-        creat_sign_64 (buff, buff_size, &myhead.check_sum1 , &myhead.check_sum2);
+        creat_sign_64 (buff, buff_size, &myhead.check_sum[0] , &myhead.check_sum[1]);
 
         char extra_buf[4];
         uint32_t  extra_len = (4 - (buff_size % 4 )) % 4;
@@ -437,7 +442,7 @@ void FileLinkBlock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& 
     fclose(fp);
 }
 
-void FileLinkBlock:: log_offset()
+void FileLinkBlock:: save_offset()
 {
     // 写入文件
     MySuicideAssert (0 < strlen(m_channel_name));

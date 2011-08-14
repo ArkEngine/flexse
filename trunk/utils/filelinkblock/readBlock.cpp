@@ -2,7 +2,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <assert.h>
-#include "FileLinkBlock.h"
+#include "filelinkblock.h"
 
 using namespace std;
 
@@ -35,8 +35,8 @@ void read_and_print(FileLinkBlock& flb, char* readbuff, uint32_t SIZE)
 	uint32_t block_id = 0;
 	uint32_t read_size = flb.read_message(log_id, block_id, readbuff, SIZE);
 	assert (0 < read_size);
-	//deserialize mcpack to IVar
-	fprintf(stdout, "========== log_id : %u block_id : %u ==========\n", log_id, block_id);
+    readbuff[read_size] = 0;
+	fprintf(stdout, "===== log_id[%u] block_id[%u] msglen[%u] =====\n", log_id, block_id, read_size);
 	fprintf(stdout, "%s\n", readbuff);
 	fflush(stdout);
 }
@@ -86,7 +86,7 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	FileLinkBlock flb(queue_path, queue_name);
+	FileLinkBlock flb(queue_path, queue_name, true);
 	flb.set_channel("queue.debug");
 	flb.seek_message(begin_file_no, begin_block_id);
 	const uint32_t SIZE = 40000000;
