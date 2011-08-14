@@ -26,7 +26,6 @@
 #include "merger_thread.h"
 
 Config* myConfig;
-index_group* myIndexGroup;
 
 int ServiceApp(thread_data_t* ptd);
 
@@ -86,7 +85,7 @@ int read_file_all(const char* file, unsigned char* buff, const uint32_t bufsize)
 	void*
 ServiceThread(void* args)
 {
-	thread_data_t *ptd = (thread_data_t*)args;
+	thread_data_t* ptd = (thread_data_t*)args;
 	int sock = -1;
 	int ret = -1;
 	int netret = -1;
@@ -143,7 +142,7 @@ ServiceThread(void* args)
  * (4) 服务结束，继续阻塞于这个socket，等待一个超时时间后关闭
  * (5) 这个线程又回到了accept的锁竞争
  */
-thread_data_t* ServiceThreadInit(equeue* myequeue)
+thread_data_t* ServiceThreadInit(equeue* myequeue, flexse_plugin* pflexse_plugin)
 {
     thread_data_t* ptd = (thread_data_t*)malloc(sizeof(thread_data_t)*myConfig->ServiceThreadNum());
     if (ptd == NULL) {
@@ -159,6 +158,7 @@ thread_data_t* ServiceThreadInit(equeue* myequeue)
         ptd[i].SendBuff = (char*)malloc(myConfig->ThreadBufferSize());
         ptd[i].RecvBuffSize = myConfig->ThreadBufferSize();
         ptd[i].servapp = ServiceApp;
+        ptd[i].plugin  = pflexse_plugin;
         ptd[i].poll = myequeue;
         if (ptd[i].RecvBuff == NULL || ptd[i].SendBuff == NULL)
         {
@@ -205,21 +205,20 @@ int main(int argc, char* argv[])
     if (myConfig == NULL) {
         while(0 != raise(SIGKILL)){}
     }
-    myIndexGroup = new index_group(myConfig->CellSize(), myConfig->BucketSize(),
-            myConfig->HeadListSize(), myConfig->MemBlockNumList(), myConfig->MemBlockNumListSize());
+    flexse_plugin* pflexse_plugin = new flexse_plugin(myConfig->PluginConfigPath());
     pthread_t ontime_thread_id;
     pthread_t update_thread_id;
     pthread_t merger_thread_id;
     // init update thread
-    MyThrowAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, NULL));
+    MyThrowAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, pflexse_plugin));
     // init merger thread
-    MyThrowAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, NULL));
+    MyThrowAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, pflexse_plugin));
     // init ontime thread
-    MyThrowAssert ( 0 == pthread_create(&merger_thread_id, NULL, merger_thread, NULL));
+    MyThrowAssert ( 0 == pthread_create(&merger_thread_id, NULL, merger_thread, pflexse_plugin));
 
     equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->QueryPort());
     // generate service-thread
-    thread_data_t* ptd = ServiceThreadInit(myequeue);
+    thread_data_t* ptd = ServiceThreadInit(myequeue, pflexse_plugin);
     ROUTN( "All Service Threads Init Ok");
     // hold the place and not quit
     myequeue->running();

@@ -2,6 +2,7 @@
 #define  __THREADDATA_H_
 #include <stdint.h>
 #include "mylog.h"
+#include "flexse_plugin.h"
 #include "xhead.h"
 #include "equeue.h"
 #include <pthread.h>
@@ -20,6 +21,7 @@ struct thread_data_t
 	uint32_t  RecvBuffSize;
     equeue*   poll;
 	servfunc  servapp;
+	flexse_plugin* plugin;
 	union{
 		char*     RecvBuff;
 		xhead_t*  RecvHead;

@@ -12,7 +12,6 @@
 		        (cur.tv_usec) - (pre.tv_usec))
  
 extern Config* myConfig;
-extern index_group* myIndexGroup;
 
 const char* get_query_string(Json::Value& root)
 {
@@ -55,6 +54,8 @@ int ServiceApp(thread_data_t* ptd)
         // 无法取得query
         return 0;
     }
+
+    index_group* myIndexGroup = ptd->plugin->getIndexGroup();
 
     int list_num = myIndexGroup->get_posting_list(query, dststr, ptd->SendBuffSize - sizeof(xhead_t));
     for (int i=0; i<list_num; i++)

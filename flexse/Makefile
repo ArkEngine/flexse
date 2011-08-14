@@ -18,14 +18,16 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../utils/memblocks/include/ \
 	  -I ../utils/fileblock/include/ \
 	  -I ../utils/diskv/include/ \
+	  -I ../utils/bitmap/include/ \
+	  -I ../utils/bitlist/include/ \
 	  -I ../utils/indexer/index_group/include/ \
 	  -I ../utils/indexer/base_indexer/include/ \
 	  -I ../utils/indexer/disk_indexer/include/ \
 	  -I ../utils/indexer/mem_indexer/include/ \
 	  -I ../opensrc/jsoncpp/include/ \
+	  -I ../plugin/flexse/include/ \
 
 LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
-		 -L ../utils/nlp_processor/lib/        -lnlp_processor \
 		 -L ../utils/indexer/index_group/lib/  -lindex_group \
 		 -L ../utils/indexer/mem_indexer/lib/  -lmem_indexer \
 		 -L ../utils/indexer/disk_indexer/lib/ -ldisk_indexer \
@@ -37,6 +39,10 @@ LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../utils/creat_sign/lib/           -lcreat_sign \
 		 -L ../utils/equeue/lib/               -lequeue \
 		 -L ../utils/myutils/lib/              -lmyutils \
+		 -L ../plugin/flexse/lib/              -lflexse_plugin \
+		 -L ../utils/nlp_processor/lib/        -lnlp_processor \
+		 -L ../utils/bitmap/lib/               -lbitmap \
+		 -L ../utils/bitlist/lib/              -lbitlist \
 		 -L ../utils/xhead/lib/                -lxhead \
 		 -L ../utils/mylog/lib/                -lmylog \
 		 -L ../utils/MyException/lib/          -lMyException \

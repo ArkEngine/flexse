@@ -9,6 +9,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((sys.argv[1], int(sys.argv[2])));
 for x in range(int(sys.argv[3])):
     dd = {}
+    dd['OPERATION'] = "INSERT"
     dd['DOC_ID'] = x
     dd['CONTENT'] = "this is test message. no[%u] jingle[%u] buffalo[%u]" % (x, x, x, )
     #dd['CONTENT'] = "buffalo[%u]" % (x, )

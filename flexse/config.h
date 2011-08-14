@@ -50,11 +50,15 @@ class Config
         uint32_t m_memblocknumlist[32]; // postinglist memblocks config
         uint32_t m_memblocknumlistsize;
 
+        char m_plugin_config_path[128];
+
 		Config();
 		Config(const Config&);
 	public:
 		Config(const char* configpath);
 		~Config(){}
+
+        const char* PluginConfigPath() { return m_plugin_config_path;}
 
 		uint32_t RTimeMS()  const { return m_rtimeout_ms; }
 		uint32_t WTimeMS()  const { return m_wtimeout_ms; }

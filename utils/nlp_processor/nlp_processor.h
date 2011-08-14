@@ -1,3 +1,5 @@
+#ifndef _NLP_PROCESSOR_H_
+#define _NLP_PROCESSOR_H_
 #include <string>
 #include <vector>
 using namespace std;
@@ -11,3 +13,4 @@ class nlp_processor
         ~nlp_processor();
         void split(char* str, vector<string>& vstr);
 };
+#endif

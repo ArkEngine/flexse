@@ -13,7 +13,7 @@ const char* const flexse_plugin::CONFIGCATEGORY_NLP       = "NLP";
 const char* const flexse_plugin::CONFIGCATEGORY_GENERAL   = "GENERAL";
 
 const char* const flexse_plugin::m_StrMaxDocID = "MaxDocID";
-const char* const flexse_plugin::m_StrDataDir  = "DataDir";
+const char* const flexse_plugin::m_StrAttrDataDir  = "AttrDataDir";
 
 const char* const flexse_plugin::m_StrCellSize = "PostingListCellSize";
 const char* const flexse_plugin::m_StrBucketSize = "PostingBucketSize";
@@ -34,8 +34,13 @@ flexse_plugin:: flexse_plugin(const char* config_path)
 
     MyThrowAssert (! generalConfig[m_StrMaxDocID].isNull());
     m_max_doc_id = generalConfig[m_StrMaxDocID].asInt();
-    MyThrowAssert (! generalConfig[m_StrDataDir].isNull());
-    snprintf(m_data_dir, sizeof(m_data_dir), "%s", generalConfig[m_StrDataDir].asCString());
+
+    // ATTR CONFIG
+    Json::Value attrConfig = root[CONFIGCATEGORY_ATTR];
+    MyThrowAssert (! attrConfig.isNull());
+
+    MyThrowAssert (! attrConfig[m_StrAttrDataDir].isNull());
+    snprintf(m_attr_data_dir, sizeof(m_attr_data_dir), "%s", attrConfig[m_StrAttrDataDir].asCString());
 
     // INDEXDESC CONFIG
     Json::Value indexDescConfig = root[CONFIGCATEGORY_INDEXDESC];
@@ -48,7 +53,7 @@ flexse_plugin:: flexse_plugin(const char* config_path)
     MyThrowAssert (! indexDescConfig[m_StrHeadListSize].isNull());
     m_headlist_size = indexDescConfig[m_StrHeadListSize].asInt();
     Json::Value memblocknumlist = indexDescConfig[m_StrMemBlockNumList];
-    MyThrowAssert (!memblocknumlist.isNull() && !memblocknumlist.isArray());
+    MyThrowAssert (!memblocknumlist.isNull() && memblocknumlist.isArray());
     m_memblocknumlistsize = memblocknumlist.size();
     for (uint32_t i=0; i<m_memblocknumlistsize; i++)
     {
@@ -61,12 +66,20 @@ flexse_plugin:: flexse_plugin(const char* config_path)
     m_pnlp_processor = new nlp_processor();
     m_pindex_group   = new index_group(m_cell_size, m_bucket_size,
             m_headlist_size, m_memblocknumlist, m_memblocknumlistsize);
-    m_del_bitmap = new bitmap(m_data_dir, "del_bitmap", m_max_doc_id/8);
-    m_mod_bitmap = new bitmap(m_data_dir, "mod_bitmap", m_max_doc_id/8);
+    m_del_bitmap = new bitmap(m_attr_data_dir, "del_bitmap", m_max_doc_id/8);
+    m_mod_bitmap = new bitmap(m_attr_data_dir, "mod_bitmap", m_max_doc_id/8);
 }
 
-int flexse_plugin:: insert(Json::Value root, uint32_t& doc_id, vector<string> & vstr)
+int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
 {
+    Json::Value root;
+    Json::Reader reader;
+    if (! reader.parse(jsonstr, root))
+    {
+        ALARM("jsonstr format error. [%s]", jsonstr);
+        return -1;
+    }
+
     if (root["DOC_ID"].isNull())
     {
         ALARM("jsonstr NOT contain 'DOC_ID'.");
@@ -90,8 +103,16 @@ int flexse_plugin:: insert(Json::Value root, uint32_t& doc_id, vector<string> & 
     return 0;
 }
 
-int flexse_plugin:: update(Json::Value root, uint32_t& doc_id, vector<string> & vstr)
+int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
 {
+    Json::Value root;
+    Json::Reader reader;
+    if (! reader.parse(jsonstr, root))
+    {
+        ALARM("jsonstr format error. [%s]", jsonstr);
+        return -1;
+    }
+
     if (root["DOC_ID"].isNull())
     {
         ALARM("jsonstr NOT contain 'DOC_ID'.");
@@ -115,8 +136,16 @@ int flexse_plugin:: update(Json::Value root, uint32_t& doc_id, vector<string> & 
     return 0;
 }
 
-int flexse_plugin:: remove(Json::Value root, vector<uint32_t> & id_list)
+int flexse_plugin:: del(const char* jsonstr, vector<uint32_t> & id_list)
 {
+    Json::Value root;
+    Json::Reader reader;
+    if (! reader.parse(jsonstr, root))
+    {
+        ALARM("jsonstr format error. [%s]", jsonstr);
+        return -1;
+    }
+
     id_list.clear();
     Json::Value json_idlist = root[m_StrInsideKey_DocIDList];
     MyThrowAssert (!json_idlist.isNull() && !json_idlist.isArray());
@@ -129,16 +158,12 @@ int flexse_plugin:: remove(Json::Value root, vector<uint32_t> & id_list)
     return 0;
 }
 
-int flexse_plugin:: restore(Json::Value root, vector<uint32_t> & id_list)
+int flexse_plugin:: undel(const char* jsonstr, vector<uint32_t> & id_list)
 {
-    id_list.clear();
-    Json::Value json_idlist = root[m_StrInsideKey_DocIDList];
-    MyThrowAssert (!json_idlist.isNull() && !json_idlist.isArray());
-    const uint32_t json_idlist_size = json_idlist.size();
-    for (uint32_t i=0; i<json_idlist_size; i++)
-    {
-        id_list.push_back(json_idlist[i].asInt());
-    }
+    return del(jsonstr, id_list);
+}
 
-    return 0;
+index_group* flexse_plugin:: getIndexGroup()
+{
+    return m_pindex_group;
 }
