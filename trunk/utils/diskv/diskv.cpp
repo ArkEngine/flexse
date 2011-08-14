@@ -74,7 +74,7 @@ int diskv :: detect_file( )
 
     while((dirp = readdir(dp)) != NULL)
     {
-        DEBUG( "%s", dirp->d_name);
+//        DEBUG( "%s", dirp->d_name);
         char* pn = strstr(dirp->d_name, prefix);
         if (pn != NULL)
         {
@@ -84,16 +84,16 @@ int diskv :: detect_file( )
             if (*cc == '\0')
             {
                 int n = atoi(&pn[len]);
-                DEBUG( "-- %d", n);
+//                DEBUG( "-- %d", n);
                 if (n > max)
                 {
                     max = n;
                 }
             }
-            else
-            {
-                DEBUG( "^^ invalid file name : %s", dirp->d_name);
-            }
+//            else
+//            {
+//                DEBUG( "^^ invalid file name : %s", dirp->d_name);
+//            }
         }
     }
 

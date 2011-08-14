@@ -58,7 +58,9 @@ void* update_thread(void*)
     MyThrowAssert(listenfd != -1);
     xhead_t* recv_head = (xhead_t*)malloc(myConfig->UpdateReadBufferSize());
     xhead_t  send_head;
+    memset(&send_head, 0, sizeof(xhead_t));
     snprintf(send_head.srvname, sizeof(send_head.srvname), "%s", PROJNAME);
+    send_head.log_id = recv_head->log_id;
 
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
@@ -124,9 +126,13 @@ void* update_thread(void*)
                         ret, send_head.detail_len, myConfig->UpdateSocketTimeOutMS());
                 break;
             }
+            else
+            {
+                ROUTN("update OK! doc_id[%u] message[%s]", doc_id, jsonstr);
+            }
             // DEBUG
 //            uint32_t plist[1000];
-//            int rnum = mymem_indexer.get_posting_list("this", plist, sizeof(plist));
+//            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
 //            for (int i=0; i<rnum; i++)
 //            {
 //                printf("[%u] ", plist[i]);
