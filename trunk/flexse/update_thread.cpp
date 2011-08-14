@@ -93,8 +93,16 @@ void* update_thread(void*)
         {
             char* jsonstr = (char*)(&recv_head[1]);
             jsonstr[recv_head->detail_len] = 0;
-//            ROUTN("client[%s] ip[%s] message[%s]",
-//                    recv_head->srvname, inet_ntoa (cltaddr.sin_addr), (char*)(&recv_head[1]));
+            Json::Value root;
+            Json::Reader reader;
+            if (! reader.parse(jsonstr, root))
+            {
+                ALARM("jsonstr format error. [%s]", jsonstr);
+                break;
+            }
+
+            //            ROUTN("client[%s] ip[%s] message[%s]",
+            //                    recv_head->srvname, inet_ntoa (cltaddr.sin_addr), (char*)(&recv_head[1]));
             // 你该干点什么了
             // (1) 插入，自己分辨出什么是否需要更新 d-a 数据
             // (2) 删除
@@ -139,13 +147,13 @@ void* update_thread(void*)
                 ROUTN("update OK! doc_id[%u] message[%s]", doc_id, jsonstr);
             }
             // DEBUG
-//            uint32_t plist[1000];
-//            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
-//            for (int i=0; i<rnum; i++)
-//            {
-//                printf("[%u] ", plist[i]);
-//            }
-//            printf("\n");
+            //            uint32_t plist[1000];
+            //            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
+            //            for (int i=0; i<rnum; i++)
+            //            {
+            //                printf("[%u] ", plist[i]);
+            //            }
+            //            printf("\n");
         }
         ALARM("recv socket error. ret[%d] buffsiz[%u] timeoutMS[%u] msg[%m]",
                 ret, myConfig->UpdateReadBufferSize(), myConfig->UpdateSocketTimeOutMS());

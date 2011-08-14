@@ -38,7 +38,7 @@ Config::Config(const char* configpath)
 {
     // DEFAULT CONFIG
     m_log_level = mylog :: ROUTN;
-    m_log_size  = 1 << 30;
+    m_log_size  = 1 << 31;
     m_log_name  = "flexse";
     SETLOG(m_log_level, m_log_size, m_log_name);
 
