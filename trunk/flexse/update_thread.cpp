@@ -1,3 +1,11 @@
+/*
+ * 更新线程处理的操作分为
+ * (1) 插入文档，需要分配内部的ID和更新倒排索引及文档属性
+ * (2) 修改文档，需要分配内部的ID，把modbitmap置位，更新倒排索引及文档属性
+ * (3) 更新文档属性，更新文档属性即可。
+ * (4) 删除文档，把delbitmap置位
+ * (5) 反删除文档，把delbitmap复位
+ */
 #include "update_thread.h"
 #include "config.h"
 #include "MyException.h"
@@ -5,6 +13,7 @@
 #include "myutils.h"
 #include "xhead.h"
 #include "mem_indexer.h"
+#include "nlp_processor.h"
 #include "index_group.h"
 #include <json/json.h>
 #include <unistd.h>
@@ -18,7 +27,7 @@
 
 extern Config* myConfig;
 extern index_group* myIndexGroup;
-
+nlp_processor mynlp_processor;
 using namespace flexse;
 
 int insert_process(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
@@ -47,7 +56,7 @@ int insert_process(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
     }
     else
     {
-        flexse::strspliter((char*)root["CONTENT"].asCString(), vstr);
+        mynlp_processor.split((char*)root["CONTENT"].asCString(), vstr);
     }
     return 0;
 }
@@ -61,6 +70,7 @@ void* update_thread(void*)
     memset(&send_head, 0, sizeof(xhead_t));
     snprintf(send_head.srvname, sizeof(send_head.srvname), "%s", PROJNAME);
     send_head.log_id = recv_head->log_id;
+    send_head.detail_len = 0;
 
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
@@ -118,8 +128,6 @@ void* update_thread(void*)
                 pindexer = myIndexGroup->swap_mem_indexer();
                 ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
             }
-            send_head.log_id = recv_head->log_id;
-            send_head.detail_len = 0;
             if(0 != xsend(clientfd, &send_head, myConfig->UpdateSocketTimeOutMS()))
             {
                 ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
