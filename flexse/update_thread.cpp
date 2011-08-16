@@ -49,7 +49,7 @@ void* update_thread(void* args)
         int clientfd = accept(listenfd, (struct sockaddr *) &cltaddr, &caddr_len);
         if(clientfd < 0)
         {
-            ALARM( "accept client fail, don't fuck me. msg[%m]");
+            ALARM( "accept client fail, don't fuck my besiness. msg[%m]");
             continue;
         }
         // setnonblock(clientfd);
@@ -185,6 +185,9 @@ int mod(flexse_plugin* pflexse_plugin, const char* jsonstr)
     {
         return -1;
     }
+
+    // 为doc_id分配内部id
+
 
     index_group* myIndexGroup = pflexse_plugin->getIndexGroup();
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
