@@ -17,5 +17,7 @@ namespace flexse {
     bool is_valid_ip(const char* str);
 
     char* strip(char* str);
+
+    int read_file_all(const char* file, unsigned char* buff, const uint32_t bufsize);
 }
 #endif
