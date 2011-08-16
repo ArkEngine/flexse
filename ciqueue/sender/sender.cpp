@@ -28,7 +28,7 @@ void PrintVersion(void)
 {
     printf("Project    :  %s\n", PROJNAME);
     printf("Version    :  %s\n", VERSION);
-    printf("BuildDate  :  %s\n", __DATE__);
+    printf("BuildDate  :  %s - %s\n", __DATE__, __TIME__);
 }
 
 int main(int argc, char** argv)

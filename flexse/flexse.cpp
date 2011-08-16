@@ -44,7 +44,7 @@ void PrintVersion(void)
 {
 	printf("Project    :  %s\n", PROJNAME);
 	printf("Version    :  %s\n", VERSION);
-	printf("BuildDate  :  %s\n", __DATE__);
+	printf("BuildDate  :  %s - %s\n", __DATE__, __TIME__);
 }
 
 int read_file_all(const char* file, unsigned char* buff, const uint32_t bufsize)
@@ -205,6 +205,7 @@ int main(int argc, char* argv[])
     if (myConfig == NULL) {
         while(0 != raise(SIGKILL)){}
     }
+    ROUTN( "=====================================================================");
     flexse_plugin* pflexse_plugin = new flexse_plugin(myConfig->PluginConfigPath());
     pthread_t ontime_thread_id;
     pthread_t update_thread_id;
