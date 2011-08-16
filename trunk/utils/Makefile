@@ -14,5 +14,6 @@ all:
 	make -C detaildb/
 	make -C bitmap/
 	make -C bitlist/
+	make -C idmap/
 	make -C xhead/
 	make -C equeue/

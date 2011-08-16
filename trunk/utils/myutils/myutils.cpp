@@ -108,7 +108,7 @@ namespace flexse
         return (INADDR_NONE != adr_srv.sin_addr.s_addr);
     }
     
-    int read_file_all(const char* file, unsigned char* buff, const uint32_t bufsize)
+    int read_file_all(const char* file, char* buff, const uint32_t bufsize)
     {
         if (file == NULL || buff == NULL || bufsize == 0) {
             ALARM("param error. file[%p] buff[%p] bufsize[%u]",
@@ -130,7 +130,8 @@ namespace flexse
             return -1;
         }
         lseek(fd, 0, SEEK_SET);
-        int left = offset;  while (left > 0) {
+        int left = offset;
+        while (left > 0) {
             int len = read(fd, buff+offset-left, left);
             if (len == -1 || len == 0) {
                 ALARM( "readfile failed. ERROR[%m]");

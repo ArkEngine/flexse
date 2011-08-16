@@ -496,23 +496,4 @@ int FileLinkBlock::readn(int fd, char* buf, const uint32_t size)
     return size;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

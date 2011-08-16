@@ -18,6 +18,6 @@ namespace flexse {
 
     char* strip(char* str);
 
-    int read_file_all(const char* file, unsigned char* buff, const uint32_t bufsize);
+    int read_file_all(const char* file, char* buff, const uint32_t bufsize);
 }
 #endif
