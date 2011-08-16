@@ -166,13 +166,13 @@ int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
         ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
     }
     // DEBUG
-    //            uint32_t plist[1000];
-    //            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
-    //            for (int i=0; i<rnum; i++)
-    //            {
-    //                printf("[%u] ", plist[i]);
-    //            }
-    //            printf("\n");
+    // uint32_t plist[1000];
+    // int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
+    // for (int i=0; i<rnum; i++)
+    // {
+    //     printf("[%u] ", plist[i]);
+    // }
+    // printf("\n");
     return 0;
 }
 
@@ -212,13 +212,13 @@ int mod(flexse_plugin* pflexse_plugin, const char* jsonstr)
         ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
     }
     // DEBUG
-    //            uint32_t plist[1000];
-    //            int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
-    //            for (int i=0; i<rnum; i++)
-    //            {
-    //                printf("[%u] ", plist[i]);
-    //            }
-    //            printf("\n");
+    // uint32_t plist[1000];
+    // int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
+    // for (int i=0; i<rnum; i++)
+    // {
+    //     printf("[%u] ", plist[i]);
+    // }
+    // printf("\n");
     return 0;
 }
 

@@ -71,4 +71,41 @@ namespace flexse
         }
         return 0;
     }
+
+    bool is_comment(const char* str)
+    {
+        while (*str == '\t' || *str == ' ')
+        {
+            str++;
+        }
+        return (*str == '#') ? true : false;
+    }
+
+    char* strip(char* str)
+    {
+        char* b = str;
+        char* e = NULL;
+        while (*b == '\t' || *b == ' ' || *b == '\n') {
+            b++;
+        }
+        memmove(str, b, strlen(b));
+        if (NULL != (e = strchr(str, ' '))) {
+            *e = 0;
+        }
+        if (NULL != (e = strchr(str, '\t'))) {
+            *e = 0;
+        }
+        if (NULL != (e = strchr(str, '\n'))) {
+            *e = 0;
+        }
+        return str;
+    }
+
+    bool is_valid_ip(const char* str_ip)
+    {
+        struct sockaddr_in adr_srv;
+        adr_srv.sin_addr.s_addr = inet_addr (str_ip);
+        return (INADDR_NONE != adr_srv.sin_addr.s_addr);
+    }
+
 }

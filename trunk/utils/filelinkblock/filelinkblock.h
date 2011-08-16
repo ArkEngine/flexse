@@ -53,7 +53,8 @@ class FileLinkBlock
         int write_message(const uint32_t logid, const char* buff, const uint32_t buff_size);
 
         int seek_message(const uint32_t file_no, const uint32_t block_id);
-        int read_message(uint32_t& log_id, uint32_t& block_id, char* buff, const uint32_t buff_size);
+        int seek_message();
+        int read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& block_id, char* buff, const uint32_t buff_size);
         void set_channel(const char* channel_name);
         void save_offset();
         void load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& block_id);
