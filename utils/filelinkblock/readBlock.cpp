@@ -33,7 +33,8 @@ void read_and_print(FileLinkBlock& flb, char* readbuff, uint32_t SIZE)
 {
 	uint32_t log_id   = 0;
 	uint32_t block_id = 0;
-	uint32_t read_size = flb.read_message(log_id, block_id, readbuff, SIZE);
+	uint32_t file_no = 0;
+	uint32_t read_size = flb.read_message(log_id, file_no, block_id, readbuff, SIZE);
 	assert (0 < read_size);
     readbuff[read_size] = 0;
 	fprintf(stdout, "===== log_id[%u] block_id[%u] msglen[%u] =====\n", log_id, block_id, read_size);

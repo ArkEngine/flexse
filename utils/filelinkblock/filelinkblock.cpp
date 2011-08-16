@@ -216,7 +216,7 @@ int FileLinkBlock::detect_file( )
 
     while((dirp = readdir(dp)) != NULL)
     {
-        DEBUG( "%s", dirp->d_name);
+//        DEBUG( "%s", dirp->d_name);
         char* pn = strstr(dirp->d_name, prefix);
         if (pn != NULL)
         {
@@ -359,7 +359,24 @@ int FileLinkBlock::seek_message(const uint32_t file_no, const uint32_t block_id)
     return 0;
 }
 
-int FileLinkBlock::read_message(uint32_t& log_id, uint32_t& block_id, char* buff, const uint32_t buff_size)
+int FileLinkBlock::seek_message()
+{
+	uint32_t file_no = 0;
+	uint32_t offset = 0;
+	uint32_t block_id = 0;
+
+	load_offset(file_no, offset, block_id);
+    if (offset == 0 && block_id != 0)
+    {
+        return seek_message(file_no, block_id);
+    }
+    else
+    {
+        return seek_message(file_no, offset, block_id);
+    }
+}
+
+int FileLinkBlock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& block_id, char* buff, const uint32_t buff_size)
 {
     assert (buff != NULL && buff_size > 0);
     struct file_link_block_head myhead;
@@ -401,6 +418,7 @@ int FileLinkBlock::read_message(uint32_t& log_id, uint32_t& block_id, char* buff
             m_flb_read_offset = lseek(m_flb_r_fd, 0, SEEK_CUR);
             log_id            = myhead.log_id;
             block_id          = myhead.block_id;
+			file_no           = m_flb_read_file_no;
             // 校验block_id即可，就不用计算check_num了
             MySuicideAssert(m_flb_read_block_id == myhead.block_id);
             DEBUG("get new data! name[%s] size [%u] block_id[%u] try[%u]",
@@ -438,7 +456,8 @@ void FileLinkBlock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& 
     fgets(rbuff, sizeof(rbuff), fp);
     ret = sscanf (rbuff, "block_id : %u", &block_id);
     MySuicideAssert (1 == ret);
-    DEBUG("file_no : %u offset : %u block_id : %u", file_no, offset, block_id);
+    DEBUG("channel[%s] file_no[%u] offset[%u] block_id[%u]",
+            m_channel_name, file_no, offset, block_id);
     fclose(fp);
 }
 
@@ -446,15 +465,16 @@ void FileLinkBlock:: save_offset()
 {
     // 写入文件
     MySuicideAssert (0 < strlen(m_channel_name));
-    int wfd = open(m_channel_name, O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    int wfd = open(m_channel_name, O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     MySuicideAssert(wfd > 0);
     char wbuff[1024];
     int wlen = snprintf(wbuff, sizeof(wbuff),
             "file_no  : %u\n"
             "offset   : %u\n"
-            "block_id : %u",
+            "block_id : %u\n",
             m_flb_read_file_no, m_flb_read_offset, m_flb_read_block_id);
     MySuicideAssert(wlen == write(wfd, wbuff, wlen));
+    MySuicideAssert( 0 == ftruncate(wfd, wlen));
     close(wfd);
     return; 
 }

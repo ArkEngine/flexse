@@ -1,0 +1,10 @@
+(1) queueReceiver.Demo.php 是启动程序，启动这个程序时，会建立监听端口，开始服务。
+    这个文件由你来编写，在 queueReceiver 初始化时传入回调函数的设定。
+(2) messageCallBackFunc.php 是你的回调函数实现。通过把函数名传递给queueReceiver的初始化函数，建立回调机制。
+    如果你是类的回调函数，那么参见messageCallBackFunc.php中的说明。
+(3) php_ciqueuetrigger_demo.sh + run + sv_php_ciqueuetrigger_demo + start.sh + stop.sh 是拉起脚本
+    -1- 把killall php改成killall queueReceiver.Demo.php 的方式是为了误杀其他的php。
+        为了让一个php脚本直接执行，需要在php脚本的头部加上 #!$(your_php_path)
+    -2- 运行start.sh启动监听程序。
+    -3- 运行stop.sh停止程序。
+        
