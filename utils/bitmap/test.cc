@@ -130,6 +130,9 @@ int main(int argc, char** argv)
         assert(0 == _GET_BITMAP_(mmbitmap, i));
     }
 
+    // test over bound
+//    pmybitmap->puint[SIZE] = 1;
+
     delete pmybitmap;
 
     return 0;
