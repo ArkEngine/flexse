@@ -15,6 +15,7 @@ all:
 	make -C bitmap/
 	make -C bitlist/
 	make -C idmap/
+	make -C nlp_processor/
 	make -C secore/
 	make -C xhead/
 	make -C equeue/
