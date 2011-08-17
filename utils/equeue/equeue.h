@@ -5,6 +5,10 @@
 #include <pthread.h>
 #include <queue>
 
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
+
 using namespace std;
 
 /*
