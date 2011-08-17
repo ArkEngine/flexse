@@ -31,6 +31,7 @@ idmap::idmap(const char* dir, const uint32_t maxOuterID, const uint32_t maxInner
     m_pi2omap = new bitmap(dir, filename, maxInnerID*sizeof(uint32_t));
 
     // load the cur innerid
+    // 这个文件中存放的是已经分配出去的最大内部ID
     snprintf(m_innerid_file, sizeof(m_innerid_file), "%s/%s.%s",
             dir, STR_IDMAP_FILE_PREFIX, STR_IDMAP_CUR_INNERID);
     if (0 == access(m_innerid_file, F_OK))
@@ -54,6 +55,8 @@ idmap::~idmap()
     {
         close(m_innerid_fd);
     }
+    delete m_pi2omap;
+    delete m_po2imap;
 }
 
 uint32_t idmap::getInnerID(const uint32_t outerID)
@@ -63,15 +66,15 @@ uint32_t idmap::getInnerID(const uint32_t outerID)
 
 uint32_t idmap::getOuterID(const uint32_t innerID)
 {
-    return (innerID >= m_max_innerid) ? 0 : m_pi2omap->puint[innerID];
+    return ((innerID + 1) >= m_max_innerid) ? 0 : m_pi2omap->puint[innerID];
 }
 
 uint32_t idmap::allocInnerID(const uint32_t outerID)
 {
-    if (outerID >= m_max_outerid || m_cur_innerid >= m_max_innerid)
+    if (outerID >= m_max_outerid || (m_cur_innerid + 1) >= m_max_innerid)
     {
-        ALARM("outerID[%u] m_max_outerid[%u] m_cur_innerid[%u] m_max_innerid[%u]",
-                outerID, m_max_outerid, m_cur_innerid, m_max_innerid);
+        ALARM("outerID[%u] m_max_outerid[%u] m_cur_innerid+1[%u] m_max_innerid[%u]",
+                outerID, m_max_outerid, m_cur_innerid+1, m_max_innerid);
         return 0;
     }
 

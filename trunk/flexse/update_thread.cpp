@@ -140,7 +140,7 @@ int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
         return -1;
     }
 
-    index_group* myIndexGroup = pflexse_plugin->getIndexGroup();
+    index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
     bool have_swap = false;
@@ -189,7 +189,7 @@ int mod(flexse_plugin* pflexse_plugin, const char* jsonstr)
     // 为doc_id分配内部id
 
 
-    index_group* myIndexGroup = pflexse_plugin->getIndexGroup();
+    index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
     bool have_swap = false;

@@ -2,8 +2,8 @@ CC= g++
 SHELL= /bin/sh
 RANLIB=ranlib
 
-LIB= libflexse_plugin.a
-LIBOBJ= flexse_plugin.o
+LIB= libsecore.a
+LIBOBJ= secore.o
 
 INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/MyException/include/ \
@@ -15,7 +15,6 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/idmap/include/ \
 	  -I ../../utils/bitmap/include/ \
 	  -I ../../utils/bitlist/include/ \
-	  -I ../../utils/secore/include/ \
 	  -I ../../utils/indexer/mem_indexer/include/ \
 	  -I ../../utils/indexer/disk_indexer/include/ \
 	  -I ../../utils/indexer/base_indexer/include/ \
@@ -37,7 +36,7 @@ $(LIB): $(LIBOBJ)
 	mkdir lib/
 	mkdir include/
 	mv $(LIB) lib/
-	cp flexse_plugin.h include
+	cp secore.h include
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@

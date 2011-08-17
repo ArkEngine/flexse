@@ -56,7 +56,7 @@ namespace flexse
         } \
         else \
         { \
-            FATAL ("MyThrowAssert Failed. ["#expression"]");\
+            FATAL ("MyThrowAssert Failed. ["#expression"] EMSG[%m]");\
             throw flexse::MyException("MyThrowAssert Failed. ["#expression"]", __FILE__, __LINE__, __func__); \
         } \
     } \
@@ -70,7 +70,7 @@ namespace flexse
         } \
         else \
         { \
-            FATAL("MySuicideAssert Failed. ["#expression"]"); \
+            FATAL("MySuicideAssert Failed. ["#expression"] EMSG[%m]"); \
             while(0 != raise(SIGKILL)){} \
             exit(1); \
         } \

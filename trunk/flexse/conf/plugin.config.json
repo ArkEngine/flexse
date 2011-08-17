@@ -1,7 +1,9 @@
 {
     "GENERAL":
     {
-        "MaxDocID":100000
+        "MaxOuterID"   :100000,
+        "MaxInnerID"   :100000,
+        "IdmapDataDir" :"./data/idmap/"
     },
     "ATTR":
     {

@@ -15,22 +15,22 @@ typedef int (*servfunc)(thread_data_t *);
 
 struct thread_data_t
 {
-	pthread_t thandle;
-	uint32_t  tid;
-	uint32_t  SendBuffSize;
-	uint32_t  RecvBuffSize;
-    equeue*   poll;
-	servfunc  servapp;
+	pthread_t      thandle;
+	uint32_t       tid;
+	uint32_t       SendBuffSize;
+	uint32_t       RecvBuffSize;
+    equeue*        poll;
+	servfunc       servapp;
 	flexse_plugin* plugin;
 	union{
-		char*     RecvBuff;
-		xhead_t*  RecvHead;
+		char*      RecvBuff;
+		xhead_t*   RecvHead;
 	};
 	union{
-		char*     SendBuff;
-		xhead_t*  SendHead;
+		char*      SendBuff;
+		xhead_t*   SendHead;
 	};
-	sockaddr_in cltaddr;
+    char           cltip[32];
 };
 
 #endif  //__THREADDATA_H_
