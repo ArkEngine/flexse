@@ -154,10 +154,10 @@ int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
         ALARM("allocInnerID Fail.");
         return -1;
     }
-    return _insert(pflexse_plugin, jsonstr);
+    return _insert(pflexse_plugin, innerid, vstr);
 }
 
-int _insert(flexse_plugin* pflexse_plugin, const char* jsonstr)
+int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<string>& vstr)
 {
     index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
@@ -166,12 +166,12 @@ int _insert(flexse_plugin* pflexse_plugin, const char* jsonstr)
     bool nearly_full = false;
     for (uint32_t i=0; i<vstr.size(); i++)
     {
-        int setret = pindexer->set_posting_list(vstr[i].c_str(), &doc_id);
+        int setret = pindexer->set_posting_list(vstr[i].c_str(), &id);
         if (postinglist::FULL == setret)
         {
-            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
+            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", id);
             pindexer = myIndexGroup->swap_mem_indexer();
-            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
+            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &id));
             have_swap = true;
         }
         if (postinglist::NEARLY_FULL == setret)

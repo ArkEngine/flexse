@@ -10,11 +10,11 @@
 #define BIT_MASK  31
 
 #define _GET_BITMAP_(mybitmap, offset) \
-        (((mybitmap.puint[(offset)/BIT_COUNT]) >> (offset&BIT_MASK)) & 1)
+        ((((mybitmap).puint[(offset)/BIT_COUNT]) >> (offset&BIT_MASK)) & 1)
 #define _SET_BITMAP_1_(mybitmap, offset) \
-        ((mybitmap.puint[(offset)/BIT_COUNT]) |= (1<<((offset)&BIT_MASK)))
+        (((mybitmap).puint[(offset)/BIT_COUNT]) |= (1<<((offset)&BIT_MASK)))
 #define _SET_BITMAP_0_(mybitmap, offset) \
-        ((mybitmap.puint[(offset)/BIT_COUNT]) &= (~(1<<((offset)&BIT_MASK))))
+        (((mybitmap).puint[(offset)/BIT_COUNT]) &= (~(1<<((offset)&BIT_MASK))))
 
 class bitmap
 {
