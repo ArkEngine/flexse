@@ -6,7 +6,7 @@ using namespace std;
 
 flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
 {
-    MyThrowAssert (config_path != NULL && insecore != NULL);
+    MySuicideAssert (config_path != NULL && insecore != NULL);
     mysecore = insecore;
 }
 
@@ -92,7 +92,11 @@ int flexse_plugin:: del(const char* jsonstr, vector<uint32_t> & id_list)
 
     id_list.clear();
     Json::Value json_idlist = root[secore::m_StrInsideKey_DocIDList];
-    MyThrowAssert (!json_idlist.isNull() && !json_idlist.isArray());
+    if(json_idlist.isNull() || !json_idlist.isArray())
+    {
+        ALARM("Not a list jsonstr[%s]", jsonstr);
+        return -1;
+    }
     const uint32_t json_idlist_size = json_idlist.size();
     for (uint32_t i=0; i<json_idlist_size; i++)
     {

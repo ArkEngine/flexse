@@ -13,7 +13,7 @@ bitlist :: bitlist (const char* dir, const char* file,
     // cellsize means size of the cell by uint32_t
 	m_cellsize = cellsize;
 	m_filesize = filesize;
-	MyThrowAssert((0 == (m_filesize % (m_cellsize*sizeof(uint32_t))))
+	MySuicideAssert((0 == (m_filesize % (m_cellsize*sizeof(uint32_t))))
 			&& m_filesize > 0 && m_cellsize > 0);
 	m_cellcount = m_filesize / (m_cellsize*sizeof(uint32_t));
 
@@ -22,10 +22,10 @@ bitlist :: bitlist (const char* dir, const char* file,
 
 	mode_t amode = (0 == access(filename, F_OK)) ? O_RDWR : O_RDWR|O_CREAT ;
 	m_fd = open(filename, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-	MyThrowAssert(m_fd != -1);
-	MyThrowAssert (-1 != lseek(m_fd, filesize-1, SEEK_SET));
-	MyThrowAssert ( 1 == write(m_fd, "", 1));
-	MyThrowAssert (MAP_FAILED != (puint = (uint32_t*)mmap(0, m_filesize,
+	MySuicideAssert(m_fd != -1);
+	MySuicideAssert (-1 != lseek(m_fd, filesize-1, SEEK_SET));
+	MySuicideAssert ( 1 == write(m_fd, "", 1));
+	MySuicideAssert (MAP_FAILED != (puint = (uint32_t*)mmap(0, m_filesize,
 					PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, 0)));
 }
 

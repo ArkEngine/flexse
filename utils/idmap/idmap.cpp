@@ -37,9 +37,9 @@ idmap::idmap(const char* dir, const uint32_t maxOuterID, const uint32_t maxInner
     if (0 == access(m_innerid_file, F_OK))
     {
         char load_content[MAX_FILE_LENGTH];
-        MyThrowAssert( 0 < read_file_all(m_innerid_file, load_content, sizeof(load_content)));
-        MyThrowAssert( 1 == sscanf (load_content, "cur_innerid : %u", &m_cur_innerid));
-        MyThrowAssert( m_cur_innerid > 0 );
+        MySuicideAssert( 0 < read_file_all(m_innerid_file, load_content, sizeof(load_content)));
+        MySuicideAssert( 1 == sscanf (load_content, "cur_innerid : %u", &m_cur_innerid));
+        MySuicideAssert( m_cur_innerid > 0 );
     }
     else
     {
@@ -82,7 +82,7 @@ uint32_t idmap::allocInnerID(const uint32_t outerID)
     {
         mode_t amode = (0 == access(m_innerid_file, F_OK)) ? O_WRONLY : O_WRONLY|O_CREAT;
         m_innerid_fd = open(m_innerid_file, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        MyThrowAssert(m_innerid_fd > 0);
+        MySuicideAssert(m_innerid_fd > 0);
     }
     else
     {
