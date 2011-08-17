@@ -10,8 +10,8 @@ MAINOBJ= test.o
 
 MAINLIBS= -L ./lib/ -lbitlist \
 		  -L ../structmask/lib/ -lstructmask \
+		  -L ../mylog/lib/ -lmylog \
 		  -L ../MyException/lib/ -lMyException \
-		  -L ../mylog/lib/ -lmylog
 
 INCS= -I ../mylog/include/ -I ../MyException/include/ -I ../structmask/include -I ./include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \

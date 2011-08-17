@@ -11,8 +11,8 @@ MAINOBJ= test.o
 MAINLIBS= -L ./lib/ -lidmap \
 		  -L ../bitmap/lib/ -lbitmap \
 		  -L ../myutils/lib/ -lmyutils \
+		  -L ../mylog/lib/ -lmylog \
 		  -L ../MyException/lib/ -lMyException \
-		  -L ../mylog/lib/ -lmylog
 
 INCS= -I ../mylog/include/\
 	  -I ../MyException/include/\

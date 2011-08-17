@@ -1,3 +1,5 @@
+#ifndef _DISKV_H_
+#define _DISKV_H_
 #include <stdint.h>
 
 // 危险的是，没有fsync.
@@ -40,3 +42,4 @@ class diskv
         int get(const diskv_idx_t& idx, void* buff, const uint32_t length);
         void clear();
 };
+#endif

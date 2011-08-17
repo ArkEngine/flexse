@@ -213,11 +213,11 @@ int main(int argc, char* argv[])
     pthread_t update_thread_id;
     pthread_t merger_thread_id;
     // init update thread
-    MyThrowAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, pflexse_plugin));
+    MySuicideAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, pflexse_plugin));
     // init merger thread
-    MyThrowAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, pflexse_plugin));
+    MySuicideAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, pflexse_plugin));
     // init ontime thread
-    MyThrowAssert ( 0 == pthread_create(&merger_thread_id, NULL, merger_thread, pflexse_plugin));
+    MySuicideAssert ( 0 == pthread_create(&merger_thread_id, NULL, merger_thread, pflexse_plugin));
 
     equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->QueryPort());
     // generate service-thread
