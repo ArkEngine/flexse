@@ -45,6 +45,7 @@ clean:
 	rm *.o -f
 	rm test -f
 	rm -rf lib/ include/
+	rm *.max *list -f
 
 LDFLAGS=  -g $(MAINLIBS) 
 

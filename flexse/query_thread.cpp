@@ -55,7 +55,7 @@ int ServiceApp(thread_data_t* ptd)
         return 0;
     }
 
-    index_group* myIndexGroup = ptd->plugin->getIndexGroup();
+    index_group* myIndexGroup = ptd->plugin->mysecore->m_pindex_group;
 
     int list_num = myIndexGroup->get_posting_list(query, dststr, ptd->SendBuffSize - sizeof(xhead_t));
     for (int i=0; i<list_num; i++)
@@ -69,7 +69,7 @@ int ServiceApp(thread_data_t* ptd)
     gettimeofday(&tv2, NULL );
     uint32_t timecost = TIME_US_COST(tv1, tv2);
     ROUTN( "log_id[%u] name[%s] cltip[%s] timecost[%u] string[%s] query[%s] list_num[%d] detail_len[%d]",
-            ptd->RecvHead->log_id, ptd->RecvHead->srvname, inet_ntoa (ptd->cltaddr.sin_addr), timecost,
+            ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip, timecost,
             srcstr, query, list_num, ptd->SendHead->detail_len);
 
     return 0;

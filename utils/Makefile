@@ -15,5 +15,6 @@ all:
 	make -C bitmap/
 	make -C bitlist/
 	make -C idmap/
+	make -C secore/
 	make -C xhead/
 	make -C equeue/

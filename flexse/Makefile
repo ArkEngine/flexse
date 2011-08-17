@@ -20,6 +20,8 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../utils/diskv/include/ \
 	  -I ../utils/bitmap/include/ \
 	  -I ../utils/bitlist/include/ \
+	  -I ../utils/idmap/include/ \
+	  -I ../utils/secore/include/ \
 	  -I ../utils/indexer/index_group/include/ \
 	  -I ../utils/indexer/base_indexer/include/ \
 	  -I ../utils/indexer/disk_indexer/include/ \
@@ -38,12 +40,14 @@ LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../utils/memblocks/lib/            -lmemblocks \
 		 -L ../utils/creat_sign/lib/           -lcreat_sign \
 		 -L ../utils/equeue/lib/               -lequeue \
-		 -L ../utils/myutils/lib/              -lmyutils \
+		 -L ../utils/secore/lib/               -lsecore \
 		 -L ../plugin/flexse/lib/              -lflexse_plugin \
 		 -L ../utils/nlp_processor/lib/        -lnlp_processor \
-		 -L ../utils/bitmap/lib/               -lbitmap \
 		 -L ../utils/bitlist/lib/              -lbitlist \
+		 -L ../utils/idmap/lib/                -lidmap \
+		 -L ../utils/bitmap/lib/               -lbitmap \
 		 -L ../utils/xhead/lib/                -lxhead \
+		 -L ../utils/myutils/lib/              -lmyutils \
 		 -L ../utils/mylog/lib/                -lmylog \
 		 -L ../utils/MyException/lib/          -lMyException \
 

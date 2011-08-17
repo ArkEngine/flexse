@@ -95,19 +95,20 @@ ServiceThread(void* args)
 
 	while( 1 )
 	{
-		caddr_len=sizeof(ptd->cltaddr);
 		netret = -1;
 		ret = -1;
         sock = ptd->poll->fetch_socket();
 		if( sock>0 ){
-			getpeername(sock, (sockaddr*)&ptd->cltaddr, &caddr_len );
-			DEBUG( "new task. sock:%d", sock );
-		}
+            sockaddr_in cltaddr;
+            caddr_len = sizeof(cltaddr);
+            getpeername(sock, (sockaddr*)&cltaddr, &caddr_len );
+            inet_ntop(AF_INET, (void *)&cltaddr.sin_addr, ptd->cltip, sizeof(ptd->cltip));
+        }
         else
         {
-			ALARM( "sock:%d %m", sock );
-			continue;
-		}
+            ALARM( "sock:%d %m", sock );
+            continue;
+        }
 
         memset (ptd->RecvHead, 0, sizeof(ptd->RecvHead));
         netret = xrecv(sock, ptd->RecvHead, ptd->RecvBuffSize, myConfig->RTimeMS());
@@ -206,7 +207,8 @@ int main(int argc, char* argv[])
         while(0 != raise(SIGKILL)){}
     }
     ROUTN( "=====================================================================");
-    flexse_plugin* pflexse_plugin = new flexse_plugin(myConfig->PluginConfigPath());
+    secore* mysecore = new secore(myConfig->PluginConfigPath());
+    flexse_plugin* pflexse_plugin = new flexse_plugin(myConfig->PluginConfigPath(), mysecore);
     pthread_t ontime_thread_id;
     pthread_t update_thread_id;
     pthread_t merger_thread_id;
@@ -230,5 +232,9 @@ int main(int argc, char* argv[])
     pthread_join( ontime_thread_id, NULL );
     pthread_join( update_thread_id, NULL );
     pthread_join( merger_thread_id, NULL );
+    delete myConfig;
+    delete mysecore;
+    delete pflexse_plugin;
+    delete myequeue;
     return 0;
 }
