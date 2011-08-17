@@ -17,6 +17,7 @@
 #include "config.h"
 #include "mylog.h"
 #include "xhead.h"
+#include "bitmap.h"
 #include "index_group.h"
 #include "thread_data.h"
 #include "MyException.h"
