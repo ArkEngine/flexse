@@ -1,3 +1,5 @@
+#ifndef _FILEBLOCK_H_
+#define _FILEBLOCK_H_
 #include <stdint.h>
 
 class fileblock
@@ -33,3 +35,4 @@ class fileblock
         int32_t itget(void* buff, const uint32_t length);
         bool is_end();
 };
+#endif

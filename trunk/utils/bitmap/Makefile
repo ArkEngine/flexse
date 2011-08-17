@@ -9,8 +9,8 @@ MAIN= test
 MAINOBJ= test.o
 
 MAINLIBS= -L ./lib/ -lbitmap \
+		  -L ../mylog/lib/ -lmylog\
 		  -L ../MyException/lib/ -lMyException \
-		  -L ../mylog/lib/ -lmylog
 
 INCS= -I ../mylog/include/ -I ../MyException/include/ -I ./include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \

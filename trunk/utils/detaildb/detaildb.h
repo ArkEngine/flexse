@@ -1,5 +1,5 @@
-#ifndef _DISK_INDEXER_H_
-#define _DISK_INDEXER_H_
+#ifndef _DETAILDB_H_
+#define _DETAILDB_H_
 #include <stdint.h>
 #include "fileblock.h"
 #include "diskv.h"

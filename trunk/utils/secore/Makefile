@@ -11,6 +11,7 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/memblocks/include/ \
 	  -I ../../utils/fileblock/include/ \
 	  -I ../../utils/diskv/include/ \
+	  -I ../../utils/detaildb/include/ \
 	  -I ../../utils/nlp_processor/include/ \
 	  -I ../../utils/idmap/include/ \
 	  -I ../../utils/bitmap/include/ \

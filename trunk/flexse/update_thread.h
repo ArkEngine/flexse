@@ -3,7 +3,7 @@
 #include "flexse_plugin.h"
 
 int add(flexse_plugin* pflexse_plugin, const char* jsonstr);
-int mod(flexse_plugin* pflexse_plugin, const char* jsonstr);
+int _insert(flexse_plugin* pflexse_plugin, const char* jsonstr);
 int del(flexse_plugin* pflexse_plugin, const char* jsonstr);
 int undel(flexse_plugin* pflexse_plugin, const char* jsonstr);
 

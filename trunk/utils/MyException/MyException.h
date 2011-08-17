@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <cstdio>
 #include <exception>
+#include <signal.h>
+#include <stdlib.h>
 
 namespace flexse
 {

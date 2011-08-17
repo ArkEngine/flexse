@@ -34,7 +34,7 @@ void* update_thread(void* args)
     flexse_plugin* pflexse_plugin = (flexse_plugin*)args;
 
     int32_t listenfd = mylisten(myConfig->UpdatePort());
-    MyThrowAssert(listenfd != -1);
+    MySuicideAssert(listenfd != -1);
     xhead_t* recv_head = (xhead_t*)malloc(myConfig->UpdateReadBufferSize());
     xhead_t  send_head;
     memset(&send_head, 0, sizeof(xhead_t));
@@ -85,7 +85,8 @@ void* update_thread(void* args)
             }
             else if (0 == strcmp(str_operation, "UPDATE"))
             {
-                if (0 != mod(pflexse_plugin, jsonstr))
+                // add 和 mod 一回事
+                if (0 != add(pflexse_plugin, jsonstr))
                 {
                     break;
                 }
@@ -140,55 +141,24 @@ int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
         return -1;
     }
 
-    index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
-    mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
-
-    bool have_swap = false;
-    bool nearly_full = false;
-    for (uint32_t i=0; i<vstr.size(); i++)
+    // 为doc_id分配内部id
+    // 检查一下以前有没有内部id，如果有的话，则把mod_bitmap置位
+    uint32_t tmpid = pflexse_plugin->mysecore->m_idmap->getInnerID(doc_id);
+    if (tmpid > 0)
     {
-        int setret = pindexer->set_posting_list(vstr[i].c_str(), &doc_id);
-        if (postinglist::FULL == setret)
-        {
-            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
-            pindexer = myIndexGroup->swap_mem_indexer();
-            MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
-            have_swap = true;
-        }
-        if (postinglist::NEARLY_FULL == setret)
-        {
-            nearly_full = true;
-        }
+        _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_mod_bitmap), tmpid);
     }
-    if (nearly_full && !have_swap)
+    uint32_t innerid = pflexse_plugin->mysecore->m_idmap->allocInnerID(doc_id);
+    if (innerid == 0)
     {
-        pindexer = myIndexGroup->swap_mem_indexer();
-        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
-    }
-    // DEBUG
-    // uint32_t plist[1000];
-    // int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
-    // for (int i=0; i<rnum; i++)
-    // {
-    //     printf("[%u] ", plist[i]);
-    // }
-    // printf("\n");
-    return 0;
-}
-
-int mod(flexse_plugin* pflexse_plugin, const char* jsonstr)
-{
-    vector<string> vstr;
-    uint32_t       doc_id;
-    int retp = pflexse_plugin->mod(jsonstr, doc_id, vstr);
-    if (retp != 0)
-    {
+        ALARM("allocInnerID Fail.");
         return -1;
     }
+    return _insert(pflexse_plugin, jsonstr);
+}
 
-    // 为doc_id分配内部id
-
-
+int _insert(flexse_plugin* pflexse_plugin, const char* jsonstr)
+{
     index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
     mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
 
@@ -201,7 +171,7 @@ int mod(flexse_plugin* pflexse_plugin, const char* jsonstr)
         {
             ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", doc_id);
             pindexer = myIndexGroup->swap_mem_indexer();
-            MyThrowAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
+            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &doc_id));
             have_swap = true;
         }
         if (postinglist::NEARLY_FULL == setret)
