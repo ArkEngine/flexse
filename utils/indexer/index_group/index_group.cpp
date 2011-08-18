@@ -12,10 +12,10 @@
 
 const char* const index_group :: STR_INDEX_NAME = "index";
 const char* const index_group :: STR_INDEX_CUR_NO_FILE = "cur";
-const char* const index_group :: STR_DAY_INDEX_DIR = "./data/day/";
-const char* const index_group :: STR_HIS_INDEX_DIR = "./data/his/";
-const char* const index_group :: STR_FMT_DAY_INDEX_PATH = "./data/day/%u/";
-const char* const index_group :: STR_FMT_HIS_INDEX_PATH = "./data/his/%u/";
+const char* const index_group :: STR_DAY_INDEX_DIR = "./data/index/day/";
+const char* const index_group :: STR_HIS_INDEX_DIR = "./data/index/his/";
+const char* const index_group :: STR_FMT_DAY_INDEX_PATH = "./data/index/day/%u/";
+const char* const index_group :: STR_FMT_HIS_INDEX_PATH = "./data/index/his/%u/";
 
 index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
         const uint32_t headlist_size, const uint32_t* blocknum_list, const uint32_t blocknum_list_size)
