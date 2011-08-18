@@ -58,13 +58,20 @@ int ServiceApp(thread_data_t* ptd)
     index_group* myIndexGroup = ptd->plugin->mysecore->m_pindex_group;
 
     int list_num = myIndexGroup->get_posting_list(query, dststr, ptd->SendBuffSize - sizeof(xhead_t));
+    uint32_t filter_num = 0;
+    uint32_t* plist = ((uint32_t*)dststr);
     for (int i=0; i<list_num; i++)
     {
-        printf("[%u] ", ((uint32_t*)dststr)[i]);
+//        printf("[%u]-m[%u] ", plist[i], _GET_BITMAP_(*(ptd->plugin->mysecore->m_mod_bitmap), plist[i]));
+        if ((0 == _GET_BITMAP_(*(ptd->plugin->mysecore->m_mod_bitmap), plist[i]))
+                || (_GET_BITMAP_(*(ptd->plugin->mysecore->m_del_bitmap), plist[i])))
+        {
+            plist[filter_num++] = plist[i];
+        }
     }
-    printf("\n");
+//    printf("\n");
 
-    ptd->SendHead->detail_len = list_num <= 0? 0 : list_num*sizeof(uint32_t);
+    ptd->SendHead->detail_len = filter_num <= 0? 0 : filter_num*sizeof(uint32_t);
 
     gettimeofday(&tv2, NULL );
     uint32_t timecost = TIME_US_COST(tv1, tv2);
