@@ -26,6 +26,8 @@ class disk_indexer : public base_indexer
             }
         };
 
+        uint32_t m_posting_cell_size;
+
         static const char* const FORMAT_SECOND_INDEX;
         static const uint32_t MAX_FILE_LENGTH = 128;
         static const uint32_t TERM_MILESTONE  = 1000;
@@ -48,7 +50,7 @@ class disk_indexer : public base_indexer
             READ_ONLY = -1, ///< 调用过set_finish()后，变为只读状态;
             NOT_READY = -2, ///< 正在写入过程中，不提供查询服务
         };
-        disk_indexer(const char* dir, const char* iname);
+        disk_indexer(const char* dir, const char* iname, const uint32_t posting_cell_size);
         ~disk_indexer();
         /*
          * set和get接口是相当危险的，这里的默认时，当连续的set之后，调用set_finish()方法之后才可以调用get方法

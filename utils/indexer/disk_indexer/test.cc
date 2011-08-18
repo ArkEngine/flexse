@@ -15,7 +15,20 @@ int main()
     assert(read_buff != NULL);
 
     // WRITE AND READ
-    disk_indexer di("./data/", "test");
+
+    disk_indexer di("./data/", "test", sizeof(uint32_t));
+//    di.begin();
+//    uint64_t iit = 0;
+//    while(!di.is_end())
+//    {
+//        int retnum = di.itget(iit, read_buff, sizeof(uint32_t)*SIZE);
+//        printf("retnum[%d]\n", retnum);
+//        di.next();
+//        iit++;
+//    }
+//
+//    return 0;
+
     printf("NO_SUCH_TERM ret[%d]\n", di.get_posting_list("NO_SUCH_TERM", read_buff, SIZE * sizeof(uint32_t)));
     di.clear();
 
