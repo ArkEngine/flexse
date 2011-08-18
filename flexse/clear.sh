@@ -7,3 +7,6 @@ rm -f data/day/0/index.dat.*
 rm -f data/day/1/index.dat.*
 rm -f data/his/0/index.dat.*
 rm -f data/his/1/index.dat.*
+
+rm -f data/idmap/idmap.*
+rm -f data/attr/*_bitmap

@@ -7,7 +7,7 @@ if len(sys.argv) != 4:
 FMT_XHEAD = "I16sIII"
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((sys.argv[1], int(sys.argv[2])));
-for x in range(int(sys.argv[3])):
+for x in range(1, 1+int(sys.argv[3])):
     dd = {}
     dd['OPERATION'] = "INSERT"
     dd['DOC_ID'] = x

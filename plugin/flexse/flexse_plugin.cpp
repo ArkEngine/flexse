@@ -24,9 +24,9 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<string> & 
         return -1;
     }
 
-    if (root["DOC_ID"].isNull())
+    if (root["DOC_ID"].isNull() || ! root["DOC_ID"].isInt() || 0 == root["DOC_ID"].asInt())
     {
-        ALARM("jsonstr NOT contain 'DOC_ID'.");
+        ALARM("jsonstr NOT contain 'DOC_ID' or Type error.");
         return -1;
     }
     else

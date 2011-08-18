@@ -205,7 +205,17 @@ int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
     }
 
     // update the del bitmap
-    // TODO
+    for (uint32_t i=0; i<id_list.size(); i++)
+    {
+        uint32_t innerid = pflexse_plugin->mysecore->m_idmap->getInnerID(id_list[i]);
+        if (innerid == 0)
+        {
+            ALARM("getInnerID(%u) Fail.", id_list[i]);
+            continue;
+        }
+        DEBUG("_SET_BITMAP_1_ outerid[%u] innerid[%u]", id_list[i], innerid);
+        _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_del_bitmap), innerid);
+    }
 
     return 0;
 }
@@ -220,7 +230,17 @@ int undel(flexse_plugin* pflexse_plugin, const char* jsonstr)
     }
 
     // update the del bitmap
-    // TODO
+    for (uint32_t i=0; i<id_list.size(); i++)
+    {
+        uint32_t innerid = pflexse_plugin->mysecore->m_idmap->getInnerID(id_list[i]);
+        if (innerid == 0)
+        {
+            ALARM("getInnerID(%u) Fail.", id_list[i]);
+            continue;
+        }
+        DEBUG("_SET_BITMAP_0_ outerid[%u] innerid[%u]", id_list[i], innerid);
+        _SET_BITMAP_0_(*(pflexse_plugin->mysecore->m_del_bitmap), innerid);
+    }
 
     return 0;
 }
