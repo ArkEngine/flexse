@@ -38,19 +38,19 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
     uint32_t day_cur = get_cur_no(STR_DAY_INDEX_DIR, STR_INDEX_CUR_NO_FILE);
     char index_dir[MAX_PATH_LENGTH];
     snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, day_cur);
-    m_day[day_cur] = new disk_indexer(index_dir, STR_INDEX_NAME);
+    m_day[day_cur] = new disk_indexer(index_dir, STR_INDEX_NAME, m_cell_size);
     m_index_list.push_back(m_day[day_cur]);
     snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, 1 - day_cur);
-    m_day[1-day_cur] = new disk_indexer(index_dir, STR_INDEX_NAME);
+    m_day[1-day_cur] = new disk_indexer(index_dir, STR_INDEX_NAME, m_cell_size);
 
     // his init
     // read cur file
     uint32_t his_cur = get_cur_no(STR_HIS_INDEX_DIR, STR_INDEX_CUR_NO_FILE);
     snprintf(index_dir, sizeof(index_dir), STR_FMT_HIS_INDEX_PATH, his_cur);
-    m_his[his_cur] = new disk_indexer(index_dir, STR_INDEX_NAME);
+    m_his[his_cur] = new disk_indexer(index_dir, STR_INDEX_NAME, m_cell_size);
     m_index_list.push_back(m_his[his_cur]);
     snprintf(index_dir, sizeof(index_dir), STR_FMT_HIS_INDEX_PATH, 1 - his_cur);
-    m_his[1 - his_cur] = new disk_indexer(index_dir, STR_INDEX_NAME);
+    m_his[1 - his_cur] = new disk_indexer(index_dir, STR_INDEX_NAME, m_cell_size);
 
     pthread_mutex_init(&m_mutex, NULL);
     pthread_cond_init(&m_mem_dump_cond, NULL);
@@ -105,7 +105,8 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while((!src1_indexer->is_end()) && (! src2_indexer->is_end()))
     {
         int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
-        int32_t num2 = src2_indexer->itget(key2.sign64, src1_list, length);
+        int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
+        ROUTN("num1[%u] num2[%u] key1[%llu] key2[%llu]", num1, num2, key1.sign64, key2.sign64);
         MyThrowAssert (num1 > 0 && num2 > 0);
         if (key1.sign64 < key2.sign64)
         {
@@ -138,6 +139,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while (!src1_indexer->is_end())
     {
         int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
+        ROUTN("num1[%u] key1[%llu]", num1, key1.sign64);
         if (num1 > 0)
         {
             dest_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
@@ -148,6 +150,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while (!src2_indexer->is_end())
     {
         int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
+        ROUTN("num2[%u] key2[%llu]", num2, key2.sign64);
         if (num2 > 0)
         {
             dest_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
@@ -243,8 +246,18 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
     {
         if (m_index_list[i] != NULL)
         {
-            lstnum += m_index_list[i]->get_posting_list(strTerm, &((char*)buff)[offset], length-offset);
-            offset = lstnum * m_cell_size;
+            int tmpnum = m_index_list[i]->get_posting_list(strTerm, &((char*)buff)[offset], length-offset);
+            if (tmpnum > 0)
+            {
+                lstnum += tmpnum;
+                offset = lstnum * m_cell_size;
+                printf("-- index_no[%u] lstnum[%u] --\n", i, tmpnum);
+                for (uint32_t k=0; k<lstnum; k++)
+                {
+                    printf("[%u] ", ((uint32_t*)buff)[k]);
+                }
+                printf("\n");
+            }
         }
     }
     pthread_rwlock_unlock(&m_list_rwlock);

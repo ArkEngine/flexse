@@ -118,7 +118,6 @@ int32_t fileblock :: get(const uint32_t offset, void* buff, const uint32_t lengt
 
     MyThrowAssert(m_fd[file_no] != -1);
     return pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
-
 }
 
 int32_t fileblock :: get(const uint32_t offset, const uint32_t count, void* buff, const uint32_t length)

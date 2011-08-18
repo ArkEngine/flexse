@@ -10,8 +10,10 @@
 #include "disk_indexer.h"
 
 const char* const disk_indexer :: FORMAT_SECOND_INDEX = "%s/%s.second_idx";
-disk_indexer :: disk_indexer(const char* dir, const char* iname)
-    : m_fileblock(dir, iname, sizeof(fb_index_t)), m_diskv(dir, iname)
+disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t posting_cell_size)
+    : m_fileblock(dir, iname, sizeof(fb_index_t)),
+      m_diskv(dir, iname),
+      m_posting_cell_size(posting_cell_size)
 {
     snprintf(m_second_index_file, sizeof(m_second_index_file), FORMAT_SECOND_INDEX, dir, iname);
     int fd = open(m_second_index_file, O_RDONLY);
@@ -107,7 +109,9 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
         return -1;
     }
     // (4) 得到了diskv中的diskv_idx_t, 读取索引
-    return m_diskv.get(pseRet->idx, buff, length);
+    int ret = m_diskv.get(pseRet->idx, buff, length);
+    ROUTN("diskv readret[%u] idx.data_len[%u]\n", ret, pseRet->idx.data_len);
+    return (ret < 0) ? ret : ret/m_posting_cell_size;
 }
 
 int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
@@ -127,6 +131,7 @@ int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
     m_last_si.ikey      = ikey;
     fb_index_t fi;
     MyThrowAssert(0 == m_diskv.set(fi.idx, buff, length));
+    ROUTN("diskv idx.data_len[%u]\n", fi.idx.data_len);
     fi.ikey = ikey;
     MyThrowAssert(0 == m_fileblock.set(id, &fi));
     // 记住最后一个milestone
