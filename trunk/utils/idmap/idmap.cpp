@@ -96,7 +96,7 @@ uint32_t idmap::allocInnerID(const uint32_t outerID)
 
     m_pi2omap->puint[m_cur_innerid] = outerID;
     m_po2imap->puint[outerID] = m_cur_innerid;
-    ROUTN("outerid[%u] <> innerid[%u]", outerID, m_cur_innerid);
+//    ROUTN("outerid[%u] <> innerid[%u]", outerID, m_cur_innerid);
 
     return m_cur_innerid;
 }
