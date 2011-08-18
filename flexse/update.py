@@ -18,4 +18,4 @@ for x in range(int(sys.argv[3])):
     sbuf += jsonstr
     sock.send(sbuf)
     rbuf = sock.recv(32)
-    print struct.unpack(FMT_XHEAD, rbuf)
+#    print struct.unpack(FMT_XHEAD, rbuf)
