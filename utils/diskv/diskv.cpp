@@ -24,7 +24,7 @@ diskv :: diskv(const char* dir, const char* module)
         m_read_fd[i] = -1;
     }
     int detect_no = detect_file();
-    m_max_file_no = (detect_no < 0) ? 1 : detect_no + 1;
+    m_max_file_no = (detect_no <= 0) ? 1 : detect_no + 1;
     char full_name[MAX_PATH_LENGTH];
 
     snprintf(full_name, sizeof(full_name), FORMAT_PATH, m_dir, m_module, m_max_file_no - 1);

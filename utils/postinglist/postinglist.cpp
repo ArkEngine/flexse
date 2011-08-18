@@ -344,5 +344,6 @@ void postinglist :: clear()
     // 重置bucket
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
     set_readonly(false);
+    m_headlist_used = 0;
     // 我就是舍不得释放这些已经申请的内存啊，谁能理解我的苦衷呢
 }

@@ -16,6 +16,7 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 				blocksize, blocknum, catnum, m_MemCatMaxnum);
 		MyToolThrow("Param Error Failed in Mempool Construct");
 	}
+    m_memsize = 0;
 	m_catnum = catnum;
 	for (uint32_t i=0; i<m_catnum; i++)
 	{
@@ -36,11 +37,14 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 		m_mem_cat_info[i].freecount = blocknum[i];
 		m_memsize += blocksize[i] * blocknum[i];
 		m_blocknum += blocknum[i];
+
+		ROUTN("catidx[%u] blocksize[%u] blocknum[%u]",
+				i, m_mem_cat_info[i].size, m_mem_cat_info[i].count);
 	}
 	m_mem = (char*)malloc(m_memsize);
 	if (m_mem == NULL)
 	{
-		ALARM("malloc failed. memsize[%u]", m_memsize);
+		ALARM("malloc failed. memsize[%u] msg[%m]", m_memsize);
 		MyToolThrow("MemAllocBad in Mempool Construct");
 	}
 	int memoffset = 0;
@@ -56,8 +60,6 @@ memblocks::memblocks(const uint32_t* blocksize, const uint32_t* blocknum, const 
 			m_mem_cat_info[i].memlisthead = tmpmlist;
 			memoffset += m_mem_cat_info[i].size;
 		}
-		ROUTN("catidx[%u] blocksize[%u] blocknum[%u]",
-				i, m_mem_cat_info[i].size, m_mem_cat_info[i].count);
 	}
 
 	m_mem_extra.memlisthead = NULL;

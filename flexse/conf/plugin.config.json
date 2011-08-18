@@ -1,8 +1,8 @@
 {
     "GENERAL":
     {
-        "MaxOuterID"   :100000,
-        "MaxInnerID"   :100000,
+        "MaxOuterID"   :100000000,
+        "MaxInnerID"   :100000000,
         "IdmapDataDir" :"./data/idmap/"
     },
     "ATTR":
@@ -17,7 +17,7 @@
     {
         "PostingListCellSize"    : 4,        // uint32_t
         "PostingBucketSize"      : 20,       // N begin 20 and 24, bucket_size = 1<<N
-        "PostingHeadListSize"    : 16777216, // default as 16777216,
+        "PostingHeadListSize"    : 2000000,  // default as 16777216,
         "PostingMemBlockNumList" : [1048576, 524288, 262144, 131072, 65536, 32768, 16384, 8192]
     }
 }
