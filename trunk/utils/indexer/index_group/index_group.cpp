@@ -168,7 +168,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
 void index_group :: update_day_indexer()
 {
     pthread_mutex_lock(&m_mutex);
-    // 等到m_index_list[1]不为NULL时，执行合并过程
+    // 等到m_index_list[1]不为NULL时，且这个dst_indexer(disk)为空闲时，执行合并过程
     while(m_index_list[1] == NULL)
     {
         pthread_cond_wait(&m_mem_dump_cond, &m_mutex);
