@@ -15,7 +15,6 @@
 using namespace std;
 
 const char* const Config::m_StrLogLevel = "LogLevel";
-const char* const Config::m_StrLogSize  = "LogSize";
 const char* const Config::m_StrLogName  = "LogName";
 
 const char* const Config::m_StrQuerySendTimeOut = "SendTimeOut_MS";
@@ -33,9 +32,8 @@ Config::Config(const char* configpath)
 {
     // DEFAULT CONFIG
     m_log_level = mylog :: ROUTN;
-    m_log_size  = 1 << 31;
     m_log_name  = PROJNAME;
-    SETLOG(m_log_level, m_log_size, m_log_name);
+    SETLOG(m_log_level, m_log_name);
 
     m_pollsize           = 128;
     m_wtimeout_ms        = 1000;
@@ -65,9 +63,8 @@ Config::Config(const char* configpath)
     Json::Value logConfig = root["LOG"];
     if (! logConfig.isNull()) {
         m_log_level = logConfig[m_StrLogLevel].isNull() ? m_log_level : logConfig[m_StrLogLevel].asInt();
-        m_log_size  = logConfig[m_StrLogSize].isNull()  ? m_log_size  : logConfig[m_StrLogSize].asInt();
         m_log_name  = logConfig[m_StrLogName].isNull()  ? m_log_name  : logConfig[m_StrLogName].asCString();
-        SETLOG(m_log_level, m_log_size, m_log_name);
+        SETLOG(m_log_level, m_log_name);
     }
 
     Json::Value qSrvConfig = root["QUERY_SERVER"];

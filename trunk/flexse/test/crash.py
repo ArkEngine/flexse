@@ -1,13 +1,18 @@
 import socket, struct, sys, json
 
-if len(sys.argv) != 4:
-    print "python test.py ip port loopcount"
+if len(sys.argv) != 3:
+    print "python crash.py begin end"
     sys.exit(1)
+if int(sys.argv[1]) > int(sys.argv[2]) :
+    print "begin > end"
+    sys.exit(1)
+begin = int(sys.argv[1])
+end   = int(sys.argv[2]) + 1
 
 FMT_XHEAD = "I16sIII"
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((sys.argv[1], int(sys.argv[2])));
-for x in range(1, 1+int(sys.argv[3])):
+sock.connect(("127.0.0.1", 1984));
+for x in range(begin, end):
     dd = {}
     dd['OPERATION'] = "INSERT"
     dd['DOC_ID'] = x

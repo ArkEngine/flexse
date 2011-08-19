@@ -22,7 +22,6 @@ class Config
 
 		// log config
 		uint32_t  m_log_level; // DEBUG, ROUTN, ALARM, FATAL
-		uint32_t  m_log_size;  // max log size
 		const char* m_log_name; // logname
 
         // query server config

@@ -21,7 +21,6 @@ mylog :: mylog()
 {
     pthread_mutex_init(&m_lock, NULL);
     m_level = ROUTN;
-    m_file_size = 1073741824;
     snprintf(m_path, sizeof(m_path), "./log/%s.log", strLogName);
     m_log_fd = -1;
     m_LastDayTime = DayTimeNow();
@@ -33,10 +32,9 @@ mylog* mylog::getInstance()
     return m_mylog;
 }
 
-void mylog :: setlog(const uint32_t level, const uint32_t size, const char* logname)
+void mylog :: setlog(const uint32_t level, const char* logname)
 {
     m_level = (level > (uint32_t)FATAL) ? (uint32_t)ROUTN : level;
-    m_file_size = size > 1073741824 ? 1073741824 : size;
     const char* mylogname = (logname[0] != 0 ) ? logname : strLogName;
     MyThrowAssert(NULL == strchr(mylogname, '/'));
     if (0 != strcmp(mylogname, strLogName))
@@ -50,7 +48,7 @@ void mylog :: setlog(const uint32_t level, const uint32_t size, const char* logn
     snprintf(m_path, sizeof(m_path), "./log/%s.log", mylogname);
     LogFileCheckOpen();
     fprintf(stderr, "mylog Level[%u] SetLevel[%u] Path[%s] Size[%u]\n",
-            m_level, level, m_path, m_file_size);
+            m_level, level, m_path, LogFileMaxSize);
     return;
 }
 
@@ -93,7 +91,12 @@ void mylog :: WriteLog(const uint32_t mylevel, const char* file,
     pos = strlen(buff);
     buff[pos] = '\n';
     buff[pos+1] = '\0';
+    if ((m_cur_logsize + pos + 1) > LogFileMaxSize)
+    {
+         m_cur_logsize = ( 0 == ftruncate(m_log_fd, 0)) ? 0 : m_cur_logsize;
+    }
     WriteNByte(m_log_fd, buff, pos+1);
+    m_cur_logsize += pos+1;
     pthread_mutex_unlock(&m_lock);
 }
 
@@ -115,20 +118,19 @@ void mylog :: LogFileCheckOpen()
             *p = '\0';
             Mkdirs(tmppath);
         }
-        if (m_log_fd >= 0){
-            close(m_log_fd);
-            m_log_fd = -1;
-        }
+    }
+    if (m_log_fd >= 0){
+        close(m_log_fd);
+        m_log_fd = -1;
     }
     chdir(curpath);
+    m_log_fd = open(logpath, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (m_log_fd < 0) {
-        m_log_fd = open(logpath, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        if (m_log_fd < 0) {
-            fprintf(stderr, "FILE[%s:%u] create logfile[%s] fail. msg[%m]\n",
-                    __FILE__, __LINE__, logpath);
-            while(0 != raise(SIGKILL)){}
-        }
+        fprintf(stderr, "FILE[%s:%u] create logfile[%s] fail. msg[%m]\n",
+                __FILE__, __LINE__, logpath);
+        while(0 != raise(SIGKILL)){}
     }
+    m_cur_logsize = lseek(m_log_fd, SEEK_END, 0);;
 }
 
 void mylog :: LogFileSwitchCheck()
