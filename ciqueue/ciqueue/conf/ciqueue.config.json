@@ -2,7 +2,6 @@
     "LOG":
     {
         "LogLevel" : 1,           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
-        "LogSize"  : 2097152000,  // default 2G, 2*1024*1024*1000
         "LogName"  : "ciqueue"    // extend to "./log/%s.log" default = "PROJNAME"
     },
     "CI_SERVER":

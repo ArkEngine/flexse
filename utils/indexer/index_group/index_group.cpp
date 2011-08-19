@@ -106,7 +106,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     {
         int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
         int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
-        ROUTN("num1[%u] num2[%u] key1[%llu] key2[%llu]", num1, num2, key1.sign64, key2.sign64);
+//        ROUTN("num1[%u] num2[%u] key1[%llu] key2[%llu]", num1, num2, key1.sign64, key2.sign64);
         MyThrowAssert (num1 > 0 && num2 > 0);
         if (key1.sign64 < key2.sign64)
         {
@@ -139,7 +139,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while (!src1_indexer->is_end())
     {
         int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
-        ROUTN("num1[%u] key1[%llu]", num1, key1.sign64);
+//        ROUTN("num1[%u] key1[%llu]", num1, key1.sign64);
         if (num1 > 0)
         {
             dest_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
@@ -150,7 +150,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while (!src2_indexer->is_end())
     {
         int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
-        ROUTN("num2[%u] key2[%llu]", num2, key2.sign64);
+//        ROUTN("num2[%u] key2[%llu]", num2, key2.sign64);
         if (num2 > 0)
         {
             dest_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);

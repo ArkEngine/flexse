@@ -74,9 +74,8 @@ int main(int argc, char** argv)
     snprintf(qfile, sizeof(qfile), "%s", root["qfile"].asCString());
 
     uint32_t    loglevel = root["LogLevel"].asInt();
-    uint32_t    logsize  = root["LogSize"].asInt();
     const char* logname = root["LogPath"].asCString();
-    SETLOG(loglevel, logsize, logname);
+    SETLOG(loglevel, logname);
     ROUTN( "=====================================================================");
 
     Json::Value follower_array = root["followers"];

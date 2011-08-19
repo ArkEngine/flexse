@@ -19,18 +19,18 @@ class mylog
 {
     private:
         static const uint32_t LogNameMaxLen = 128;
-        static const uint32_t LogFileMaxSize = 1024*1024*1024;
+        static const uint32_t LogFileMaxSize = 2*1024*1024*1000;
         static const uint32_t TimeBuffMaxLen = 32;
         static const uint32_t LogContentMaxLen = 2048;
         static const char* const strLogName;
         static const char* LevelTag[];
         uint32_t m_level;
-        uint32_t m_file_size;
         uint32_t m_LastDayTime;
         char m_path[LogNameMaxLen];
         int m_log_fd;
-        pthread_mutex_t m_lock;
+        int m_cur_logsize;
         char m_timebuff[TimeBuffMaxLen];
+        pthread_mutex_t m_lock;
 
         uint32_t DayTimeNow();
         const char* GetTimeNow();
@@ -44,14 +44,14 @@ class mylog
     public:
         enum { DEBUG = 0, ROUTN, ALARM, FATAL, };
         static mylog* getInstance();
-        void setlog(const uint32_t level, const uint32_t size, const char* logname);
+        void setlog(const uint32_t level, const char* logname);
         ~mylog();
         void WriteLog(const uint32_t mylevel, const char* file,
                 const uint32_t line, const char* func, const char *format, ...);
 };
 
-#define SETLOG(level, size, logname) \
-        mylog::getInstance()->setlog(level, size, logname)
+#define SETLOG(level, logname) \
+        mylog::getInstance()->setlog(level, logname)
 
 #define FATAL(fmt, msg ...) \
         mylog::getInstance()->WriteLog(mylog::FATAL, __FILE__, __LINE__, __func__, fmt, ##msg)

@@ -1,7 +1,6 @@
 {
 	"LogLevel" : 0,
 	"LogPath"  : "sender",
-	"LogSize"  : 1073741824,
 
 	"qpath" : "video",
 	"qfile" : "video",
