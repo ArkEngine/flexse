@@ -47,7 +47,7 @@ class Config
 		uint32_t m_wtimeout_ms;
 
         // queue handle
-        FileLinkBlock* m_queue;
+        filelinkblock* m_queue;
         
         // ip set
         set<string> m_ip_set;
@@ -67,7 +67,7 @@ class Config
 		uint32_t PollSize() const;
 		uint32_t ServiceThreadNum() const;
 		uint32_t ThreadBufferSize() const;
-        FileLinkBlock* GetQueue();
+        filelinkblock* GetQueue();
         bool     IpNotValid(const char* str_ip);
         bool     NeedIpControl() const;
         void     LoadIpSet();

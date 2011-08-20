@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-class FileLinkBlock
+class filelinkblock
 {
     private:
         static const uint32_t BLOCK_MAX_SIZE = (1<<22);     ///< Ã¿¿é×î¶à4M
@@ -40,7 +40,7 @@ class FileLinkBlock
 
         pthread_mutex_t m_mutex;     ///< Ð´Ëø
 
-        FileLinkBlock();
+        filelinkblock();
         int __write_message(const uint32_t logid, const char* buff, const uint32_t buff_size);
         int newfile(const char* strfile);
         int detect_file();
@@ -48,8 +48,8 @@ class FileLinkBlock
         void check_and_repaire();
         int  readn(int fd, char* buf, const uint32_t size);
     public:
-        FileLinkBlock(const char* path, const char* name, bool readonly);
-        ~FileLinkBlock();
+        filelinkblock(const char* path, const char* name, bool readonly);
+        ~filelinkblock();
         int write_message(const uint32_t logid, const char* buff, const uint32_t buff_size);
 
         int seek_message(const uint32_t file_no, const uint32_t block_id);

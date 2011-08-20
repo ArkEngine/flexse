@@ -15,9 +15,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
-const char* const FileLinkBlock::BASE_DATA_PATH = "./data/";
-const char* const FileLinkBlock::BASE_OFFSET_PATH = "./offset/";
-FileLinkBlock::FileLinkBlock(const char* path, const char* name, bool readonly)
+const char* const filelinkblock::BASE_DATA_PATH = "./data/";
+const char* const filelinkblock::BASE_OFFSET_PATH = "./offset/";
+filelinkblock::filelinkblock(const char* path, const char* name, bool readonly)
 {
     MySuicideAssert(0 < strlen(path) && 0 < strlen(name));
     snprintf(m_flb_path, sizeof(m_flb_path), "%s/%s/", BASE_DATA_PATH, path);
@@ -49,7 +49,7 @@ FileLinkBlock::FileLinkBlock(const char* path, const char* name, bool readonly)
     }
 }
 
-FileLinkBlock::~FileLinkBlock()
+filelinkblock::~filelinkblock()
 {
     if (m_flb_w_fd > 0)
     {
@@ -63,7 +63,7 @@ FileLinkBlock::~FileLinkBlock()
     }
 }
 
-int FileLinkBlock:: newfile (const char* strfile)
+int filelinkblock:: newfile (const char* strfile)
 {
     mode_t amode = (0 == access(strfile, F_OK)) ? O_WRONLY|O_APPEND|O_TRUNC : O_WRONLY|O_CREAT|O_APPEND|O_TRUNC;
     m_flb_w_fd = open(strfile, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -73,7 +73,7 @@ int FileLinkBlock:: newfile (const char* strfile)
     return m_flb_w_fd;
 }
 
-void FileLinkBlock:: check_and_repaire()
+void filelinkblock:: check_and_repaire()
 {
     // 需要检查出当前文件夹的最后一个文件
     // (1) 如果按照大小切分，扫描当前文件夹，找到 name.n 中最大的那个文件
@@ -197,7 +197,7 @@ void FileLinkBlock:: check_and_repaire()
     }
     return;
 }
-int FileLinkBlock::detect_file( )
+int filelinkblock::detect_file( )
 {
     DIR *dp;
     struct  dirent  *dirp;
@@ -244,7 +244,7 @@ int FileLinkBlock::detect_file( )
     return max;
 }
 
-int FileLinkBlock::__write_message(const uint32_t log_id, const char* buff, const uint32_t buff_size)
+int filelinkblock::__write_message(const uint32_t log_id, const char* buff, const uint32_t buff_size)
 {
     // (buff_size>>2)<<2 是为了补齐不足4个字节，这样可以让magic_num的查找更加方面
     uint32_t wlen = (((buff_size+3)>>2)<<2) + sizeof(file_link_block_head);
@@ -295,7 +295,7 @@ int FileLinkBlock::__write_message(const uint32_t log_id, const char* buff, cons
     }
     return 0;
 }
-int FileLinkBlock::write_message(const uint32_t log_id, const char* buff, const uint32_t buff_size)
+int filelinkblock::write_message(const uint32_t log_id, const char* buff, const uint32_t buff_size)
 {
     assert (buff != NULL && buff_size > 0);
     pthread_mutex_lock(&m_mutex);
@@ -303,7 +303,7 @@ int FileLinkBlock::write_message(const uint32_t log_id, const char* buff, const 
     pthread_mutex_unlock(&m_mutex);
     return ret;
 }
-int FileLinkBlock::seek_message(const uint32_t file_no, const uint32_t file_offset, const uint32_t block_id)
+int filelinkblock::seek_message(const uint32_t file_no, const uint32_t file_offset, const uint32_t block_id)
 {
     snprintf(m_read_file_name, sizeof(m_read_file_name), "%s/%s.%u", m_flb_path, m_flb_name, file_no);
     m_flb_r_fd = open(m_read_file_name, O_RDONLY);
@@ -317,7 +317,7 @@ int FileLinkBlock::seek_message(const uint32_t file_no, const uint32_t file_offs
     return 0;
 }
 
-int FileLinkBlock::seek_message(const uint32_t file_no, const uint32_t block_id)
+int filelinkblock::seek_message(const uint32_t file_no, const uint32_t block_id)
 {
     if (block_id == 0)
     {
@@ -359,7 +359,7 @@ int FileLinkBlock::seek_message(const uint32_t file_no, const uint32_t block_id)
     return 0;
 }
 
-int FileLinkBlock::seek_message()
+int filelinkblock::seek_message()
 {
 	uint32_t file_no = 0;
 	uint32_t offset = 0;
@@ -376,7 +376,7 @@ int FileLinkBlock::seek_message()
     }
 }
 
-int FileLinkBlock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& block_id, char* buff, const uint32_t buff_size)
+int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& block_id, char* buff, const uint32_t buff_size)
 {
     assert (buff != NULL && buff_size > 0);
     struct file_link_block_head myhead;
@@ -431,7 +431,7 @@ int FileLinkBlock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
     return read_size;
 }
 
-void FileLinkBlock:: set_channel(const char* channel_name)
+void filelinkblock:: set_channel(const char* channel_name)
 {
     // 写入文件
     MySuicideAssert (channel_name != NULL && 0 < strlen(channel_name));
@@ -439,7 +439,7 @@ void FileLinkBlock:: set_channel(const char* channel_name)
     return;
 }
 
-void FileLinkBlock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& block_id)
+void filelinkblock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& block_id)
 {
     // 写入文件
     MySuicideAssert (0 < strlen(m_channel_name));
@@ -461,7 +461,7 @@ void FileLinkBlock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& 
     fclose(fp);
 }
 
-void FileLinkBlock:: save_offset()
+void filelinkblock:: save_offset()
 {
     // 写入文件
     MySuicideAssert (0 < strlen(m_channel_name));
@@ -479,7 +479,7 @@ void FileLinkBlock:: save_offset()
     return; 
 }
 
-int FileLinkBlock::readn(int fd, char* buf, const uint32_t size)
+int filelinkblock::readn(int fd, char* buf, const uint32_t size)
 {
     int left = size;
     while (left > 0)

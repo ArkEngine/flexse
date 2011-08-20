@@ -29,7 +29,7 @@ void print_version(void)
 	printf("BuildDate  :  %s\n", __DATE__);
 }
 
-void read_and_print(FileLinkBlock& flb, char* readbuff, uint32_t SIZE)
+void read_and_print(filelinkblock& flb, char* readbuff, uint32_t SIZE)
 {
 	uint32_t log_id   = 0;
 	uint32_t block_id = 0;
@@ -87,7 +87,7 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	FileLinkBlock flb(queue_path, queue_name, true);
+	filelinkblock flb(queue_path, queue_name, true);
 	flb.set_channel("queue.debug");
 	flb.seek_message(begin_file_no, begin_block_id);
 	const uint32_t SIZE = 40000000;

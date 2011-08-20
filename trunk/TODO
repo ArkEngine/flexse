@@ -1,8 +1,8 @@
-[L] [TODO] merger执行时对各个indexer进行判空，避免空merge
+[L] [DONE] merger执行时对各个indexer进行判空，避免空merge
 [M] [TODO] disk_indexer中加入对index_block的缓存
 [H] [DONE] query服务实现
 [H] [DONE] bitmet实现
-[H] [TODO] ID映射
+[H] [DONE] ID映射
 [H] [TODO] 整理系统的限制说明:
     [TODO] -1- diskv的最大文档长度是32M，postinglist和detail不得超过这个长度
     [TODO] -2- hash的冲突率
@@ -10,3 +10,6 @@
 [H] [TODO] 灵活索引的实现
 [H] [DONE] 过滤算法集成
 [H] [DONE] 调权算法集成(attr/term/offset)
+[H] [TODO] 增加index_group的快速建库模式
+[H] [TODO] 计算mem_indexer撑爆的时间和disk_indexer持久化的时间，这是参数配置的前提
+[H] [TODO] 测试seek_message(file_no, block_id)的正确性

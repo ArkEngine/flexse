@@ -84,7 +84,7 @@ int ServiceApp(thread_data_t* ptd) try
 
     if (is_valid(root))
     {
-        FileLinkBlock* pflb = myConfig->GetQueue();
+        filelinkblock* pflb = myConfig->GetQueue();
         if (0 != pflb->write_message(ptd->SendHead->log_id, srcstr, ptd->RecvHead->detail_len))
         {
             ptd->SendHead->reserved = RET_WRITE_MQUEUE_FAIL;

@@ -87,7 +87,7 @@ Config::Config(const char* configpath)
         m_queue_path    = qQueueConfig[m_StrQueuePath].isNull() ? m_queue_path : qQueueConfig[m_StrQueuePath].asCString();
         m_queue_name    = qQueueConfig[m_StrQueueName].isNull() ? m_queue_name : qQueueConfig[m_StrQueueName].asCString();
     }
-    m_queue = new FileLinkBlock(m_queue_path, m_queue_name, false);
+    m_queue = new filelinkblock(m_queue_path, m_queue_name, false);
 }
 uint32_t Config:: RTimeMS()  const
 {
@@ -113,7 +113,7 @@ uint32_t Config::ThreadBufferSize() const
 {
     return m_thread_buffer_size;
 }
-FileLinkBlock* Config:: GetQueue() {
+filelinkblock* Config:: GetQueue() {
     return m_queue;
 }
 bool Config:: NeedIpControl() const
