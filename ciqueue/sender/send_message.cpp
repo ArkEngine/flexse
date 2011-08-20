@@ -58,7 +58,7 @@ int myconnect(const sender_config_t* psender_config)
 void* send_message(void* arg)
 {
 	sender_config_t* psender_config = (sender_config_t*) arg;
-	FileLinkBlock myflb(psender_config->qpath, psender_config->qfile, true);
+	filelinkblock myflb(psender_config->qpath, psender_config->qfile, true);
 	char channel[128];
 	snprintf(channel, sizeof(channel), "%s.offset", psender_config->channel);
 	myflb.set_channel(channel);

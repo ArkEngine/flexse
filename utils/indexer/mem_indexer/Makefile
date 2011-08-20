@@ -8,8 +8,13 @@ LIBOBJ= mem_indexer.o
 MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ../../MyException/lib/ -lMyException \
-		  -L ../../mylog/lib/ -lmylog
+MAINLIBS= -L ./lib/ -lmem_indexer \
+		  -L ../base_indexer/lib/ -lbase_indexer \
+		  -L ../../postinglist/lib/ -lpostinglist \
+		  -L ../../creat_sign/lib/ -lcreat_sign \
+		  -L ../../memblocks/lib/ -lmemblocks \
+		  -L ../../MyException/lib/ -lMyException \
+		  -L ../../mylog/lib/ -lmylog \
 
 INCS= -I ../../mylog/include/ \
 	  -I ../../creat_sign/include/ \
