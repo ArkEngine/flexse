@@ -15,6 +15,8 @@ class index_group
 {
     private:
 
+        enum {MEM0 = 0, MEM1, DAY, DAY2, HIS,};
+
         static const uint32_t MAX_PATH_LENGTH = 128;
         static const uint32_t MAX_POSTINGLIST_SIZE = 1000000; ///> postinglist最多的cell个数
 
@@ -32,10 +34,14 @@ class index_group
         uint32_t m_blocknum_list[32];
 
         base_indexer* m_mem[2];
-        base_indexer* m_day[2];
+        base_indexer* m_day[3]; // 0/1用于当mem满了时切换，2专门用于与his合并
         base_indexer* m_his[2];
+        
+        bool     m_day2_ready;
+        uint32_t m_dump_hour_min;
+        uint32_t m_dump_hour_max;
 
-        // TODO 读写锁效率更好一点
+        // 读写锁效率更好一点
         pthread_mutex_t m_mutex;
         pthread_cond_t m_mem_dump_cond;
         pthread_rwlock_t m_list_rwlock;
@@ -45,6 +51,7 @@ class index_group
         void     set_cur_no(const char* dir, const char* file, const uint32_t cur);
         uint32_t get_cur_no(const char* dir, const char* file);
         uint32_t merger(base_indexer* src1_indexer, base_indexer* src2_indexer, disk_indexer* dest_indexer);
+        uint32_t get_cur_hour();
 
         index_group (const index_group&);
         index_group();
@@ -69,6 +76,8 @@ class index_group
         mem_indexer*  get_cur_mem_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
+//        // 这里只是调用 mem_indexer 写入，因此接口与 mem_indexer 一致
+//        int32_t set_posting_list(const char* strTerm, const void* buff);
 };
 
 #endif

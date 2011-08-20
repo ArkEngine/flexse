@@ -30,6 +30,7 @@ CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 
 all: clean $(LIB) $(MAIN)
 	rm *.o -f
+	rm log -rf
 
 $(LIB): $(LIBOBJ)
 	ar cr $(LIB) $(LIBOBJ)

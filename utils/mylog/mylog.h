@@ -42,7 +42,7 @@ class mylog
         mylog(const mylog&);
         static mylog* m_mylog;
     public:
-        enum { DEBUG = 0, ROUTN, ALARM, FATAL, };
+        enum { PRINT = 0, DEBUG, ROUTN, ALARM, FATAL, };
         static mylog* getInstance();
         void setlog(const uint32_t level, const char* logname);
         ~mylog();
@@ -64,5 +64,8 @@ class mylog
 
 #define DEBUG(fmt, msg ...) \
         mylog::getInstance()->WriteLog(mylog::DEBUG, __FILE__, __LINE__, __func__, fmt, ##msg)
+
+#define PRINT(fmt, msg ...) \
+        mylog::getInstance()->WriteLog(mylog::PRINT, __FILE__, __LINE__, __func__, fmt, ##msg)
 
 #endif

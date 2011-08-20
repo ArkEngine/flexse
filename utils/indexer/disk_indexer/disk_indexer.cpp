@@ -64,8 +64,14 @@ int disk_indexer :: ikey_comp (const void *m1, const void *m2)
 
 int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
-    // 一旦调用get方法，则变为只读状态
-    set_readonly();
+//    // 一旦调用get方法，则变为只读状态
+//    set_readonly();
+
+    if (m_readonly == false)
+    {
+        ALARM("disk index can't be readed. term[%s]", strTerm);
+        return -1;
+    }
 
     int len = strlen(strTerm);
     if (0 == len || NULL == buff || length == 0)
@@ -159,7 +165,7 @@ void disk_indexer :: set_finish()
         MyThrowAssert(sizeof(second_index_t) == write(fd, &m_second_index[i], sizeof(second_index_t)));
     }
     close(fd);
-    m_readonly = true;
+    m_readonly  = true;
 }
 
 void disk_indexer :: clear()
@@ -174,6 +180,11 @@ void disk_indexer :: clear()
     m_last_si.milestone = 0;
     m_last_si.ikey.sign64 = 0;
     m_readonly = false;
+}
+
+bool disk_indexer :: empty()
+{
+    return m_readonly == false;
 }
 
 void disk_indexer :: set_readonly()

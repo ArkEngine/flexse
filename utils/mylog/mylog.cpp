@@ -13,7 +13,7 @@
 #include "mylog.h"
 
 const char* const mylog::strLogName = "default";
-const char* mylog::LevelTag[] = { "DEBUG", "ROUTN", "ALARM", "FATAL", };
+const char* mylog::LevelTag[] = { "PRINT", "DEBUG", "ROUTN", "ALARM", "FATAL", };
 
 mylog* mylog::m_mylog = new mylog();
 
@@ -39,6 +39,7 @@ void mylog :: setlog(const uint32_t level, const char* logname)
     MyThrowAssert(NULL == strchr(mylogname, '/'));
     if (0 != strcmp(mylogname, strLogName))
     {
+        // 把默认的日志删除
         close(m_log_fd);
         m_log_fd = -1;
         char  logpath[LogNameMaxLen];
@@ -72,8 +73,6 @@ void mylog :: WriteLog(const uint32_t mylevel, const char* file,
     pthread_mutex_lock(&m_lock);
     //    LogFileCheckOpen();
     LogFileSwitchCheck();
-    va_list args;
-    va_start(args, format);
     char buff[LogContentMaxLen];
     uint32_t pos = 0;
     if (mylevel < m_level) {
@@ -81,22 +80,27 @@ void mylog :: WriteLog(const uint32_t mylevel, const char* file,
         return;
     }
     uint32_t  level = (mylevel > (uint32_t)FATAL) ? (uint32_t)FATAL : mylevel;
-    pos =  snprintf(&buff[pos], LogContentMaxLen-pos, "%s ", LevelTag[level]);
-    pos += snprintf(&buff[pos], LogContentMaxLen-pos, "%s ", GetTimeNow());
-    pos += snprintf(&buff[pos], LogContentMaxLen-pos, "%lu ", pthread_self());
-    pos += snprintf(&buff[pos], LogContentMaxLen-pos, "file[%s:%u] ", file, line);
-    pos += snprintf(&buff[pos], LogContentMaxLen-pos, "func[%s] ", func);
-    vsnprintf(&buff[pos], LogContentMaxLen-pos-2, format, args);
+    pos =  snprintf(&buff[pos], LogContentMaxLen-pos, "%s %s %lu file[%s:%u] func[%s] ",
+            LevelTag[level], GetTimeNow(), pthread_self(), file, line, func);
+    va_list args;
+    va_start(args, format);
+    pos += vsnprintf(&buff[pos], LogContentMaxLen-pos-2, format, args);
     va_end(args);
-    pos = strlen(buff);
     buff[pos] = '\n';
-    buff[pos+1] = '\0';
-    if ((m_cur_logsize + pos + 1) > LogFileMaxSize)
+    buff[++pos] = '\0';
+//    fprintf(stdout, "%s", buff);
+    if (mylevel == PRINT)
+    {
+        fprintf(stdout, "%s", buff);
+        pthread_mutex_unlock(&m_lock);
+        return;
+    }
+    if ((m_cur_logsize + pos) > LogFileMaxSize)
     {
          m_cur_logsize = ( 0 == ftruncate(m_log_fd, 0)) ? 0 : m_cur_logsize;
     }
-    WriteNByte(m_log_fd, buff, pos+1);
-    m_cur_logsize += pos+1;
+    WriteNByte(m_log_fd, buff, pos);
+    m_cur_logsize += pos;
     pthread_mutex_unlock(&m_lock);
 }
 
@@ -135,10 +139,10 @@ void mylog :: LogFileCheckOpen()
 
 void mylog :: LogFileSwitchCheck()
 {
-    char  curpath[LogNameMaxLen];
     uint32_t timenow = DayTimeNow();
     if (timenow != m_LastDayTime)
     {
+        char  curpath[LogNameMaxLen];
         close(m_log_fd);
         snprintf(curpath, sizeof(curpath), "%s.%d", m_path, timenow);
         m_log_fd = open(curpath, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);

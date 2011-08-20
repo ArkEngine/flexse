@@ -35,4 +35,5 @@ clean:
 	rm -rf lib/ include/ log/
 
 test:
-	g++ test.cc -o test -I ./include/ -L ./lib -lmylog -L ../MyException/lib/ -lMyException
+	rm -f test
+	g++ $(CPPFLAGS) test.cc -o test -I ./include/ -L ./lib -lmylog -L ../MyException/lib/ -lMyException

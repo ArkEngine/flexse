@@ -24,7 +24,8 @@
 #include "equeue.h"
 #include "ontime_thread.h"
 #include "update_thread.h"
-#include "merger_thread.h"
+#include "day_merger_thread.h"
+#include "his_merger_thread.h"
 
 Config* myConfig;
 
@@ -212,13 +213,15 @@ int main(int argc, char* argv[])
     flexse_plugin* pflexse_plugin = new flexse_plugin(myConfig->PluginConfigPath(), mysecore);
     pthread_t ontime_thread_id;
     pthread_t update_thread_id;
-    pthread_t merger_thread_id;
-    // init update thread
-    MySuicideAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, pflexse_plugin));
-    // init merger thread
-    MySuicideAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, pflexse_plugin));
+    pthread_t day_merger_thread_id;
+    pthread_t his_merger_thread_id;
     // init ontime thread
-    MySuicideAssert ( 0 == pthread_create(&merger_thread_id, NULL, merger_thread, pflexse_plugin));
+    MySuicideAssert ( 0 == pthread_create(&ontime_thread_id, NULL, ontime_thread, pflexse_plugin));
+    // init update thread
+    MySuicideAssert ( 0 == pthread_create(&update_thread_id, NULL, update_thread, pflexse_plugin));
+    // init merger thread
+    MySuicideAssert ( 0 == pthread_create(&day_merger_thread_id, NULL, day_merger_thread, pflexse_plugin));
+    MySuicideAssert ( 0 == pthread_create(&his_merger_thread_id, NULL, his_merger_thread, pflexse_plugin));
 
     equeue* myequeue = new equeue(myConfig->PollSize(), myConfig->QueryPort());
     // generate service-thread
@@ -232,7 +235,8 @@ int main(int argc, char* argv[])
     }
     pthread_join( ontime_thread_id, NULL );
     pthread_join( update_thread_id, NULL );
-    pthread_join( merger_thread_id, NULL );
+    pthread_join( day_merger_thread_id, NULL );
+    pthread_join( his_merger_thread_id, NULL );
     delete myConfig;
     delete mysecore;
     delete pflexse_plugin;
