@@ -69,4 +69,7 @@ bool mem_indexer :: is_end()
     return m_postinglist.is_end();
 }
 
-
+bool mem_indexer :: empty()
+{
+    return m_postinglist.empty();
+}

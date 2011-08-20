@@ -89,11 +89,11 @@ void equeue::running()
                     ALARM( "epoll set insertion error: fd[%d]", clientfd);
                     close(clientfd);
                 }
-                else
-                {
-                    DEBUG( "epoll set insertion ok: fd[%d] total[%u] ok[%d] events[%d]",
-                            clientfd, nfds, events[n].events & EPOLLRDHUP, events[n].events);
-                }
+//                else
+//                {
+//                    DEBUG( "epoll set insertion ok: fd[%d] total[%u] ok[%d] events[%d]",
+//                            clientfd, nfds, events[n].events & EPOLLRDHUP, events[n].events);
+//                }
 // 如果是RT的方式，必须重新设置一下，那个ONESHOT呢?
 //             ev.events = EPOLLIN | EPOLLET;
 //             ev.data.fd = m_listenfd;
@@ -101,8 +101,8 @@ void equeue::running()
             }
             else
             {
-                DEBUG( "socket react: fd[%d] total[%u] ok[%d] events[%d]",
-                        events[n].data.fd, nfds, events[n].events & EPOLLRDHUP, events[n].events);
+//                DEBUG( "socket react: fd[%d] total[%u] ok[%d] events[%d]",
+//                        events[n].data.fd, nfds, events[n].events & EPOLLRDHUP, events[n].events);
                 // client 端关闭了连接。
                 if (events[n].events & EPOLLRDHUP)
                 {
@@ -110,11 +110,11 @@ void equeue::running()
                     continue;
                 }
                 pthread_mutex_lock(&m_qmutex);
-                if (m_qsock.size() > 0 && events[n].data.fd == m_qsock.front())
-                {
-                    DEBUG("======: qsize[%d] fd[%d] front[%d]",
-                            m_qsock.size(), events[n].data.fd,  m_qsock.front());
-                }
+//                if (m_qsock.size() > 0 && events[n].data.fd == m_qsock.front())
+//                {
+//                    DEBUG("======: qsize[%d] fd[%d] front[%d]",
+//                            m_qsock.size(), events[n].data.fd,  m_qsock.front());
+//                }
                 m_qsock.push(events[n].data.fd);
                 pthread_cond_signal(&m_qcond);
                 pthread_mutex_unlock(&m_qmutex);
@@ -155,7 +155,7 @@ int equeue::free_socket(int sock, bool ok)
     struct epoll_event ev;
     if (!ok)
     {
-        DEBUG( "close the socket[%d]", sock);
+//        DEBUG( "close the socket[%d]", sock);
         close(sock);
         return 0;
     }
@@ -176,10 +176,10 @@ int equeue::free_socket(int sock, bool ok)
             close(sock);
             return -1;
         }
-        else
-        {
-            DEBUG( "epoll set insertion ok: fd[%d]", sock);
-        }
+//        else
+//        {
+//            DEBUG( "epoll set insertion ok: fd[%d]", sock);
+//        }
     }
     return 0;
 }

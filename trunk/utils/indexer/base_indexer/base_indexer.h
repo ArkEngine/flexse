@@ -27,5 +27,6 @@ class base_indexer
         virtual void next() = 0;
         virtual int32_t itget(uint64_t& key, void* buff, const uint32_t length) = 0;
         virtual bool is_end() = 0;
+        virtual bool empty() = 0;
 };
 #endif

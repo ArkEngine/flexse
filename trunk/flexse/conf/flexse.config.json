@@ -1,8 +1,8 @@
 {
     "LOG":
     {
-        "LogLevel" : 0,           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
-        "LogName"  : "flexse"     // extend to "./log/%s.log" default = "flexse", default 2G
+        // enum {PRINT = 0, DEBUG, ROUTN, ALARM, FATAL,}, default as 2, name by "./log/flexse.log.YYYYMMHH", size default 2G
+        "LogLevel" : 0
     },
     "QUERY_SERVER":
     {

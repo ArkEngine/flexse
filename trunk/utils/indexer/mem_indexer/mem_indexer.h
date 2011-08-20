@@ -27,5 +27,6 @@ class mem_indexer : public base_indexer
         void next();
         int32_t itget(uint64_t& key, void* buff, const uint32_t length);
         bool is_end();
+        bool empty();
 };
 #endif

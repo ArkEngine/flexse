@@ -17,16 +17,19 @@ int main()
     // WRITE AND READ
 
     disk_indexer di("./data/", "test", sizeof(uint32_t));
-//    di.begin();
-//    uint64_t iit = 0;
-//    while(!di.is_end())
-//    {
-//        int retnum = di.itget(iit, read_buff, sizeof(uint32_t)*SIZE);
-//        printf("retnum[%d]\n", retnum);
-//        di.next();
-//        iit++;
-//    }
-//
+    printf("empty[%u]\n", di.empty());
+    di.clear();
+    printf("empty[%u]\n", di.empty());
+    //    di.begin();
+    //    uint64_t iit = 0;
+    //    while(!di.is_end())
+    //    {
+    //        int retnum = di.itget(iit, read_buff, sizeof(uint32_t)*SIZE);
+    //        printf("retnum[%d]\n", retnum);
+    //        di.next();
+    //        iit++;
+    //    }
+    //
 //    return 0;
 
     printf("NO_SUCH_TERM ret[%d]\n", di.get_posting_list("NO_SUCH_TERM", read_buff, SIZE * sizeof(uint32_t)));
@@ -36,13 +39,14 @@ int main()
     {
         read_buff[i] = i;
     }
-    
+
     for (uint32_t i=0; i<SIZE; i++)
     {
         ikey_t ikey;
         ikey.sign64 = i;
         di.set_posting_list(i, ikey, read_buff, i*sizeof(uint32_t));
     }
+    di.set_finish();
     memset(read_buff, 0, SIZE * sizeof(uint32_t));
     di.begin();
     uint64_t it = 0;
@@ -57,7 +61,6 @@ int main()
         di.next();
         it++;
     }
-    di.set_finish();
 
     // fileblock跨文件
     di.clear();
@@ -68,13 +71,14 @@ int main()
     {
         read_buff[i] = i;
     }
-    
+
     for (uint32_t i=0; i<MFILE_COUNT; i++)
     {
         ikey_t ikey;
         ikey.sign64 = i;
         di.set_posting_list(i, ikey, read_buff, NUMBER*sizeof(uint32_t));
     }
+    di.set_finish();
 
     di.begin();
     it = 0;
@@ -90,7 +94,6 @@ int main()
         di.next();
         it++;
     }
-    di.set_finish();
     di.clear();
 
     free(read_buff);

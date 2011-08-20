@@ -26,13 +26,15 @@ class disk_indexer : public base_indexer
             }
         };
 
-        uint32_t m_posting_cell_size;
 
         static const char* const FORMAT_SECOND_INDEX;
         static const uint32_t MAX_FILE_LENGTH = 128;
         static const uint32_t TERM_MILESTONE  = 1000;
+
         fileblock m_fileblock;
         diskv     m_diskv;
+        uint32_t  m_posting_cell_size;
+
         bool      m_readonly;                ///< true时表示只读状态，初始化时，如果没有二级索引则置为false
         second_index_t m_last_si;            ///< set过程中记录最后一个二级索引
         vector<second_index_t> m_second_index; ///< 二级索引
@@ -53,8 +55,8 @@ class disk_indexer : public base_indexer
         disk_indexer(const char* dir, const char* iname, const uint32_t posting_cell_size);
         ~disk_indexer();
         /*
-         * set和get接口是相当危险的，这里的默认时，当连续的set之后，调用set_finish()方法之后才可以调用get方法
-         * 一旦get之后，set接口就失效了。
+         * set和get接口是相当危险的，
+         * 当连续的set之后，调用set_finish()方法之后才可以调用get方法
          * 这相当于在磁盘上把索引生成之后，才可以使用这个索引。
          */
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
@@ -62,11 +64,12 @@ class disk_indexer : public base_indexer
         int32_t set_posting_list(const uint32_t id, const ikey_t& ikey, const void* buff, const uint32_t length);
         void    set_finish();
         void    set_readonly();
+        bool    empty();
         void    clear();
 
-        void begin();
-        void next();
+        void    begin();
+        void    next();
         int32_t itget(uint64_t& key, void* buff, const uint32_t length);
-        bool is_end();
+        bool    is_end();
 };
 #endif

@@ -6,8 +6,6 @@ class Config
 {
 	private:
 		static const char* const m_StrLogLevel;
-		static const char* const m_StrLogSize;
-		static const char* const m_StrLogName;
 
 		static const char* const m_StrQuerySendTimeOut;
 		static const char* const m_StrQueryRecvTimeOut;
@@ -22,7 +20,6 @@ class Config
 
 		// log config
 		uint32_t  m_log_level; // DEBUG, ROUTN, ALARM, FATAL
-		const char* m_log_name; // logname
 
         // query server config
         uint32_t m_pollsize; // socket pool size

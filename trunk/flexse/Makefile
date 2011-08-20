@@ -1,7 +1,7 @@
 CC= g++
 SHELL= /bin/sh
 
-OBJ= query_thread.o config.o flexse.o ontime_thread.o update_thread.o merger_thread.o
+OBJ= query_thread.o config.o flexse.o ontime_thread.o update_thread.o day_merger_thread.o his_merger_thread.o
 
 MAIN= flexse
 TEST= client

@@ -322,6 +322,11 @@ bool postinglist :: is_end()
     }
 }
 
+bool postinglist :: empty()
+{
+    return m_headlist_used > 0;
+}
+
 void postinglist :: clear()
 {
     // 调用者保证执行这段代码时，没有人读写这个对象

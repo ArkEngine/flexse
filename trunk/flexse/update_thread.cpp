@@ -171,9 +171,13 @@ int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<strin
         {
             ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", id);
             pindexer = myIndexGroup->swap_mem_indexer();
+            ROUTN( "THANKS GOD, SWITCH OK. ID[%u]", id);
             MySuicideAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &id));
             have_swap = true;
         }
+        // 为什么需要一个 NEARLY_FULL 的状态呢
+        // 这是考虑到当接受一个文档，分词后，进行插入工作，如果mem_indexer完全满了
+        // 就需要插入到另一个mem_indexer中
         if (postinglist::NEARLY_FULL == setret)
         {
             nearly_full = true;
@@ -181,8 +185,9 @@ int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<strin
     }
     if (nearly_full && !have_swap)
     {
+        ROUTN( "SET POSTING LIST NEARLY_FULL. GOTO SWAP. ID[%u]", id);
         pindexer = myIndexGroup->swap_mem_indexer();
-        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED");
+        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED. ID[%u]", id);
     }
     // DEBUG
     // uint32_t plist[1000];

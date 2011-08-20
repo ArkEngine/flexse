@@ -45,7 +45,6 @@ fileblock :: fileblock (const char* dir, const char* filename, const uint32_t ce
         }
     }
     m_it = 0;
-    DEBUG("--- max_file_no[%u] ---", m_max_file_no);
 }
 
 fileblock :: ~fileblock()
