@@ -17,7 +17,7 @@
     {
         "PostingListCellSize"    : 4,        // uint32_t
         "PostingBucketSize"      : 20,       // N begin 20 and 24, bucket_size = 1<<N
-        "PostingHeadListSize"    : 8000000,  // default as 16777216,
+        "PostingHeadListSize"    : 4000000,  // default as 16777216,
         "PostingMemBlockNumList" : [1200000, 3000000, 1000000]
     }
 }
