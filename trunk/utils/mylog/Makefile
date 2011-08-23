@@ -36,4 +36,4 @@ clean:
 
 test:
 	rm -f test
-	g++ $(CPPFLAGS) test.cc -o test -I ./include/ -L ./lib -lmylog -L ../MyException/lib/ -lMyException
+	g++ $(CPPFLAGS) test.cpp -o test -I ./include/ -L ./lib -lmylog -L ../MyException/lib/ -lMyException

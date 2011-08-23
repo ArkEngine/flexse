@@ -31,7 +31,6 @@ Config::Config(const char* configpath)
 {
     // DEFAULT CONFIG
     m_log_level = mylog :: ROUTN;
-    SETLOG(m_log_level, PROJNAME);
 
     m_pollsize           = 128;
     m_wtimeout_ms        = 1000;
@@ -62,6 +61,7 @@ Config::Config(const char* configpath)
     if (! logConfig.isNull()) {
         m_log_level = logConfig[m_StrLogLevel].isNull() ? m_log_level : logConfig[m_StrLogLevel].asInt();
     }
+    SETLOG(m_log_level, PROJNAME);
 
     Json::Value qSrvConfig = root["QUERY_SERVER"];
     if (! qSrvConfig.isNull()) {
