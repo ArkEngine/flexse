@@ -62,8 +62,8 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
     pthread_cond_init(&m_mem_dump_cond, NULL);
     pthread_rwlock_init(&m_list_rwlock, NULL);
 
-    m_dump_hour_min = 1;
-    m_dump_hour_min = 5;
+    m_dump_hour_min = 15;
+    m_dump_hour_max = 23;
 }
 
 index_group :: ~index_group()
@@ -206,7 +206,8 @@ void index_group :: update_day_indexer()
     // -2- 执行合并
     struct   timeval btv;
     struct   timeval etv;
-    PRINT ("DayMerger BEGIN DUMP2DAY2[%u].", dumpToday2);
+    PRINT ("DayMerger BEGIN DUMP2DAY2[%u] DAY2READY[%u] DUMP_MIN_HOUR[%u] DUMP_MAX_HOUR[%u] NOW_HOUR[%u].",
+            dumpToday2, m_day2_ready, m_dump_hour_min, m_dump_hour_max, get_cur_hour());
     gettimeofday(&btv, NULL);
     uint32_t id_count_merged = merger(m_index_list[MEM1], psrc_indexer, pdst_indexer);
     gettimeofday(&etv, NULL);
