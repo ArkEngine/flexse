@@ -91,7 +91,7 @@ mem_indexer* index_group :: swap_mem_indexer()
     m_index_list[MEM0] = new mem_indexer(m_cell_size, m_bucket_size, m_headlist_size,
             m_blocknum_list, m_blocknum_list_size);
     pthread_rwlock_unlock(&m_list_rwlock);
-    // -2- 通知merge线程可以把mem持久化了
+    // -2- 通知merge线程可以把mem1持久化了
     pthread_cond_signal(&m_mem_dump_cond);
     // -3- 返回一个新的mem
     return dynamic_cast<mem_indexer*>(m_index_list[MEM0]);
@@ -208,7 +208,7 @@ void index_group :: update_day_indexer()
     struct   timeval etv;
     PRINT ("DayMerger BEGIN DUMP2DAY2[%u].", dumpToday2);
     gettimeofday(&btv, NULL);
-    uint32_t id_count_merged = merger(m_index_list[DAY], psrc_indexer, pdst_indexer);
+    uint32_t id_count_merged = merger(m_index_list[MEM1], psrc_indexer, pdst_indexer);
     gettimeofday(&etv, NULL);
     PRINT ("DayMerger FINISH. termCount[%u] time-consumed[%u]s", id_count_merged, (etv.tv_sec - btv.tv_sec));
     ROUTN ("DayMerger FINISH. termCount[%u] time-consumed[%u]s", id_count_merged, (etv.tv_sec - btv.tv_sec));
@@ -234,6 +234,7 @@ void index_group :: update_day_indexer()
     {
         m_index_list[DAY] = pdst_indexer;
     }
+    // 通知等待swap的update线程
     pthread_cond_signal(&m_mem_dump_cond);
     pthread_rwlock_unlock(&m_list_rwlock);
     return;
@@ -246,7 +247,7 @@ void index_group :: update_his_indexer()
         ROUTN("DAY2 is NOT READY.");
         return;
     }
-    MyThrowAssert(m_index_list[DAY2] != NULL || !m_index_list[DAY2]->empty());
+    MyThrowAssert(m_index_list[DAY2] != NULL);
     // 合并过程:
     // -1- 设置当前的disk_indexer和空闲的disk_indexer
     disk_indexer* psrc_indexer = dynamic_cast<disk_indexer*>(m_index_list[HIS]);
