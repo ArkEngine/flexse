@@ -120,7 +120,7 @@ void* memblocks::AllocMem(const uint32_t memsize)
 		{
 			m_mem_extra_tatol++;
 			m_mem_extra.count++;
-            if ((++m_log_killer) > 1000)
+            if ((++m_log_killer) > 10000)
             {
                 m_log_killer = 0;
                 ALARM("allocmem[%p] in extramem memsize[%d] blocknum[%d]",

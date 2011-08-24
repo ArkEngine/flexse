@@ -164,6 +164,10 @@ int32_t fileblock :: get(const uint32_t offset, const uint32_t count, void* buff
     }
 }
 
+int32_t fileblock :: get_cell_count()
+{
+    return (m_max_file_no-1)*m_cell_num_per_file + m_last_file_offset/m_cell_size;
+}
 
 int32_t fileblock :: clear()
 {

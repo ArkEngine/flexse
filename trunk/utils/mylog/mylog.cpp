@@ -35,21 +35,24 @@ mylog* mylog::getInstance()
 void mylog :: setlog(const uint32_t level, const char* logname)
 {
     m_level = (level > (uint32_t)FATAL) ? (uint32_t)ROUTN : level;
-    const char* mylogname = (logname[0] != 0 ) ? logname : strLogName;
+    const char* mylogname = (logname != NULL && logname[0] != 0 ) ? logname : strLogName;
     MyThrowAssert(NULL == strchr(mylogname, '/'));
+
+    char  defaultlogname[LogNameMaxLen];
+    snprintf(defaultlogname, sizeof(defaultlogname), "./log/%s.log", strLogName);
     if (0 != strcmp(mylogname, strLogName))
     {
         // 把默认的日志删除
         close(m_log_fd);
         m_log_fd = -1;
         char  logpath[LogNameMaxLen];
-        snprintf(logpath, sizeof(logpath), "%s.%d", m_path, m_LastDayTime);
+        snprintf(logpath, sizeof(logpath), "%s.%d", defaultlogname, m_LastDayTime);
         remove(logpath);
     }
     snprintf(m_path, sizeof(m_path), "./log/%s.log", mylogname);
     LogFileCheckOpen();
-    fprintf(stderr, "mylog Level[%u] SetLevel[%u] Path[%s] Size[%u]\n",
-            m_level, level, m_path, LogFileMaxSize);
+    fprintf(stderr, "START %s mylog Level[%u] SetLevel[%u] Path[%s] Size[%u]\n",
+            GetTimeNow(), m_level, level, m_path, LogFileMaxSize);
     return;
 }
 

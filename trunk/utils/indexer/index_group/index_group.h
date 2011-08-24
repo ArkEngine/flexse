@@ -37,9 +37,11 @@ class index_group
         base_indexer* m_day[3]; // 0/1用于当mem满了时切换，2专门用于与his合并
         base_indexer* m_his[2];
         
-        bool     m_day2_ready;
+        bool     m_his_merge_ready;
+        bool     m_can_dump_day2;
         uint32_t m_dump_hour_min;
         uint32_t m_dump_hour_max;
+        uint32_t m_last_day_merge_timecost;
 
         // 读写锁效率更好一点
         pthread_mutex_t m_mutex;
@@ -52,6 +54,7 @@ class index_group
         uint32_t get_cur_no(const char* dir, const char* file);
         uint32_t merger(base_indexer* src1_indexer, base_indexer* src2_indexer, disk_indexer* dest_indexer);
         uint32_t get_cur_hour();
+        bool     need_to_dump_day2();
 
         index_group (const index_group&);
         index_group();
