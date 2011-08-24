@@ -13,7 +13,7 @@ void* his_merger_thread(void* args)
     while(1)
     {
         myIndexGroup->update_his_indexer();
-        sleep(100);
+        sleep(10);
     }
     return NULL;
 }

@@ -3,6 +3,7 @@
 
 int main()
 {
+    SETLOG(0, "test");
     FATAL("this is message");
     ALARM("this is message");
     ROUTN("this is message");

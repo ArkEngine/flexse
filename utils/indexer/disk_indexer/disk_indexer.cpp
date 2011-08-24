@@ -15,28 +15,50 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
       m_diskv(dir, iname),
       m_posting_cell_size(posting_cell_size)
 {
+    uint32_t first_index_count  = m_fileblock.get_cell_count();
+    uint32_t second_index_count = 0;
+
     snprintf(m_second_index_file, sizeof(m_second_index_file), FORMAT_SECOND_INDEX, dir, iname);
     int fd = open(m_second_index_file, O_RDONLY);
     if (fd == -1)
     {
         ALARM("a new disk_indexer, set freeze as FALSE.");
         m_readonly = false;
+        m_fileblock.clear();
+        m_diskv.clear();
     }
     else
     {
+        uint32_t flen = getfilesize(m_second_index_file);
+        MySuicideAssert(0 == (flen%sizeof(second_index_t)));
+
         second_index_t sindex;
         while(sizeof(sindex) == read(fd, &sindex, sizeof(sindex)))
         {
             m_second_index.push_back(sindex);
         }
-        m_readonly = (0 != m_second_index.size());
-        ALARM("set freeze as [%u].", m_readonly);
+    }
+    second_index_count = (0 == m_second_index.size()) ? 0 : m_second_index[m_second_index.size()-1].milestone; 
+    if (0 == second_index_count)
+    {
+        // 判断2级索引是否已经完整的写入了
+        ALARM("second index NOT complete first_index_count[%u] second_index_count[%u]. set freeze as FALSE.",
+                first_index_count, second_index_count);
+        m_readonly = false;
+        m_fileblock.clear();
+        m_diskv.clear();
     }
     close(fd);
     m_index_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
-    MyThrowAssert(NULL != m_index_block);
+    MySuicideAssert(NULL != m_index_block);
     m_last_si.milestone = 0;
     m_last_si.ikey.sign64 = 0;
+    m_readonly = (0 != m_second_index.size());
+    ROUTN("second_index size[%u] count[%u] first_index_count[%u] set freeze as [%u].",
+            m_second_index.size(),
+            second_index_count,
+            first_index_count,
+            m_readonly);
 }
 
 disk_indexer :: ~disk_indexer()
@@ -64,8 +86,8 @@ int disk_indexer :: ikey_comp (const void *m1, const void *m2)
 
 int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
-//    // 一旦调用get方法，则变为只读状态
-//    set_readonly();
+    //    // 一旦调用get方法，则变为只读状态
+    //    set_readonly();
 
     if (m_readonly == false)
     {
@@ -116,7 +138,7 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     }
     // (4) 得到了diskv中的diskv_idx_t, 读取索引
     int ret = m_diskv.get(pseRet->idx, buff, length);
-//    ROUTN("diskv readret[%u] idx.data_len[%u]", ret, pseRet->idx.data_len);
+    //    ROUTN("diskv readret[%u] idx.data_len[%u]", ret, pseRet->idx.data_len);
     return (ret < 0) ? ret : ret/m_posting_cell_size;
 }
 
@@ -137,7 +159,7 @@ int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
     m_last_si.ikey      = ikey;
     fb_index_t fi;
     MyThrowAssert(0 == m_diskv.set(fi.idx, buff, length));
-//    ROUTN("diskv idx.data_len[%u]", fi.idx.data_len);
+    //    ROUTN("diskv idx.data_len[%u]", fi.idx.data_len);
     fi.ikey = ikey;
     MyThrowAssert(0 == m_fileblock.set(id, &fi));
     if (0 == (id % TERM_MILESTONE))
@@ -151,9 +173,14 @@ int32_t disk_indexer :: set_posting_list(const uint32_t id, const ikey_t& ikey,
 void disk_indexer :: set_finish()
 {
     // 记住最后一个milestone
+    // 这个if判断是为了防止加入2次
     if (0 != (m_last_si.milestone % TERM_MILESTONE))
     {
         m_second_index.push_back(m_last_si);
+    }
+    if (m_second_index.size() == 0)
+    {
+        return;
     }
     // 把m_second_index写入磁盘
 
@@ -215,3 +242,11 @@ bool disk_indexer :: is_end()
 {
     return m_fileblock.is_end();
 }
+
+uint32_t disk_indexer :: getfilesize( const char* name )
+{
+    struct stat fs;
+    MyThrowAssert( 0 == stat( name, &fs ) );
+    return fs.st_size;
+}
+

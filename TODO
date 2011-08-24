@@ -12,4 +12,11 @@
 [H] [DONE] 调权算法集成(attr/term/offset)
 [H] [TODO] 增加index_group的快速建库模式
 [H] [TODO] 计算mem_indexer撑爆的时间和disk_indexer持久化的时间，这是参数配置的前提
+           -1- 磁盘写入速度在9M/s，30G的索引需要1个小时左右写完
+           -2- mem_indexer中的headlistsize为200万时，需要2分钟写满(最坏情况)
+[H] [TODO] 通过判断内部ID分配速度和每次day索引merge的时间来判断是否需要dump到day/2中
+[H] [TODO] dump到day/2后，通过条件变量的方式来通知his_merger_thread来合并索引
 [H] [TODO] 测试seek_message(file_no, block_id)的正确性
+[H] [TODO] 需要考虑异常情况，当dump到day时，如果进行中进程终止，那么启动之后判断
+           -1- 没有2级索引，则清空索引
+           -2- 如果2级索引不完整，则清空索引

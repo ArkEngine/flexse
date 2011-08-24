@@ -45,6 +45,7 @@ class disk_indexer : public base_indexer
         disk_indexer();
         disk_indexer(const disk_indexer&);
         static int ikey_comp (const void *m1, const void *m2);
+        uint32_t getfilesize( const char* name );
     public:
         enum
         {

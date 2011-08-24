@@ -35,6 +35,8 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
 
     // day init
     // read cur file
+    // 当dump到day的过程中，进程终止时，会导致索引不完整
+    // 重启之后，读取到不完整索引时，disk_indexer会清空这个索引
     uint32_t day_cur = get_cur_no(STR_DAY_INDEX_DIR, STR_INDEX_CUR_NO_FILE);
     char index_dir[MAX_PATH_LENGTH];
     snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, day_cur);
@@ -42,11 +44,14 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
     m_index_list.push_back(m_day[day_cur]);
     snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, 1 - day_cur);
     m_day[1-day_cur] = new disk_indexer(index_dir, STR_INDEX_NAME, m_cell_size);
-    m_day[1 - day_cur]->clear();
     snprintf(index_dir, sizeof(index_dir), STR_FMT_DAY_INDEX_PATH, 2);
     m_day[2] = new disk_indexer(index_dir, STR_INDEX_NAME, m_cell_size);
-    m_day2_ready = (false == m_day[2]->empty());
     m_index_list.push_back(m_day[2]);
+
+    m_day[1 - day_cur]->clear();
+    m_his_merge_ready = (false == m_day[2]->empty());
+    m_can_dump_day2   = m_day[2]->empty();
+    m_last_day_merge_timecost = 0;
 
     // his init
     // read cur file
@@ -62,8 +67,8 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
     pthread_cond_init(&m_mem_dump_cond, NULL);
     pthread_rwlock_init(&m_list_rwlock, NULL);
 
-    m_dump_hour_min = 15;
-    m_dump_hour_max = 23;
+    m_dump_hour_min = 1;
+    m_dump_hour_max = 5;
 }
 
 index_group :: ~index_group()
@@ -175,6 +180,30 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     return id;
 }
 
+bool index_group :: need_to_dump_day2()
+{
+    if (! m_can_dump_day2)
+    {
+        // ./data/index/day/2目录还没准备好，正在被用于与his的合并
+        return false;
+    }
+
+    if (m_last_day_merge_timecost > 60)
+    {
+        // dump到day的时间超过了120s，还是合并到day/2吧，否则会把内存索引撑爆
+        // 设置这个的原因是为了考虑到快速建立数据的过程中，不能一天合并一次his
+        return true;
+    }
+
+    if (get_cur_hour() >= m_dump_hour_min && get_cur_hour() <= m_dump_hour_max)
+    {
+        // 低峰时刻，开始dump
+        return true;
+    }
+
+    return false;
+}
+
 void index_group :: update_day_indexer()
 {
     pthread_mutex_lock(&m_mutex);
@@ -191,12 +220,11 @@ void index_group :: update_day_indexer()
     // 当前时间为指定的时间区域时dump到day的2目录，并以条件变量通知his_merger_thread
     // 如果不是特定的时间区域，则正常的dump到0/1目录中
     // dump到day2时，要检查day2是否是空的
-    bool dumpToday2 = false;
+    bool dumpToday2 = need_to_dump_day2();
     disk_indexer* pdst_indexer = NULL;
-    if (get_cur_hour() >= m_dump_hour_min && get_cur_hour() <= m_dump_hour_max && m_day2_ready == false)
+    if (dumpToday2)
     {
         pdst_indexer = dynamic_cast<disk_indexer*>(m_day[2]);
-        dumpToday2 = true;
     }
     else
     {
@@ -206,8 +234,7 @@ void index_group :: update_day_indexer()
     // -2- 执行合并
     struct   timeval btv;
     struct   timeval etv;
-    PRINT ("DayMerger BEGIN DUMP2DAY2[%u] DAY2READY[%u] DUMP_MIN_HOUR[%u] DUMP_MAX_HOUR[%u] NOW_HOUR[%u].",
-            dumpToday2, m_day2_ready, m_dump_hour_min, m_dump_hour_max, get_cur_hour());
+    PRINT ("DayMerger BEGIN DUMP2DAY2[%u] DAY2CANWRITE[%u].", dumpToday2, m_can_dump_day2);
     gettimeofday(&btv, NULL);
     uint32_t id_count_merged = merger(m_index_list[MEM1], psrc_indexer, pdst_indexer);
     gettimeofday(&etv, NULL);
@@ -223,17 +250,18 @@ void index_group :: update_day_indexer()
     m_index_list[MEM1] = NULL;
     // 把已经合并的数据清理掉
     m_index_list[DAY]->clear();
-    // 指向新的DAY 0/1 INDEX
-    m_index_list[DAY] = pdst_indexer;
     // 通知 m_index_list[1] == NULL 了
     if (dumpToday2)
     {
-        m_day2_ready = true;
-//        m_index_list[DAY2] = pdst_indexer;
+        m_his_merge_ready = true;
+        m_can_dump_day2   = false;
+        m_last_day_merge_timecost = 0;
     }
     else
     {
+        // 指向新的DAY 0/1 INDEX
         m_index_list[DAY] = pdst_indexer;
+        m_last_day_merge_timecost = etv.tv_sec - btv.tv_sec;
     }
     // 通知等待swap的update线程
     pthread_cond_signal(&m_mem_dump_cond);
@@ -243,9 +271,9 @@ void index_group :: update_day_indexer()
 
 void index_group :: update_his_indexer()
 {
-    if (get_cur_hour() < m_dump_hour_min || get_cur_hour() > m_dump_hour_max || m_day2_ready == false)
+    if (m_his_merge_ready == false)
     {
-        ROUTN("DAY2 is NOT READY.");
+        ALARM("DAY2 is NOT READY.");
         return;
     }
     MyThrowAssert(m_index_list[DAY2] != NULL);
@@ -272,7 +300,8 @@ void index_group :: update_his_indexer()
     m_index_list[DAY2]->clear();
     m_index_list[HIS]->clear();
     m_index_list[HIS] = pdst_indexer;
-    m_day2_ready = false;
+    m_his_merge_ready = false;
+    m_can_dump_day2   = true;
     pthread_rwlock_unlock(&m_list_rwlock);
     return;
 }
