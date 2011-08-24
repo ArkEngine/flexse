@@ -39,7 +39,7 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
         }
     }
     second_index_count = (0 == m_second_index.size()) ? 0 : m_second_index[m_second_index.size()-1].milestone; 
-    if (0 == second_index_count)
+    if (0 == second_index_count || second_index_count != first_index_count)
     {
         // 判断2级索引是否已经完整的写入了
         ALARM("second index NOT complete first_index_count[%u] second_index_count[%u]. set freeze as FALSE.",

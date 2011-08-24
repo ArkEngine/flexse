@@ -16,10 +16,10 @@ int main()
 
     // WRITE AND READ
 
-    disk_indexer di("./data/", "test", sizeof(uint32_t));
+    disk_indexer di("./data/", "index", sizeof(uint32_t));
     printf("empty[%u]\n", di.empty());
-    di.clear();
-    printf("empty[%u]\n", di.empty());
+//    di.clear();
+//    printf("empty[%u]\n", di.empty());
     //    di.begin();
     //    uint64_t iit = 0;
     //    while(!di.is_end())
@@ -30,7 +30,7 @@ int main()
     //        iit++;
     //    }
     //
-//    return 0;
+    return 0;
 
     printf("NO_SUCH_TERM ret[%d]\n", di.get_posting_list("NO_SUCH_TERM", read_buff, SIZE * sizeof(uint32_t)));
     di.clear();
