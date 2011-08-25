@@ -7,9 +7,11 @@
 
 #include "mem_indexer.h"
 #include "disk_indexer.h"
+#include "myutils.h"
 #include <pthread.h>
 #include <vector>
 using namespace std;
+using namespace flexse;
 
 class index_group
 {
@@ -79,8 +81,7 @@ class index_group
         mem_indexer*  get_cur_mem_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
-//        // 这里只是调用 mem_indexer 写入，因此接口与 mem_indexer 一致
-//        int32_t set_posting_list(const char* strTerm, const void* buff);
+        int32_t set_posting_list(const uint32_t id, const vector<term_info_t>& termlist);
 };
 
 #endif

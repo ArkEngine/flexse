@@ -16,6 +16,7 @@ INCS= -I ../mem_indexer/include \
 	  -I ../../memblocks/include/\
 	  -I ../../postinglist/include/\
 	  -I ../../mylog/include/\
+	  -I ../../myutils/include/\
 	  -I ../../MyException/include/\
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \

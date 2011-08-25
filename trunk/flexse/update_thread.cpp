@@ -111,6 +111,7 @@ void* update_thread(void* args)
                 break;
             }
 
+            // TODO 记下当前的进度
             if(0 != xsend(clientfd, &send_head, myConfig->UpdateSocketTimeOutMS()))
             {
                 ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
@@ -133,9 +134,9 @@ void* update_thread(void* args)
 
 int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
 {
-    vector<string> vstr;
+    vector<term_info_t> termlist;
     uint32_t       doc_id;
-    int retp = pflexse_plugin->add(jsonstr, doc_id, vstr);
+    int retp = pflexse_plugin->add(jsonstr, doc_id, termlist);
     if (retp != 0)
     {
         return -1;
@@ -154,41 +155,19 @@ int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
         ALARM("allocInnerID Fail.");
         return -1;
     }
-    return _insert(pflexse_plugin, innerid, vstr);
+    // 把termlist中的id设置为内部的ID
+    for(uint32_t i=0; i<termlist.size(); i++)
+    {
+        termlist[i].id = innerid;
+    }
+    return _insert(pflexse_plugin, innerid, termlist);
 }
 
-int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<string>& vstr)
+int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<term_info_t>& termlist)
 {
     index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
-    mem_indexer* pindexer = myIndexGroup->get_cur_mem_indexer();
+    return myIndexGroup->set_posting_list(id, termlist);
 
-    bool have_swap = false;
-    bool nearly_full = false;
-    for (uint32_t i=0; i<vstr.size(); i++)
-    {
-        int setret = pindexer->set_posting_list(vstr[i].c_str(), &id);
-        if (postinglist::FULL == setret)
-        {
-            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", id);
-            pindexer = myIndexGroup->swap_mem_indexer();
-            ROUTN( "THANKS GOD, SWITCH OK. ID[%u]", id);
-            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &id));
-            have_swap = true;
-        }
-        // 为什么需要一个 NEARLY_FULL 的状态呢
-        // 这是考虑到当接受一个文档，分词后，进行插入工作，如果mem_indexer完全满了
-        // 就需要插入到另一个mem_indexer中
-        if (postinglist::NEARLY_FULL == setret)
-        {
-            nearly_full = true;
-        }
-    }
-    if (nearly_full && !have_swap)
-    {
-        ROUTN( "SET POSTING LIST NEARLY_FULL. GOTO SWAP. ID[%u]", id);
-        pindexer = myIndexGroup->swap_mem_indexer();
-        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED. ID[%u]", id);
-    }
     // DEBUG
     // uint32_t plist[1000];
     // int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));

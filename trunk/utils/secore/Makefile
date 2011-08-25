@@ -16,6 +16,7 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/idmap/include/ \
 	  -I ../../utils/bitmap/include/ \
 	  -I ../../utils/bitlist/include/ \
+	  -I ../../utils/myutils/include/ \
 	  -I ../../utils/indexer/mem_indexer/include/ \
 	  -I ../../utils/indexer/disk_indexer/include/ \
 	  -I ../../utils/indexer/base_indexer/include/ \
