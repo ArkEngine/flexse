@@ -9,7 +9,7 @@ nlp_processor:: nlp_processor()
 nlp_processor:: ~nlp_processor()
 {}
 
-void nlp_processor:: split(char* str, vector<string>& vstr)
+void nlp_processor:: split(char* str, vector<term_info_t>& termlist)
 {
     char* stri = str;
     char* strb = str;
@@ -19,7 +19,9 @@ void nlp_processor:: split(char* str, vector<string>& vstr)
         *strb = '\0';
         if (strset.end() == strset.find(string(str)))
         {
-            vstr.push_back(string(str));
+            term_info_t term_info;
+            term_info.strTerm = string(str);
+            termlist.push_back(term_info);
             strset.insert(string(str));
 //            printf("uni key: %s\n", str);
         }
@@ -32,7 +34,9 @@ void nlp_processor:: split(char* str, vector<string>& vstr)
     }
     if (strset.end() == strset.find(string(stri)))
     {
-        vstr.push_back(string(stri));
+        term_info_t term_info;
+        term_info.strTerm = string(stri);
+        termlist.push_back(term_info);
     }
 }
 

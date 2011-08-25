@@ -14,7 +14,7 @@ flexse_plugin:: ~flexse_plugin()
 {
 }
 
-int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
+int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist)
 {
     Json::Value root;
     Json::Reader reader;
@@ -41,13 +41,13 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<string> & 
     }
     else
     {
-        mysecore->m_pnlp_processor->split((char*)root["CONTENT"].asCString(), vstr);
+        mysecore->m_pnlp_processor->split((char*)root["CONTENT"].asCString(), termlist);
     }
 
     return 0;
 }
 
-int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id, vector<string> & vstr)
+int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist)
 {
     Json::Value root;
     Json::Reader reader;
@@ -74,7 +74,7 @@ int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id, vector<string> & 
     }
     else
     {
-        mysecore->m_pnlp_processor->split((char*)root["CONTENT"].asCString(), vstr);
+        mysecore->m_pnlp_processor->split((char*)root["CONTENT"].asCString(), termlist);
     }
 
     return 0;

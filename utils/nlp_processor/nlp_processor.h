@@ -2,7 +2,9 @@
 #define _NLP_PROCESSOR_H_
 #include <string>
 #include <vector>
+#include "myutils.h"
 using namespace std;
+using namespace flexse;
 
 class nlp_processor
 {
@@ -11,6 +13,6 @@ class nlp_processor
     public:
         nlp_processor();
         ~nlp_processor();
-        void split(char* str, vector<string>& vstr);
+        void split(char* str, vector<term_info_t>& termlist);
 };
 #endif

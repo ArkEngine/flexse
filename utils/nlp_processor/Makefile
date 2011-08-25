@@ -5,13 +5,13 @@ RANLIB=ranlib
 LIB= libnlp_processor.a
 LIBOBJ= nlp_processor.o
 
-CPPFLAGS= -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
+INCS= -I ../myutils/include/
+CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB) $(MAIN)
-#all: clean $(LIB)
+all: clean $(LIB)
 	rm *.o -f
 
 $(LIB): $(LIBOBJ)
@@ -29,5 +29,4 @@ $(LIB): $(LIBOBJ)
 clean:
 	rm $(LIB) -f
 	rm *.o -f
-	rm test -f
 	rm -rf lib/ include/

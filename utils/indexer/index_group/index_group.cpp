@@ -224,6 +224,7 @@ void index_group :: update_day_indexer()
     disk_indexer* pdst_indexer = NULL;
     if (dumpToday2)
     {
+        m_can_dump_day2   = false;
         pdst_indexer = dynamic_cast<disk_indexer*>(m_day[2]);
     }
     else
@@ -254,7 +255,6 @@ void index_group :: update_day_indexer()
     if (dumpToday2)
     {
         m_his_merge_ready = true;
-        m_can_dump_day2   = false;
         m_last_day_merge_timecost = 0;
     }
     else
@@ -273,10 +273,13 @@ void index_group :: update_his_indexer()
 {
     if (m_his_merge_ready == false)
     {
-        ALARM("DAY2 is NOT READY.");
         return;
     }
     MyThrowAssert(m_index_list[DAY2] != NULL);
+    if (m_index_list[DAY2]->empty())
+    {
+        return;
+    }
     // 合并过程:
     // -1- 设置当前的disk_indexer和空闲的disk_indexer
     disk_indexer* psrc_indexer = dynamic_cast<disk_indexer*>(m_index_list[HIS]);
@@ -338,20 +341,42 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
     return lstnum;
 }
 
-//int32_t index_group :: set_posting_list(const char* strTerm, const void* buff)
-//{
-//    mem_indexer* pindexer = get_cur_mem_indexer();
-//    int setret = pindexer->set_posting_list(strTerm, buff);
-//    if (postinglist::FULL == setret)
-//    {
-//        ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", id);
-//        pindexer = myIndexGroup->swap_mem_indexer();
-//        ROUTN( "THANKS GOD, SWITCH OK. ID[%u]", id);
-//        MySuicideAssert(postinglist::OK == pindexer->set_posting_list(vstr[i].c_str(), &id));
-//        have_swap = true;
-//    }
-//    return 0;
-//}
+int32_t index_group :: set_posting_list(const uint32_t id, const vector<term_info_t>& termlist)
+{
+    mem_indexer* pindexer = get_cur_mem_indexer();
+
+    bool have_swap = false;
+    bool nearly_full = false;
+    for (uint32_t i=0; i<termlist.size(); i++)
+    {
+        // &(termlist[i].id) 表示从id的地址开始，拷贝postlist_cell_size个大小的内存
+        // 不是仅仅拷贝id
+        int setret = pindexer->set_posting_list(termlist[i].strTerm.c_str(), &(termlist[i].id));
+        if (postinglist::FULL == setret)
+        {
+            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", id);
+            pindexer = swap_mem_indexer();
+            ROUTN( "THANKS GOD, SWITCH OK. ID[%u]", termlist[i].id);
+            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(termlist[i].strTerm.c_str(), &(termlist[i].id)));
+            have_swap = true;
+        }
+        // 为什么需要一个 NEARLY_FULL 的状态呢
+        // 这是考虑到当接受一个文档，分词后，进行插入工作，如果mem_indexer完全满了
+        // 就需要插入到另一个mem_indexer中
+        if (postinglist::NEARLY_FULL == setret)
+        {
+            nearly_full = true;
+        }
+    }
+    if (nearly_full && !have_swap)
+    {
+        ROUTN( "SET POSTING LIST NEARLY_FULL. GOTO SWAP. ID[%u]", id);
+        pindexer = swap_mem_indexer();
+        ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED. ID[%u]", id);
+    }
+
+    return 0;
+}
 
 
 uint32_t index_group :: get_cur_no(const char* dir, const char* name)

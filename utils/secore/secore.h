@@ -7,7 +7,9 @@
 #include "bitlist.h"
 #include "idmap.h"
 #include "detaildb.h"
+#include "myutils.h"
 #include <json/json.h>
+#include <string>
 
 class secore
 {
