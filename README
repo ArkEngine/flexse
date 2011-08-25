@@ -1,0 +1,22 @@
+(1) 倒排索引
+-1- index_group = mem_indexer + disk_indexer
+-2- mem_indexer  = postinglist + creat_sign
+    #1# postinglist = (hash-bucket) + (headlist) + memblocks
+-3- disk_indexer = 二级索引 + [1级索引cache] + fileblock + diskv
+(2) 文档属性
+-1- bitlist + structmask
+(3) 文档详细
+-1- detaildb = fileblock + diskv
+
+服务搭建
+(1) 线程组成
+-1- equeue + query_threads
+-2- update_thread
+-3- day_merger_thread
+-4- his_merger_thread
+-5- ontime_thread
+(2) 通信协议
+-1- xhead + json
+
+索引管理逻辑
+
