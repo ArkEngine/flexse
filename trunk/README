@@ -1,10 +1,44 @@
+看sphinx的文档
+(1) 为什么要做这个东东
+-1- 搜索产品内部需要
+    我们的相关搜索和搜索建议，本质上还是倒排结构。
+-2- 搜索院对其他部门的技术支持
+    云城搜索/C2C搜索/积分商城搜索。。
+
+(2) 架构愿景和应用前景
+-1- 一张图，表示云搜索，叙述工作流程，小数据+大数据量扩展
+-2- 应用前景，框架的应用 + 插件使用
+
+(3) 特性
+性能方面
+-0- 实时索引
+-1- 快速建库
+-2- 快速查询
+-3- 超大数据
+功能方面
+-4- 算法强大
+-5- 功能全配
+-6- 灵活配置
+数据恢复
+-7- 崩溃恢复
+架构远景
+-8- 云搜索化
+二次开发
+-9- 支持插件
+
 (1) 倒排索引
 -1- index_group = mem_indexer + disk_indexer
--2- mem_indexer  = postinglist + creat_sign
+-2- mem_indexer = postinglist + creat_sign
     #1# postinglist = (hash-bucket) + (headlist) + memblocks
 -3- disk_indexer = 二级索引 + [1级索引cache] + fileblock + diskv
+索引管理逻辑
+-1- mem/disk的时间节点
+-2- dump逻辑
+-3- 修改和删除(bitmap+idmap)
+
 (2) 文档属性
 -1- bitlist + structmask
+
 (3) 文档详细
 -1- detaildb = fileblock + diskv
 
@@ -18,5 +52,4 @@
 (2) 通信协议
 -1- xhead + json
 
-索引管理逻辑
 
