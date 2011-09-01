@@ -7,12 +7,12 @@ using namespace std;
 const char* const secore::m_StrInsideKey_DocIDList = "id_list";
 const char* const secore::m_StrInsideKey_DocID     = "id";
 
-const char* const secore::CONFIGCATEGORY_INDEXDESC = "INDEXDESC";
-const char* const secore::CONFIGCATEGORY_FLEXINDEX = "FLEXINDEX";
-const char* const secore::CONFIGCATEGORY_ATTR      = "ATTR";
-const char* const secore::CONFIGCATEGORY_DETAIL    = "DETAIL";
-const char* const secore::CONFIGCATEGORY_NLP       = "NLP";
-const char* const secore::CONFIGCATEGORY_GENERAL   = "GENERAL";
+const char* const secore::CONFIGCATEGORY_INDEXCONFIG = "INDEXCONFIG";
+const char* const secore::CONFIGCATEGORY_FLEXINDEX   = "FLEXINDEX";
+const char* const secore::CONFIGCATEGORY_ATTR        = "ATTR";
+const char* const secore::CONFIGCATEGORY_DETAIL      = "DETAIL";
+const char* const secore::CONFIGCATEGORY_NLP         = "NLP";
+const char* const secore::CONFIGCATEGORY_GENERAL     = "GENERAL";
 
 const char* const secore::m_StrMaxOuterID   = "MaxOuterID";
 const char* const secore::m_StrMaxInnerID   = "MaxInnerID";
@@ -64,7 +64,7 @@ secore:: secore(const char* config_path)
     snprintf(m_detail_data_dir, sizeof(m_detail_data_dir), "%s", detailConfig[m_StrDetailDataDir].asCString());
 
     // INDEXDESC CONFIG
-    Json::Value indexDescConfig = root[CONFIGCATEGORY_INDEXDESC];
+    Json::Value indexDescConfig = root[CONFIGCATEGORY_INDEXCONFIG];
     MySuicideAssert (! indexDescConfig.isNull());
 
     MySuicideAssert (! indexDescConfig[m_StrCellSize].isNull());
