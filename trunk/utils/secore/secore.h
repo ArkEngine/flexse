@@ -16,7 +16,7 @@ class secore
     private:
         static const uint32_t MAX_FILENAME_LENGTH = 128;
 
-        static const char* const CONFIGCATEGORY_INDEXDESC;
+        static const char* const CONFIGCATEGORY_INDEXCONFIG;
         static const char* const CONFIGCATEGORY_FLEXINDEX;
         static const char* const CONFIGCATEGORY_ATTR;
         static const char* const CONFIGCATEGORY_DETAIL;

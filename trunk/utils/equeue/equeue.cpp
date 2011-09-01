@@ -141,7 +141,7 @@ int equeue::fetch_socket()
     }
     int cursock = m_qsock.front();
     m_qsock.pop();
-    DEBUG( "epoll queue size[%d]", m_qsock.size());
+//    DEBUG( "epoll queue size[%d]", m_qsock.size());
     pthread_mutex_unlock(&m_qmutex);
     return cursock;
 }

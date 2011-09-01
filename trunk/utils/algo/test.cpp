@@ -474,7 +474,7 @@ int main(int argc, char** argv)
     printf("merge_rst_num: %d\n", merge_rst_num);
 //    for (uint32_t i=0; i<merge_rst_num; i++)
 //    {
-//        printf("%u %u\n", result_pair_lst[i].id, result_pair_lst[i].weight);
+//        printf("%8u %u\n", result_pair_lst[i].id, result_pair_lst[i].weight);
 //    }
 
     // MERGE TEST

@@ -26,6 +26,7 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
         m_readonly = false;
         m_fileblock.clear();
         m_diskv.clear();
+        remove(m_second_index_file);
     }
     else
     {
@@ -38,7 +39,8 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
             m_second_index.push_back(sindex);
         }
     }
-    second_index_count = (0 == m_second_index.size()) ? 0 : m_second_index[m_second_index.size()-1].milestone; 
+    second_index_count = (0 == m_second_index.size()) ? 0 : (m_second_index[m_second_index.size()-1].milestone + 1); 
+    // 因为milestone表示已经写入的id(id从0开始)，因此需要+1
     if (0 == second_index_count || second_index_count != first_index_count)
     {
         // 判断2级索引是否已经完整的写入了
@@ -47,6 +49,7 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
         m_readonly = false;
         m_fileblock.clear();
         m_diskv.clear();
+        remove(m_second_index_file);
     }
     close(fd);
     m_index_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
@@ -91,7 +94,7 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
 
     if (m_readonly == false)
     {
-        ALARM("disk index can't be readed. term[%s]", strTerm);
+//        ALARM("disk index can't be readed. term[%s]", strTerm);
         return -1;
     }
 
@@ -124,6 +127,8 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     uint32_t block_no = (bounds->milestone == 0) ? 0 : bounds->milestone-TERM_MILESTONE;
     uint32_t rd_count = (bounds->milestone == m_last_si.milestone) ? m_last_si.milestone%TERM_MILESTONE : TERM_MILESTONE;
 
+    uint32_t rt_count = (uint32_t)m_fileblock.get(block_no, rd_count, m_index_block, TERM_MILESTONE*sizeof(fb_index_t));
+    DEBUG("rd_count[%u] rt_count[%u] block_no[%u]", rd_count, rt_count, block_no);
     MyThrowAssert(rd_count*sizeof(fb_index_t) == (uint32_t)m_fileblock.get(block_no, rd_count,
                 m_index_block, TERM_MILESTONE*sizeof(fb_index_t)));
     // (3) 执行二分查找

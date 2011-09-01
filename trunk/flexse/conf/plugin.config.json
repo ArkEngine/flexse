@@ -13,11 +13,39 @@
     {
         "DetailDataDir" : "./data/detail/"
     },
-    "INDEXDESC":
+    "INDEXCONFIG":
     {
         "PostingListCellSize"    : 4,        // uint32_t
         "PostingBucketSize"      : 20,       // N begin 20 and 24, bucket_size = 1<<N
         "PostingHeadListSize"    : 2000000,  // default as 16777216,
         "PostingMemBlockNumList" : [4000000, 2000000]
+    },
+    "FLEXINDEX":
+    {
+        "id"      : {"op":"DOC_ID", "type":"INT"},
+        "uid"     : {"op":"PREFIX", "type":"INT", "token":"UID^"},
+        "title"   : {"op":"NLP",    "field":"intitle"},
+        "content" : {"op":"NLP"},
+        "type"    : {"op":"PREFIX", "type":"INT", "token":"TYPE^"},
+        "tags"    : {"op":"PREFIX", "type":"ARR", "token":"TAG^"}
+    },
+    "STRUCTMASK":
+    {
+        "posting_list_cell":
+        [
+            {"id"            : 32},
+            {"intitle"       :  1},
+            {"title_count"   :  2},
+            {"content_count" :  4},
+            {"title_offset"  :  4},
+            {"reserved"      : 21}
+        ],
+        "document_attribute":
+        [
+            {"update_time"   : 32},
+            {"type"          :  4},
+            {"selected"      :  1},
+            {"reserved"      : 27}
+        ]
     }
 }
