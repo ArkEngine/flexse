@@ -4,8 +4,8 @@
 #define _GET_SOLO_VALUE_(puint,mask_item) \
                 (((((uint32_t*)puint)[mask_item.uint_offset]) & (mask_item.item_mask)) >> (mask_item.move_count))
 
-#define _GET_LIST_VALUE_(puint,index,uint_count,mask_item) \
-                (((((uint32_t*)puint)[index*uint_count+mask_item.uint_offset]) &\
+#define _GET_LIST_VALUE_(puint,index,mask_item) \
+                (((((uint32_t*)puint)[index*mask_item.uint32_count+mask_item.uint_offset]) &\
                 (mask_item.item_mask)) >> (mask_item.move_count))
 
 #define _SET_SOLO_VALUE_(puint,mask_item,ivalue) \
@@ -13,9 +13,9 @@
                 (((uint32_t*)puint)[mask_item.uint_offset] & \
                 (~mask_item.item_mask)) | ((ivalue)<<(mask_item.move_count)))
 
-#define _SET_LIST_VALUE_(puint,index,uint_count,mask_item,ivalue) \
-                ((uint32_t*)puint)[index*uint_count+mask_item.uint_offset] = \
-                (((uint32_t*)puint)[index*uint_count+mask_item.uint_offset] &\
+#define _SET_LIST_VALUE_(puint,index,mask_item,ivalue) \
+                ((uint32_t*)puint)[index*mask_item.uint32_count+mask_item.uint_offset] = \
+                (((uint32_t*)puint)[index*mask_item.uint32_count+mask_item.uint_offset] &\
                 (~mask_item.item_mask)) | (ivalue << mask_item.move_count)
 
 #include <map>
@@ -26,9 +26,10 @@ using namespace std;
 typedef struct _mask_item_t
 {
     uint32_t item_mask;
-    uint32_t uint_offset : 10; // sizeof(struct) max is 1K
-    uint32_t move_count  :  5; // 0 - 31
-    uint32_t reserved    : 17; // 
+    uint32_t uint_offset  : 10; // sizeof(struct) max is 1K*4, 一个结构体最多容纳1024个uint32_t
+    uint32_t move_count   :  5; // 0 - 31
+    uint32_t uint32_count : 10; // 
+    uint32_t reserved     :  7; // 保留位
 }mask_item_t;
 
 class structmask

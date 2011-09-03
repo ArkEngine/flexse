@@ -93,8 +93,8 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, post_mask_map.get_section_size(), doc_id_mask, SIZE,
-                attr_list_org, attr_mask_map.get_section_size(), &mlogic, 1 );
+        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+                attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
         //        printf("rst_num: %d\n", rst_num);
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
         for (int32_t i=0; i<rst_num; i++)
         {
             uint32_t id = _GET_SOLO_VALUE_(post_list, doc_id_mask);
-            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count, mlogic.key_mask);
+            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, mlogic.key_mask);
             assert (vv >= ivalue);
             post_list += post_uint_count;
         }
@@ -137,8 +137,8 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, post_mask_map.get_section_size(), doc_id_mask, SIZE,
-                attr_list_org, attr_mask_map.get_section_size(), &mlogic, 1 );
+        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+                attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
         //        printf("rst_num: %d\n", rst_num);
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
         for (int32_t i=0; i<rst_num; i++)
         {
             uint32_t id = _GET_SOLO_VALUE_(post_list, doc_id_mask);
-            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count, mlogic.key_mask);
+            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, mlogic.key_mask);
             assert (vv <= ivalue);
             post_list += post_uint_count;
         }
@@ -183,8 +183,8 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, post_mask_map.get_section_size(), doc_id_mask, SIZE,
-                attr_list_org, attr_mask_map.get_section_size(), &mlogic, 1 );
+        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+                attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
         //        printf("rst_num: %d\n", rst_num);
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
         for (int32_t i=0; i<rst_num; i++)
         {
             uint32_t id = _GET_SOLO_VALUE_(post_list, doc_id_mask);
-            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count, mlogic.key_mask);
+            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, mlogic.key_mask);
             //            printf("v[%u] : m[%u] M[%u]\n", vv, min_value, max_value);
             assert (min_value <= vv  && vv <= max_value);
             post_list += post_uint_count;
@@ -228,8 +228,8 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, post_mask_map.get_section_size(), doc_id_mask, SIZE,
-                attr_list_org, attr_mask_map.get_section_size(), &mlogic, 1 );
+        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+                attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
         //        printf("rst_num: %d\n", rst_num);
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
         for (int32_t i=0; i<rst_num; i++)
         {
             uint32_t id = _GET_SOLO_VALUE_(post_list, doc_id_mask);
-            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count, mlogic.key_mask);
+            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, mlogic.key_mask);
             assert (vv == ivalue);
             post_list += post_uint_count;
         }
@@ -275,8 +275,8 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, post_mask_map.get_section_size(), doc_id_mask, SIZE,
-                attr_list_org, attr_mask_map.get_section_size(), &mlogic, 1 );
+        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+                attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
         //        printf("rst_num: %d\n", rst_num);
@@ -284,7 +284,7 @@ int main(int argc, char** argv)
         for (int32_t i=0; i<rst_num; i++)
         {
             uint32_t id = _GET_SOLO_VALUE_(post_list, doc_id_mask);
-            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, attr_uint_count, mlogic.key_mask);
+            uint32_t vv = _GET_LIST_VALUE_(attr_list_org, id, mlogic.key_mask);
             //            printf("o[%u] m[%u] --\n", vv, mask/2);
             assert (vv <= mask/2);
             post_list += post_uint_count;
@@ -397,8 +397,8 @@ int main(int argc, char** argv)
 //        printf("mcount : %d\n", mcount);
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, post_mask_map.get_section_size(), doc_id_mask, SIZE,
-                attr_list_org, attr_mask_map.get_section_size(), logic_list, 5 );
+        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+                attr_list_org, logic_list, 5 );
         gettimeofday(&eetv, NULL); 
 //        printf("rst_num: %d\n", rst_num);
 
@@ -469,7 +469,7 @@ int main(int argc, char** argv)
     termlist[0].weight = 1;
     termlist[1].weight = 1;
 
-    int32_t merge_rst_num = weight_merge(termlist, 2, doc_id_mask, weight_mask, post_uint_count_new,
+    int32_t merge_rst_num = weight_merge(termlist, 2, doc_id_mask, weight_mask,
             result_pair_lst, SIZE);
     printf("merge_rst_num: %d\n", merge_rst_num);
 //    for (uint32_t i=0; i<merge_rst_num; i++)

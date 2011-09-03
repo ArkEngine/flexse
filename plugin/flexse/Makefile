@@ -9,6 +9,7 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/MyException/include/ \
 	  -I ../../utils/postinglist/include/ \
 	  -I ../../utils/memblocks/include/ \
+	  -I ../../utils/structmask/include/ \
 	  -I ../../utils/fileblock/include/ \
 	  -I ../../utils/diskv/include/ \
 	  -I ../../utils/nlp_processor/include/ \

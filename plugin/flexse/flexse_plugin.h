@@ -2,6 +2,7 @@
 #define _FLEXSE_PLUGIN_H_
 
 #include "secore.h"
+#include "structmask.h"
 #include <json/json.h>
 
 class flexse_plugin
@@ -9,6 +10,21 @@ class flexse_plugin
     private:
         flexse_plugin();
         flexse_plugin(const flexse_plugin&);
+
+        enum {
+            DOC_ID = 0,
+            PREFIX,
+            NLP,
+        };
+        struct key_op_t
+        {
+            uint32_t    op;
+            uint32_t    type;
+            char        token[32];
+            mask_item_t key_mask;
+        };
+        map <string, key_op_t> m_key_op_map;
+
     public:
         secore* mysecore;
 

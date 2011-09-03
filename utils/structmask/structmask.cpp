@@ -88,6 +88,14 @@ structmask::structmask(const char* path, const char* name, const char* section)
                 (uint32_t)m_mask_map.size(), section, bit_count, m_section_size);
         MyToolThrow("SEG_LIST CONFIG ERROR.");
     }
+
+    MyThrowAssert((2<<10) >= m_section_size);
+
+    map<string, mask_item_t>::iterator it;
+    for (it=m_mask_map.begin(); it!=m_mask_map.end(); it++)
+    {
+        it->second.uint32_count = m_section_size;
+    }
 }
 
 structmask::~structmask()
