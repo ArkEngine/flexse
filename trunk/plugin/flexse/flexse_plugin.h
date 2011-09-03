@@ -8,13 +8,22 @@
 class flexse_plugin
 {
     private:
+        static const char* const CONFIGCATEGORY_FLEXINDEX;
+        static const char* const CONFIGCATEGORY_STRUCTMASK;
+
         flexse_plugin();
         flexse_plugin(const flexse_plugin&);
 
         enum {
-            DOC_ID = 0,
-            PREFIX,
-            NLP,
+            OP_DOC_ID = 0,
+            OP_PREFIX,
+            OP_NLP,
+        };
+        enum {
+            T_INT = 0,
+            T_STR,
+            T_LIST_INT,
+            T_LIST_STR,
         };
         struct key_op_t
         {

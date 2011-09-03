@@ -21,6 +21,7 @@
 #include <map>
 #include <string>
 #include <stdint.h>
+#include <json/json.h>
 using namespace std;
 
 typedef struct _mask_item_t
@@ -48,7 +49,8 @@ class structmask
          * @param name : name of config-file
          * @param section : section name of this structmask
          */
-        structmask(const char* path, const char* name, const char* section);
+        //structmask(const char* path, const char* name, const char* section);
+        structmask(const Json::Value& field_array);
         ~structmask();
         
         /**
@@ -60,15 +62,6 @@ class structmask
          * @return 0 if OK else -1
          */
         int get_mask_item(const char* key, mask_item_t* mask_item);
-        /**
-         * @brief : get the section name
-         *
-         * @param name : section name stored in this buffer
-         * @param size : the length of this buffer
-         *
-         * @return 0 if OK else -1
-         */
-        int get_section_name(char* name, const uint32_t size) const;
         /**
          * @brief : get the uint32_t number of this section
          *
