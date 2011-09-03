@@ -21,14 +21,14 @@
         "PostingMemBlockNumList" : [4000000, 2000000]
     },
     "FLEXINDEX":
-    {
-        "id"      : {"op":"DOC_ID", "type":"INT"},
-        "uid"     : {"op":"PREFIX", "type":"INT", "token":"UID^"},
-        "title"   : {"op":"NLP",    "field":"intitle"},
-        "content" : {"op":"NLP"},
-        "type"    : {"op":"PREFIX", "type":"INT", "token":"TYPE^"},
-        "tags"    : {"op":"PREFIX", "type":"ARR", "token":"TAG^"}
-    },
+    [
+        {"id"      : {"op":"DOC_ID", "type":"INT"}},
+        {"uid"     : {"op":"PREFIX", "type":"INT", "token":"UID^"}},
+        {"title"   : {"op":"NLP",    "field":"intitle"}},
+        {"content" : {"op":"NLP"}},
+        {"type"    : {"op":"PREFIX", "type":"INT", "token":"TYPE^"}},
+        {"tags"    : {"op":"PREFIX", "type":"LIST_STR", "token":"TAG^"}}
+    ],
     "STRUCTMASK":
     {
         "posting_list_cell":

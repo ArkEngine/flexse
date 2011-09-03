@@ -4,10 +4,41 @@
 #include <fstream>
 using namespace std;
 
+const char* const flexse_plugin:: CONFIGCATEGORY_FLEXINDEX  = "FLEXINDEX";
+const char* const flexse_plugin:: CONFIGCATEGORY_STRUCTMASK = "STRUCTMASK";
+
 flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
 {
     MySuicideAssert (config_path != NULL && insecore != NULL);
     mysecore = insecore;
+    // PLUGIN CONFIG
+    Json::Value root;
+    Json::Reader reader;
+    ifstream in(config_path);
+    MySuicideAssert (reader.parse(in, root));
+
+    Json::Value flexindex = root[CONFIGCATEGORY_FLEXINDEX];
+    MySuicideAssert (!flexindex.isNull());
+    Json::Value::const_iterator iter;          //迭代器
+    iter = flexindex.begin();
+
+    printf ("size: %d\n", flexindex.size());          // 输出 key1,key2
+    for (uint32_t i=0; i<flexindex.size(); i++)
+    {
+        Json::Value field = flexindex[i];
+        Json::Value::Members member=(*iter).getMemberNames();
+
+        string strkey(*(member.begin()));
+        printf ("k: %s\n", strkey.c_str());          // 输出 key1,key2
+        iter++;
+    }
+
+//    for(iter = flexindex.begin();iter != flexindex.end();iter++ )
+//    {
+//        Json::Value::Members member=(*iter).getMemberNames();
+//        printf ("k: %s\n", string(*(member.begin())).c_str());          // 输出 key1,key2
+//        //        (*iter)[*(member.begin())];     //输出 value1,value2
+//    }
 }
 
 flexse_plugin:: ~flexse_plugin()

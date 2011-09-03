@@ -1,10 +1,15 @@
 #include "structmask.h"
+#include "json/json.h"
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
 #include <sys/time.h>
+#include <iostream>
+#include <fstream>
+#include "mylog.h"
+#include "MyException.h"
 
 struct test
 {
@@ -23,12 +28,21 @@ int main(int argc, char** argv) try
         printf ("./test SIZE\n");
         exit(1);
     }
-    structmask mymask("./conf/", "test.conf", "document_attribute");
+
+    // read json config
+    Json::Value root;
+    Json::Reader reader;
+    ifstream in("./conf/test.conf");
+    if (! reader.parse(in, root))
+    {
+        FATAL("json format error.");
+        MyToolThrow("json format error.");
+    }
+
+    Json::Value field_array = root["document_attribute"];
+    structmask mymask(field_array);
     printf ("uint32_t size[%u]\n", mymask.get_section_size());
     printf ("segment  size[%u]\n", mymask.get_segment_size());
-    char name[128];
-    mymask.get_section_name(name, sizeof(name));
-    printf ("section  name[%s]\n", name);
     mask_item_t* mask_item = (mask_item_t*)malloc(mymask.get_segment_size()*sizeof(mask_item_t));
     const char* keylist[] = {"id0", "id1", "id2", "id3", "id4", "id5"};
     for (uint32_t i=0; i<mymask.get_segment_size(); i++)
@@ -84,12 +98,12 @@ int main(int argc, char** argv) try
     for (uint32_t i=0; i<SIZE; i++)
     {
         //        assert(ptest[i].id0 == ((puint[mask_item[0].uint_offset] & mask_item[0].item_mask) >> mask_item[0].move_count));
-//        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0]));
-//        assert(ptest[i].id1 == _GET_VALUE_(puint, mask_item[1]));
-//        assert(ptest[i].id2 == _GET_VALUE_(puint, mask_item[2]));
-//        assert(ptest[i].id3 == _GET_VALUE_(puint, mask_item[3]));
-//        assert(ptest[i].id4 == _GET_VALUE_(puint, mask_item[4]));
-//        assert(ptest[i].id5 == _GET_VALUE_(puint, mask_item[5]));
+        //        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0]));
+        //        assert(ptest[i].id1 == _GET_VALUE_(puint, mask_item[1]));
+        //        assert(ptest[i].id2 == _GET_VALUE_(puint, mask_item[2]));
+        //        assert(ptest[i].id3 == _GET_VALUE_(puint, mask_item[3]));
+        //        assert(ptest[i].id4 == _GET_VALUE_(puint, mask_item[4]));
+        //        assert(ptest[i].id5 == _GET_VALUE_(puint, mask_item[5]));
         uint32_t k = 0;
         k += _GET_SOLO_VALUE_(puint, mask_item[0]);
         k += _GET_SOLO_VALUE_(puint, mask_item[1]);
@@ -114,8 +128,8 @@ int main(int argc, char** argv) try
         _SET_SOLO_VALUE_(puint, mask_item[3], i);
         _SET_SOLO_VALUE_(puint, mask_item[4], i);
         _SET_SOLO_VALUE_(puint, mask_item[5], i);
-//        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0]));
-//        assert(ptest[i].id0 == i);
+        //        assert(ptest[i].id0 == _GET_VALUE_(puint, mask_item[0]));
+        //        assert(ptest[i].id0 == i);
         puint += uint_count;;
     }
     gettimeofday(&etv, NULL);

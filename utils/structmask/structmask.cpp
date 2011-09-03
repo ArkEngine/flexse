@@ -9,28 +9,9 @@
 using namespace std;
 using namespace flexse;
 
-structmask::structmask(const char* path, const char* name, const char* section)
+//structmask::structmask(const char* path, const char* name, const char* section)
+structmask::structmask(const Json::Value& field_array)
 {
-	char strPath[128];
-	snprintf(strPath, sizeof(strPath), "%s/%s", path, name);
-
-	if ( strlen(section) != (uint32_t)snprintf(m_section_name, sizeof(m_section_name), "%s", section) )
-	{
-		FATAL ("section[%s] too looooong for m_section_name[%u]", section, (uint32_t)sizeof(m_section_name));
-		MyToolThrow("section too looooong");
-	}
-
-    // read json config
-    Json::Value root; 
-    Json::Reader reader;
-    ifstream in(strPath);
-    if (! reader.parse(in, root))
-    {
-        FATAL("json format error.");
-		MyToolThrow("json format error.");
-    }
-
-    Json::Value field_array = root[section];
     Json::Value::const_iterator iter;
     iter = field_array.begin();
 
@@ -38,7 +19,6 @@ structmask::structmask(const char* path, const char* name, const char* section)
     m_section_size = 0;
     for (uint32_t i=0; i<field_array.size(); i++)
     {
-        Json::Value field = field_array[i];
         Json::Value::Members member=(*iter).getMemberNames();
 
         string strkey(*(member.begin()));
@@ -84,8 +64,8 @@ structmask::structmask(const char* path, const char* name, const char* section)
 
     if (bit_count != 0 || m_mask_map.size() == 0)
     {
-        ALARM("map size = [%u]. section[%s] bit_count[%u] section_size[%u]",
-                (uint32_t)m_mask_map.size(), section, bit_count, m_section_size);
+        ALARM("map size = [%u]. bit_count[%u] section_size[%u]",
+                (uint32_t)m_mask_map.size(), bit_count, m_section_size);
         MyToolThrow("SEG_LIST CONFIG ERROR.");
     }
 
@@ -114,16 +94,6 @@ int structmask::get_mask_item(const char* key, mask_item_t* mask_item)
     {
         return -1;
     }
-}
-int structmask::get_section_name(char* name, const uint32_t size) const
-{
-    name[0] = 0;
-    if (strlen(m_section_name) >= size)
-    {
-        return -1;
-    }
-    snprintf(name, size, "%s", m_section_name);
-    return 0;
 }
 uint32_t structmask::get_section_size() const
 {

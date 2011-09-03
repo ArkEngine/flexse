@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <iostream>
+#include <fstream>
 using namespace std;
 
 struct posting
@@ -47,8 +49,13 @@ int main(int argc, char** argv)
     gettimeofday(&btv, NULL); 
 
     const uint32_t SIZE = 1000000;
-    structmask post_mask_map("./conf/", "config.json", "POST");
-    structmask attr_mask_map("./conf/", "config.json", "ATTR");
+    Json::Value root;
+    Json::Reader reader;
+    ifstream in("./conf/config.json");
+    assert(reader.parse(in, root));
+
+    structmask post_mask_map(root["POST"]);
+    structmask attr_mask_map(root["ATTR"]);
     mask_item_t doc_id_mask;
     assert (0 == post_mask_map.get_mask_item("doc_id", &doc_id_mask));
 
@@ -222,7 +229,7 @@ int main(int argc, char** argv)
         {
             _SET_SOLO_VALUE_(post_list, doc_id_mask, i);
             _SET_SOLO_VALUE_(attr_list, mlogic.key_mask, i & mask);
-//            printf("o[%u] : s[%u]\n", i & mask, ivalue);
+            //            printf("o[%u] : s[%u]\n", i & mask, ivalue);
             post_list += post_uint_count;
             attr_list += attr_uint_count;
         }
@@ -295,7 +302,7 @@ int main(int argc, char** argv)
     if (0 == strcmp(argv[1], "MIX"))
     {
         printf(".");
-//        test_flag = true;
+        //        test_flag = true;
         memset (post_list_org, 0, SIZE * post_uint_count * sizeof(uint32_t));
         memset (attr_list_org, 0, SIZE * attr_uint_count * sizeof(uint32_t));
         uint32_t* post_list = post_list_org;
@@ -358,13 +365,13 @@ int main(int argc, char** argv)
             _SET_SOLO_VALUE_(attr_list, logic_list[2].key_mask, i & zone_mask);
             _SET_SOLO_VALUE_(attr_list, logic_list[3].key_mask, i & equal_mask);
             _SET_SOLO_VALUE_(attr_list, logic_list[4].key_mask, i & set_mask);
-//            printf("[%u : %u] [%u : %u] [%u : %u] [%u : %u] [%u : %u]\n",
-//                    pattr[i].qingxidu,    i & big_mask,
-//                    pattr[i].is_movie,    i & small_mask,
-//                    pattr[i].duration,    i & zone_mask,
-//                    pattr[i].delete_flag, i & equal_mask,
-//                    pattr[i].movie_sub,   i & set_mask
-//                    );
+            //            printf("[%u : %u] [%u : %u] [%u : %u] [%u : %u] [%u : %u]\n",
+            //                    pattr[i].qingxidu,    i & big_mask,
+            //                    pattr[i].is_movie,    i & small_mask,
+            //                    pattr[i].duration,    i & zone_mask,
+            //                    pattr[i].delete_flag, i & equal_mask,
+            //                    pattr[i].movie_sub,   i & set_mask
+            //                    );
             post_list += post_uint_count;
             attr_list += attr_uint_count;
         }
@@ -394,13 +401,13 @@ int main(int argc, char** argv)
             mcount++;
         }
 
-//        printf("mcount : %d\n", mcount);
+        //        printf("mcount : %d\n", mcount);
 
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, doc_id_mask, SIZE,
                 attr_list_org, logic_list, 5 );
         gettimeofday(&eetv, NULL); 
-//        printf("rst_num: %d\n", rst_num);
+        //        printf("rst_num: %d\n", rst_num);
 
         printf("  OK!\n");
         printf ("list-size: %u flt-time-consumed: %lu us\n", SIZE,
@@ -428,13 +435,13 @@ int main(int argc, char** argv)
         printf("  OK!\n");
         printf ("list-size: %u all-time-consumed: %u us\n", SIZE, all_time_count);
     }
-//    printf ("list-size: %u time-consumed: %lu us\n", SIZE,
-//            (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));
+    //    printf ("list-size: %u time-consumed: %lu us\n", SIZE,
+    //            (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));
 
     free(post_list_org);
     free(attr_list_org);
 
-    structmask merge_mask_map("./conf/", "config.json", "MERGE");
+    structmask merge_mask_map(root["MERGE"]);
     const uint32_t post_uint_count_new = merge_mask_map.get_section_size();
 
     uint32_t* post_list_org_0 = (uint32_t*)malloc(SIZE * post_uint_count_new * sizeof(uint32_t));
@@ -472,10 +479,10 @@ int main(int argc, char** argv)
     int32_t merge_rst_num = weight_merge(termlist, 2, doc_id_mask, weight_mask,
             result_pair_lst, SIZE);
     printf("merge_rst_num: %d\n", merge_rst_num);
-//    for (uint32_t i=0; i<merge_rst_num; i++)
-//    {
-//        printf("%8u %u\n", result_pair_lst[i].id, result_pair_lst[i].weight);
-//    }
+    //    for (uint32_t i=0; i<merge_rst_num; i++)
+    //    {
+    //        printf("%8u %u\n", result_pair_lst[i].id, result_pair_lst[i].weight);
+    //    }
 
     // MERGE TEST
     free(post_list_org_0);
