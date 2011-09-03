@@ -13,11 +13,9 @@ using namespace std;
  * @brief : filter posting-list by mutil-logic
  *
  * @param pposting_list   : posting-list stored here and filtered one also stored here.
- * @param post_uint_count : the uint_count of each post
  * @param doc_id_mask     : the doc_id mask_item of posting-list
  * @param nmemb           : the posting number of this posting-list.
  * @param pattrlist       : document-attribute buffer.
- * @param attr_uint_count : uint_count of each attribute
  * @param logic_list      : logic list
  * @param logic_num       : number of logic list
  *
@@ -25,11 +23,9 @@ using namespace std;
  */
 int32_t filter(
 		void* pposting_list,
-        const uint32_t post_uint_count,
 		const mask_item_t& doc_id_mask,
 		const uint32_t nmemb, 
 		const void* pattrlist,
-        const uint32_t attr_uint_count,
         const filter_logic_t* logic_list,
         const uint32_t logic_num
 		)
@@ -46,6 +42,7 @@ int32_t filter(
     // store the result in orginal buffer.
 	uint32_t* pdstuint = (uint32_t*)pposting_list;
 	uint32_t* pinxuint = (uint32_t*)pposting_list;
+    const uint32_t post_uint_count = doc_id_mask.uint32_count;
 	const uint32_t post_char_count = post_uint_count * sizeof(uint32_t);
 	int32_t result_nmemb = 0;
 
@@ -56,7 +53,7 @@ int32_t filter(
         for (uint32_t k=0; k<logic_num; k++)
         {
             const filter_logic_t* plogic = &logic_list[k];
-            uint32_t _value = _GET_LIST_VALUE_(pattrlist, doc_id, attr_uint_count, plogic->key_mask);
+            uint32_t _value = _GET_LIST_VALUE_(pattrlist, doc_id, plogic->key_mask);
             switch(plogic->type)
             {
                 case EQUAL:
@@ -110,12 +107,10 @@ int32_t filter(
  * @brief : ranking posting-list by mutil-logic
  *
  * @param pposting_list   : posting-list stored here and filtered one also stored here.
- * @param post_uint_count : the uint_count of each post
  * @param doc_id_mask     : the doc_id mask_item of posting-list
  * @param weight_mask     : the weight mask_item of posting-list
  * @param nmemb           : the posting number of this posting-list.
  * @param pattrlist       : document-attribute buffer.
- * @param attr_uint_count : uint_count of each attribute
  * @param logic_list      : logic list
  * @param logic_num       : number of logic list
  *
@@ -123,12 +118,10 @@ int32_t filter(
  */
 int32_t ranking(
 		void* pposting_list,
-        const uint32_t post_uint_count,
 		const mask_item_t& doc_id_mask,
 		const mask_item_t& weight_mask,
 		const uint32_t nmemb, 
 		const void* pattrlist,
-        const uint32_t attr_uint_count,
         const ranking_logic_t* logic_list,
         const uint32_t logic_num
 		)
@@ -144,6 +137,7 @@ int32_t ranking(
 
     // store the result in orginal buffer.
 	uint32_t* pinxuint = (uint32_t*)pposting_list;
+    const uint32_t post_uint_count = doc_id_mask.uint32_count;
 
 	for (uint32_t i=0; i<nmemb; i++)
 	{
@@ -152,7 +146,7 @@ int32_t ranking(
         for (uint32_t k=0; k<logic_num; k++)
         {
             const ranking_logic_t* plogic = &logic_list[k];
-            uint32_t _value = _GET_LIST_VALUE_(pattrlist, doc_id, attr_uint_count, plogic->key_mask);
+            uint32_t _value = _GET_LIST_VALUE_(pattrlist, doc_id, plogic->key_mask);
             switch(plogic->type)
             {
                 case EQUAL:
@@ -332,7 +326,6 @@ bool compare_result(const result_pair_t &left, const result_pair_t &right)
  * @param terminfo_size    : number of posting-list
  * @param id_mask          : the 'id' mask
  * @param wt_mask          : the 'weight' mask
- * @param post_uint_count  : the uint_count of each post
  * @param result_list      : result_pair stored here
  * @param result_list_size : the size of result_list
  *                                      
@@ -344,7 +337,6 @@ int32_t weight_merge(
         const uint32_t terminfo_size,   
         const mask_item_t id_mask,
         const mask_item_t wt_mask,
-        const uint32_t post_uint_count,
         result_pair_t* result_list, 
         const uint32_t result_list_size
         )
@@ -376,7 +368,7 @@ int32_t weight_merge(
             int32_t current_offset = current_pointer_list[i];
             if(current_offset>=0)  ///< 这个拉链还没有遍历完毕
             {
-                uint32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, post_uint_count, id_mask);
+                uint32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
                 max_id = (max_id > id) ? max_id : id;
             }
         }
@@ -389,11 +381,11 @@ int32_t weight_merge(
             int32_t& current_offset = current_pointer_list[i];
             if(current_offset >= 0)  ///<  这个拉链还没有遍历完毕
             {
-                uint32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, post_uint_count, id_mask);
+                uint32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
                 if(max_id == id) ///< 对应最小id
                 {
                     uint32_t t_weight = _GET_LIST_VALUE_(terminfo_list[i].posting_list,
-                            current_offset, post_uint_count, wt_mask);
+                            current_offset, wt_mask);
                     // 如果非0，则相乘, 如果为0，则变成1
                     if (t_weight == 0)
                     {

@@ -39,8 +39,10 @@ int main(int argc, char** argv) try
         }
         else
         {
-            printf("key[%s] uint_off[%u] item_mask[0x%08x] move_count[%02u]\n",
-                    keylist[i], mask_item[i].uint_offset, mask_item[i].item_mask, mask_item[i].move_count);
+            printf("key[%s] uint_off[%u] item_mask[0x%08x] move_count[%02u] uint32_count[%02u]\n",
+                    keylist[i], mask_item[i].uint_offset, 
+                    mask_item[i].item_mask, mask_item[i].move_count,
+                    mask_item[i].uint32_count);
         }
     }
 
@@ -123,12 +125,12 @@ int main(int argc, char** argv) try
     gettimeofday(&btv, NULL);
     for (uint32_t i=0; i<SIZE; i++)
     {
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[0], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[1], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[2], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[3], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[4], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[5], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[0], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[1], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[2], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[3], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[4], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[5], i);
     }
     gettimeofday(&etv, NULL);
     printf ("lcount: %u set-time-consumed: %lu us\n", SIZE,
@@ -136,13 +138,13 @@ int main(int argc, char** argv) try
 
     for (uint32_t i=0; i<SIZE; i++)
     {
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[0], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[1], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[2], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[3], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[4], i);
-        _SET_LIST_VALUE_(ptest, i, uint_count, mask_item[5], i);
-        assert (ptest[i].id0 == _GET_LIST_VALUE_(ptest, i, uint_count, mask_item[0]));
+        _SET_LIST_VALUE_(ptest, i, mask_item[0], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[1], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[2], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[3], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[4], i);
+        _SET_LIST_VALUE_(ptest, i, mask_item[5], i);
+        assert (ptest[i].id0 == _GET_LIST_VALUE_(ptest, i, mask_item[0]));
     }
 
 
