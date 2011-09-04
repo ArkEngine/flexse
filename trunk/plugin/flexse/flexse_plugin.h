@@ -9,7 +9,20 @@ class flexse_plugin
 {
     private:
         static const char* const CONFIGCATEGORY_FLEXINDEX;
+        static const char* const FLEXINDEX_KEY_OP;
+        static const char* const FLEXINDEX_KEY_TYPE;
+        static const char* const FLEXINDEX_KEY_TOKEN;
+        static const char* const FLEXINDEX_KEY_FIELD;
+        static const char* const FLEXINDEX_VALUE_OP_NLP;
+        static const char* const FLEXINDEX_VALUE_OP_DOC_ID;
+        static const char* const FLEXINDEX_VALUE_OP_PREFIX;
+        static const char* const FLEXINDEX_VALUE_TYPE_INT;
+        static const char* const FLEXINDEX_VALUE_TYPE_STR;
+        static const char* const FLEXINDEX_VALUE_TYPE_LIST_INT;
+        static const char* const FLEXINDEX_VALUE_TYPE_LIST_STR;
         static const char* const CONFIGCATEGORY_STRUCTMASK;
+        static const char* const STRUCTMASK_POST;
+        static const char* const STRUCTMASK_ATTR;
 
         flexse_plugin();
         flexse_plugin(const flexse_plugin&);
@@ -33,6 +46,9 @@ class flexse_plugin
             mask_item_t key_mask;
         };
         map <string, key_op_t> m_key_op_map;
+
+        structmask* m_post_maskmap;
+        structmask* m_attr_maskmap;
 
     public:
         secore* mysecore;

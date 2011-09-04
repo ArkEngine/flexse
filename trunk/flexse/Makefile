@@ -51,6 +51,7 @@ LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../utils/bitmap/lib/               -lbitmap \
 		 -L ../utils/xhead/lib/                -lxhead \
 		 -L ../utils/myutils/lib/              -lmyutils \
+		 -L ../utils/structmask/lib/           -lstructmask \
 		 -L ../utils/mylog/lib/                -lmylog \
 		 -L ../utils/MyException/lib/          -lMyException \
 

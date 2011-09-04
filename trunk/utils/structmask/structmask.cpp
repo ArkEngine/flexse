@@ -12,6 +12,7 @@ using namespace flexse;
 //structmask::structmask(const char* path, const char* name, const char* section)
 structmask::structmask(const Json::Value& field_array)
 {
+    MyThrowAssert(! field_array.isNull());
     Json::Value::const_iterator iter;
     iter = field_array.begin();
 
