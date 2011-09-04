@@ -22,7 +22,7 @@
     },
     "FLEXINDEX":
     [
-        {"id"      : {"op":"DOC_ID", "type":"INT"}},
+        {"id"      : {"op":"DOC_ID", "field":"id"}},
         {"uid"     : {"op":"PREFIX", "type":"INT", "token":"UID^"}},
         {"title"   : {"op":"NLP",    "field":"intitle"}},
         {"content" : {"op":"NLP"}},
