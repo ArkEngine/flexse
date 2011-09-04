@@ -94,6 +94,8 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
                 FATAL("unknown type type[%s]", value[FLEXINDEX_KEY_TYPE].asCString());
                 MySuicideAssert(0);
             }
+            MyThrowAssert(value[FLEXINDEX_KEY_TOKEN].isString());
+            MyThrowAssert(0 < snprintf(mkey_op.token, sizeof(mkey_op.token), "%s", value[FLEXINDEX_KEY_TOKEN].asCString()));
         }
         else
         {
@@ -121,74 +123,101 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<term_info_
         return -1;
     }
 
-    if (root[FLEXINDEX_VALUE_OP_DOC_ID].isNull()
-            || ! root[FLEXINDEX_VALUE_OP_DOC_ID].isInt()
-            || 0 == root[FLEXINDEX_VALUE_OP_DOC_ID].asInt())
-    {
-        ALARM("jsonstr NOT contain 'DOC_ID' or Type error.");
-        return -1;
-    }
-    else
-    {
-        doc_id = root[FLEXINDEX_VALUE_OP_DOC_ID].asInt();
-    }
+    doc_id = 0;
 
     // 从 m_key_op_map 迭代处理
     map<string, key_op_t>::iterator it;
     for (it=m_key_op_map.begin(); it!=m_key_op_map.end(); it++)
     {
-        if (root[it->first.c_str()].isNull())
+        const char* strkey = it->first.c_str();
+        if (root[strkey].isNull())
         {
-            ALARM("jsonstr NOT contain '%s'.", it->first.c_str());
+            ALARM("jsonstr NOT contain '%s'.", strkey);
             return -1;
         }
+        switch (it->second.op)
+        {
+            case OP_DOC_ID:
+                if (!root[strkey].isInt())
+                {
+                    ALARM("'%s' is NOT Int.", strkey);
+                    return -1;
+                }
+                doc_id = root[strkey].asInt();
+                break;
+            case OP_PREFIX:
+                char tmpstr[128];
+                if (it->second.type == T_INT)
+                {
+                    snprintf(tmpstr, sizeof(tmpstr), "%s%u", it->second.token, root[strkey].asInt());
+                    term_info_t term_info = {tmpstr, 0, {0,0,0,0}};
+                    termlist.push_back(term_info);
+                }
+                else if (it->second.type == T_STR)
+                {
+                    snprintf(tmpstr, sizeof(tmpstr), "%s%s", it->second.token, root[strkey].asCString());
+                    term_info_t term_info = {tmpstr, 0, {0,0,0,0}};
+                    termlist.push_back(term_info);
+                }
+                else if (it->second.type == T_LIST_INT)
+                {
+                    if( root[strkey].isNull() || !root[strkey].isArray())
+                    {
+                        ALARM("'%s' Not a list jsonstr[%s]", strkey, jsonstr);
+                        return -1;
+                    }
+                    const uint32_t json_idlist_size = root[strkey].size();
+                    for (uint32_t i=0; i<json_idlist_size; i++)
+                    {
+                        snprintf(tmpstr, sizeof(tmpstr), "%s%u", it->second.token, root[strkey][i].asInt());
+                        term_info_t term_info = {tmpstr, 0, {0,0,0,0}};
+                        termlist.push_back(term_info);
+                    }
+                }
+                else if (it->second.type == T_LIST_STR)
+                {
+                    if( root[strkey].isNull() || !root[strkey].isArray())
+                    {
+                        ALARM("'%s' Not a list jsonstr[%s]", strkey, jsonstr);
+                        return -1;
+                    }
+                    const uint32_t json_idlist_size = root[strkey].size();
+                    for (uint32_t i=0; i<json_idlist_size; i++)
+                    {
+                        snprintf(tmpstr, sizeof(tmpstr), "%s%s", it->second.token, root[strkey][i].asCString());
+                        term_info_t term_info = {tmpstr, 0, {0,0,0,0}};
+                        termlist.push_back(term_info);
+                    }
+                }
+                else
+                {
+                    MySuicideAssert(0);
+                }
+                break;
+            case OP_NLP:
+                if (root[strkey].isNull() || !root[strkey].isString())
+                {
+                    ALARM("jsonstr NOT contain 'CONTENT'.");
+                    return -1;
+                }
+                else
+                {
+                    mysecore->m_pnlp_processor->split((char*)root[strkey].asCString(), termlist);
+                }
+                break;
+            default:
+                MySuicideAssert(0);
+                break;
+        }
     }
-    // 从 m_attr_maskmap 迭代处理
-
-    if (root["CONTENT"].isNull() || !root["CONTENT"].isString())
-    {
-        ALARM("jsonstr NOT contain 'CONTENT'.");
-        return -1;
-    }
-    else
-    {
-        mysecore->m_pnlp_processor->split((char*)root["CONTENT"].asCString(), termlist);
-    }
+    // 从 m_attr_maskmap 迭代处理 TODO
 
     return 0;
 }
 
 int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist)
 {
-    Json::Value root;
-    Json::Reader reader;
-    if (! reader.parse(jsonstr, root))
-    {
-        ALARM("jsonstr format error. [%s]", jsonstr);
-        return -1;
-    }
-
-    if (root[FLEXINDEX_VALUE_OP_DOC_ID].isNull())
-    {
-        ALARM("jsonstr NOT contain 'DOC_ID'.");
-        return -1;
-    }
-    else
-    {
-        doc_id = root[FLEXINDEX_VALUE_OP_DOC_ID].asInt();
-    }
-
-    if (root["CONTENT"].isNull() || !root["CONTENT"].isString())
-    {
-        ALARM("jsonstr NOT contain 'CONTENT'.");
-        return -1;
-    }
-    else
-    {
-        mysecore->m_pnlp_processor->split((char*)root["CONTENT"].asCString(), termlist);
-    }
-
-    return 0;
+    return add(jsonstr, doc_id, termlist);
 }
 
 int flexse_plugin:: del(const char* jsonstr, vector<uint32_t> & id_list)
