@@ -13,6 +13,6 @@ class nlp_processor
     public:
         nlp_processor();
         ~nlp_processor();
-        void split(char* str, vector<term_info_t>& termlist);
+        void split(const char* str, vector<term_info_t>& termlist);
 };
 #endif

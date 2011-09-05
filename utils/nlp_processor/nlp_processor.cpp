@@ -2,6 +2,7 @@
 #include <set>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 nlp_processor:: nlp_processor()
 {}
@@ -9,34 +10,31 @@ nlp_processor:: nlp_processor()
 nlp_processor:: ~nlp_processor()
 {}
 
-void nlp_processor:: split(char* str, vector<term_info_t>& termlist)
+void nlp_processor:: split(const char* str, vector<term_info_t>& termlist)
 {
-    char* stri = str;
-    char* strb = str;
+    uint32_t len = strlen(str);
+    char* mystr = (char*)malloc(len);
+    snprintf(mystr, len, "%s", str);
+    char* mptr = mystr;
+    char* strb = NULL;
+    char *strt = NULL;
     set<string> strset;
-    while(NULL != (strb=strchr(str, ' ')))
+
+
+    while(NULL != (strb = strtok_r(mystr, " ", &strt)))
     {
-        *strb = '\0';
-        if (strset.end() == strset.find(string(str)))
+        if (strset.end() != strset.find(string(strb)))
         {
-            term_info_t term_info;
-            term_info.strTerm = string(str);
-            termlist.push_back(term_info);
-            strset.insert(string(str));
-//            printf("uni key: %s\n", str);
+            continue;
         }
-//        else
-//        {
-//            printf("dup key: %s - leftstring: %s --------\n", str, strb+1);
-//        }
-        str = strb + 1;
-        *strb = ' ';
-    }
-    if (strset.end() == strset.find(string(stri)))
-    {
         term_info_t term_info;
-        term_info.strTerm = string(stri);
+        term_info.strTerm = string(strb);
         termlist.push_back(term_info);
+        strset.insert(string(strb));
+//        printf("uni key: %s\n", strb);
+        mystr=NULL;
     }
+
+    free(mptr);
 }
 

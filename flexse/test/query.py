@@ -1,14 +1,14 @@
 import socket, struct, sys, json
 
-if len(sys.argv) != 4:
-    print "python test.py ip port query"
+if len(sys.argv) != 2:
+    print "python test.py query"
     sys.exit(1)
 
 FMT_XHEAD = "I16sIII"
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((sys.argv[1], int(sys.argv[2])));
+sock.connect(("127.0.0.1", 1983));
 dd = {}
-dd['QUERY'] = sys.argv[3]
+dd['QUERY'] = sys.argv[1]
 jsonstr = json.dumps(dd)
 print jsonstr
 sbuf = struct.pack(FMT_XHEAD, 1234, "pyclient", 0, 0, len(jsonstr))

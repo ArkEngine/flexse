@@ -166,17 +166,15 @@ int add(flexse_plugin* pflexse_plugin, const char* jsonstr)
 int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<term_info_t>& termlist)
 {
     index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
-    return myIndexGroup->set_posting_list(id, termlist);
+    int ret = myIndexGroup->set_posting_list(id, termlist);
 
     // DEBUG
-    // uint32_t plist[1000];
-    // int rnum = myIndexGroup->get_posting_list("this", plist, sizeof(plist));
-    // for (int i=0; i<rnum; i++)
-    // {
-    //     printf("[%u] ", plist[i]);
-    // }
-    // printf("\n");
-    return 0;
+    for (uint32_t i=0; i<termlist.size(); i++)
+    {
+        printf("[%s] ", termlist[i].strTerm.c_str());
+    }
+    printf("\n");
+    return ret;
 }
 
 int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
