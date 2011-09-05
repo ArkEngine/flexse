@@ -105,6 +105,8 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
 
         m_key_op_map[strkey] = mkey_op;
     }
+
+    // 迭代 m_attr_maskmap , 保存文档属性的数据
 }
 
 flexse_plugin:: ~flexse_plugin()
@@ -210,7 +212,6 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<term_info_
                 break;
         }
     }
-    // 从 m_attr_maskmap 迭代处理 TODO
 
     return 0;
 }
