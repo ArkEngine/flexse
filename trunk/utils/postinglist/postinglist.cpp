@@ -199,6 +199,8 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                     phead->mem_link = merge_memlink;
 
                     // 释放被合并的内存块
+                    // 这里其实存在一个危险的竟态条件的
+                    // 这些准备被释放的内存，不能保证正在使用。
                     m_memblocks->FreeMem(toBeFree->next);
                     m_memblocks->FreeMem(toBeFree);
                 }
@@ -333,6 +335,7 @@ void postinglist :: clear()
     // 在flexse中，当这个postinglist持久化之后，就不需要访问这个对象了，然后就reset掉好了。
     MyThrowAssert(0);
     // 遍历所有的memblocks，释放内存
+    // 不能直接delete m_memblocks完事，因为可能存在额外malloc的内存
     for (uint32_t head_list_offset=0; head_list_offset<m_headlist_used; head_list_offset++)
     {
         term_head_t* phead = &m_headlist[head_list_offset];
