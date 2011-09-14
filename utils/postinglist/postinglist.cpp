@@ -326,14 +326,14 @@ bool postinglist :: is_end()
 
 bool postinglist :: empty()
 {
-    return m_headlist_used > 0;
+    return m_headlist_used == 0;
 }
 
 void postinglist :: clear()
 {
     // 调用者保证执行这段代码时，没有人读写这个对象
     // 在flexse中，当这个postinglist持久化之后，就不需要访问这个对象了，然后就reset掉好了。
-    MyThrowAssert(0);
+//    MyThrowAssert(0);
     // 遍历所有的memblocks，释放内存
     // 不能直接delete m_memblocks完事，因为可能存在额外malloc的内存
     for (uint32_t head_list_offset=0; head_list_offset<m_headlist_used; head_list_offset++)

@@ -60,15 +60,17 @@ class index_group
 
         index_group (const index_group&);
         index_group();
-    public:
-        index_group(const uint32_t cell_size, const uint32_t bucket_size,
-                const uint32_t headlist_size, const uint32_t* blocknum_list, const uint32_t blocknum_list_size);
-        ~index_group();
+        void _swap_mem_indexer();
         // 当update_thread写满(or定期?)一个mem时:
         // -1- 把这个mem放入group中，调换mem的位置(保证各个索引的ID顺序)
         // -2- 返回另一个空闲的mem(swap到头部了)给update_thread继续写
         // -3- 启动持久化过程(直接dump或merge)
         mem_indexer* swap_mem_indexer();
+        mem_indexer*  get_cur_mem_indexer();
+    public:
+        index_group(const uint32_t cell_size, const uint32_t bucket_size,
+                const uint32_t headlist_size, const uint32_t* blocknum_list, const uint32_t blocknum_list_size);
+        ~index_group();
         // 更新day_indexer时:
         // -1- 替换掉m_index_list[2]中的disk_indexer
         // -2- 把m_index_list[1]中的mem_index标记为free状态
@@ -78,7 +80,6 @@ class index_group
         // -2- 把m_index_list[2]中的disk_index标记为free状态
         // -3- 检查是否有mem需要直接写入day_indexer
         void update_his_indexer();
-        mem_indexer*  get_cur_mem_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
         int32_t set_posting_list(const uint32_t id, const vector<term_info_t>& termlist);
