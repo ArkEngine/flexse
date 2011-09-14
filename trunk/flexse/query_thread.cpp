@@ -78,7 +78,7 @@ int ServiceApp(thread_data_t* ptd)
 
     gettimeofday(&tv2, NULL );
     uint32_t timecost = TIME_US_COST(tv1, tv2);
-    ROUTN( "log_id[%u] name[%s] cltip[%s] timecost[%u] string[%s] query[%s] list_num[%d] detail_len[%d]",
+    ROUTN( "log_id[%u] name[%s] cltip[%s] timecost_us[%u] string[%s] query[%s] list_num[%d] detail_len[%d]",
             ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip, timecost,
             srcstr, query, list_num, ptd->SendHead->detail_len);
 

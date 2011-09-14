@@ -169,11 +169,11 @@ int _insert(flexse_plugin* pflexse_plugin, const uint32_t id, const vector<term_
     int ret = myIndexGroup->set_posting_list(id, termlist);
 
     // DEBUG
-    for (uint32_t i=0; i<termlist.size(); i++)
-    {
-        printf("[%s] ", termlist[i].strTerm.c_str());
-    }
-    printf("\n");
+//    for (uint32_t i=0; i<termlist.size(); i++)
+//    {
+//        printf("[%s] ", termlist[i].strTerm.c_str());
+//    }
+//    printf("\n");
     return ret;
 }
 

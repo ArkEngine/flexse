@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/time.h>
 
 const char* const index_group :: STR_INDEX_NAME = "index";
@@ -87,19 +88,27 @@ mem_indexer* index_group :: swap_mem_indexer()
     {
         pthread_cond_wait(&m_mem_dump_cond, &m_mutex);
     }
-    pthread_mutex_unlock(&m_mutex);
+
     // -1- 调换位置
-    pthread_rwlock_wrlock(&m_list_rwlock);
+    _swap_mem_indexer();
+    // -2- 通知merge线程可以把mem1持久化了
+    pthread_cond_signal(&m_mem_dump_cond);
+    pthread_mutex_unlock(&m_mutex);
+    // -3- 返回一个新的mem
+    return dynamic_cast<mem_indexer*>(m_index_list[MEM0]);
+}
+
+
+void index_group :: _swap_mem_indexer()
+{
     // 设置为只读状态
+    // TODO如果你这时候设置的话，可能会导致update线程中正在使用的MEM0变成只读的了。
+    pthread_rwlock_wrlock(&m_list_rwlock);
     m_index_list[MEM1] = m_index_list[MEM0];
     m_index_list[MEM1]->set_readonly();
     m_index_list[MEM0] = new mem_indexer(m_cell_size, m_bucket_size, m_headlist_size,
             m_blocknum_list, m_blocknum_list_size);
     pthread_rwlock_unlock(&m_list_rwlock);
-    // -2- 通知merge线程可以把mem1持久化了
-    pthread_cond_signal(&m_mem_dump_cond);
-    // -3- 返回一个新的mem
-    return dynamic_cast<mem_indexer*>(m_index_list[MEM0]);
 }
 
 uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
@@ -207,10 +216,41 @@ bool index_group :: need_to_dump_day2()
 void index_group :: update_day_indexer()
 {
     pthread_mutex_lock(&m_mutex);
+    struct timespec timeout;           //定义时间点
+    timeout.tv_sec = time(NULL) + 10; //time(0) 代表的是当前时间 而tv_sec 是指的是秒
+    timeout.tv_nsec = 0;               //tv_nsec 代表的是纳秒时间
     // 等到m_index_list[1]不为NULL时，且这个dst_indexer(disk)为空闲时，执行合并过程
-    while(m_index_list[MEM1] == NULL)
+    int ret = 0;
+    PRINT("time[%u] ==++===================", time(NULL));
+    while(m_index_list[MEM1] == NULL && ret != ETIMEDOUT)
     {
-        pthread_cond_wait(&m_mem_dump_cond, &m_mutex);
+        ret = pthread_cond_timedwait(&m_mem_dump_cond, &m_mutex, &timeout);
+        PRINT("time[%u] ==--===================", time(NULL));
+    }
+
+    if (ret == ETIMEDOUT && m_index_list[MEM0]->empty())
+    {
+        // 既然MEM0是空的，那还merge个毛
+        PRINT("MEM0 is EMPTY!");
+        pthread_mutex_unlock(&m_mutex);
+        return;
+    }
+
+    if (ret == ETIMEDOUT)
+    {
+        // 表示过了时间间隔了，需要dump了
+        // 因为修改m_index_list[MEM1]的swap_mem_indexer已经被m_mutex保护
+        // m_index_list[MEM1] == NULL是恒成立的。
+        // 但是m_index_list[MEM0]->empty()这个条件却可能在m_mutex保护期间改变
+        // 因为更新线程可能时刻在向MEM0中插入数据
+        PRINT("ret[%d] erron[%d] ETIMEDOUT[%d] EINTR[%d] empty[%d] ------",
+                ret, errno, ETIMEDOUT, EINTR, m_index_list[MEM0]->empty());
+        _swap_mem_indexer();
+    }
+    else
+    {
+        PRINT("ret[%d] erron[%d] ETIMEDOUT[%d] EINTR[%d] empty[%d] ++++++",
+                ret, errno, ETIMEDOUT, EINTR, m_index_list[MEM0]->empty());
     }
     pthread_mutex_unlock(&m_mutex);
 
@@ -264,7 +304,11 @@ void index_group :: update_day_indexer()
         m_last_day_merge_timecost = etv.tv_sec - btv.tv_sec;
     }
     // 通知等待swap的update线程
-    pthread_cond_signal(&m_mem_dump_cond);
+    if (ret != ETIMEDOUT)
+    {
+        // 例行的dump后，不需要通知这个条件变量
+        pthread_cond_signal(&m_mem_dump_cond);
+    }
     pthread_rwlock_unlock(&m_list_rwlock);
     return;
 }
