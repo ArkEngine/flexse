@@ -221,17 +221,14 @@ void index_group :: update_day_indexer()
     timeout.tv_nsec = 0;               //tv_nsec 代表的是纳秒时间
     // 等到m_index_list[1]不为NULL时，且这个dst_indexer(disk)为空闲时，执行合并过程
     int ret = 0;
-    PRINT("time[%u] ==++===================", time(NULL));
     while(m_index_list[MEM1] == NULL && ret != ETIMEDOUT)
     {
         ret = pthread_cond_timedwait(&m_mem_dump_cond, &m_mutex, &timeout);
-        PRINT("time[%u] ==--===================", time(NULL));
     }
 
     if (ret == ETIMEDOUT && m_index_list[MEM0]->empty())
     {
         // 既然MEM0是空的，那还merge个毛
-        PRINT("MEM0 is EMPTY!");
         pthread_mutex_unlock(&m_mutex);
         return;
     }
@@ -387,6 +384,8 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
 
 int32_t index_group :: set_posting_list(const uint32_t id, const vector<term_info_t>& termlist)
 {
+    pthread_mutex_lock(&m_mutex);
+
     mem_indexer* pindexer = get_cur_mem_indexer();
 
     bool have_swap = false;
@@ -418,6 +417,7 @@ int32_t index_group :: set_posting_list(const uint32_t id, const vector<term_inf
         pindexer = swap_mem_indexer();
         ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED. ID[%u]", id);
     }
+    pthread_mutex_unlock(&m_mutex);
 
     return 0;
 }
