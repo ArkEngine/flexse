@@ -70,6 +70,8 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
 
     m_dump_hour_min = 1;
     m_dump_hour_max = 5;
+    m_day2dump_day  = 0;
+    m_daydump_interval = 3600;
 }
 
 index_group :: ~index_group()
@@ -204,7 +206,8 @@ bool index_group :: need_to_dump_day2()
         return true;
     }
 
-    if (get_cur_hour() >= m_dump_hour_min && get_cur_hour() <= m_dump_hour_max)
+    // 如果今天已经低峰期dump，就别再dump了
+    if (get_cur_hour() >= m_dump_hour_min && get_cur_hour() <= m_dump_hour_max && get_cur_day() != m_day2dump_day)
     {
         // 低峰时刻，开始dump
         return true;
@@ -217,7 +220,7 @@ void index_group :: update_day_indexer()
 {
     pthread_mutex_lock(&m_mutex);
     struct timespec timeout;           //定义时间点
-    timeout.tv_sec = time(NULL) + 10; //time(0) 代表的是当前时间 而tv_sec 是指的是秒
+    timeout.tv_sec = time(NULL) + m_daydump_interval; //time(0) 代表的是当前时间 而tv_sec 是指的是秒
     timeout.tv_nsec = 0;               //tv_nsec 代表的是纳秒时间
     // 等到m_index_list[1]不为NULL时，且这个dst_indexer(disk)为空闲时，执行合并过程
     int ret = 0;
@@ -261,7 +264,8 @@ void index_group :: update_day_indexer()
     disk_indexer* pdst_indexer = NULL;
     if (dumpToday2)
     {
-        m_can_dump_day2   = false;
+        m_can_dump_day2  = false;
+        m_day2dump_day   = get_cur_day();
         pdst_indexer = dynamic_cast<disk_indexer*>(m_day[2]);
     }
     else
@@ -272,7 +276,8 @@ void index_group :: update_day_indexer()
     // -2- 执行合并
     struct   timeval btv;
     struct   timeval etv;
-    PRINT ("DayMerger BEGIN DUMP2DAY2[%u] DAY2CANWRITE[%u].", dumpToday2, m_can_dump_day2);
+    PRINT ("DayMerger BEGIN DUMP2DAY2[%u] DAY2CANWRITE[%u] DAY[%u]",
+            dumpToday2, m_can_dump_day2, m_day2dump_day);
     gettimeofday(&btv, NULL);
     uint32_t id_count_merged = merger(m_index_list[MEM1], psrc_indexer, pdst_indexer);
     gettimeofday(&etv, NULL);
@@ -457,4 +462,38 @@ uint32_t index_group :: get_cur_hour()
     time(&now);
     localtime_r(&now, &mytm);
     return mytm.tm_hour;
+}
+
+uint32_t index_group :: get_cur_day()
+{
+    time_t now;
+    struct tm mytm;
+
+    time(&now);
+    localtime_r(&now, &mytm);
+    return 10000*mytm.tm_year + 100*mytm.tm_mon + mytm.tm_mday;
+}
+
+int index_group :: set_dump2day2_timezone(const uint32_t min_hour, const uint32_t max_hour)
+{
+    if (min_hour > 23 || max_hour > 23 || min_hour > max_hour)
+    {
+        return -1;
+    }
+    m_dump_hour_min = min_hour;
+    m_dump_hour_max = max_hour;
+
+    return 0;
+}
+
+int index_group :: set_dump2day_interval(const uint32_t interval_seconds)
+{
+    if (interval_seconds < 60 || interval_seconds > 43200)
+    {
+        return -1;
+    }
+
+    m_daydump_interval = interval_seconds;
+
+    return 0;
 }

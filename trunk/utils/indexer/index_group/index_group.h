@@ -42,6 +42,8 @@ class index_group
         bool     m_his_merge_ready;
         bool     m_can_dump_day2;
         uint32_t m_dump_hour_min;
+        uint32_t m_day2dump_day;  // 上一次dump到day2的日子
+        uint32_t m_daydump_interval;  // daydump的时间间隔
         uint32_t m_dump_hour_max;
         uint32_t m_last_day_merge_timecost;
 
@@ -56,6 +58,7 @@ class index_group
         uint32_t get_cur_no(const char* dir, const char* file);
         uint32_t merger(base_indexer* src1_indexer, base_indexer* src2_indexer, disk_indexer* dest_indexer);
         uint32_t get_cur_hour();
+        uint32_t get_cur_day();
         bool     need_to_dump_day2();
 
         index_group (const index_group&);
@@ -83,6 +86,14 @@ class index_group
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
         int32_t set_posting_list(const uint32_t id, const vector<term_info_t>& termlist);
+
+        // 设置dump到day2的时间段，min, max 在0-23之间，且min <= max，只会在这个时间段dump一次
+        // 这也是每天例行启动his索引合并的设置时间段
+        // 默认是凌晨1点到凌晨5点
+        int set_dump2day2_timezone(const uint32_t min_hour, const uint32_t max_hour);
+        // 设置间隔dump到day的时间间隔，默认是1小时, 3600s，最小不少于60，最多不多于43200(半天)
+        // 单位是秒，到达这个时间间隔时，就启动dump，dump的磁盘索引，可能是day0,day1,day2
+        int set_dump2day_interval(const uint32_t interval_seconds);
 };
 
 #endif
