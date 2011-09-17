@@ -6,6 +6,7 @@
 #include "config.h"
 #include "mylog.h"
 #include "xhead.h"
+#include "sender.h"
 #include "service_app.h"
 #include <signal.h>
 
@@ -52,6 +53,7 @@ int ServiceApp(thread_data_t* ptd) try
 
     ptd->SendHead->reserved = RET_OK;
     ptd->SendHead->detail_len = 0;
+    ptd->SendHead->status = OK;
 
     if (ptd->RecvHead->detail_len == 0)
     {
@@ -67,6 +69,7 @@ int ServiceApp(thread_data_t* ptd) try
         ALARM("ip invalid. log_id[%u] host[%s] cltname[%s]",
                 ptd->RecvHead->log_id, ptd->cltip,
                 ptd->RecvHead->srvname);
+        ptd->SendHead->status = ERROR;
         ptd->SendHead->reserved = RET_IP_INVALID;
         return 0;
     }
@@ -78,6 +81,7 @@ int ServiceApp(thread_data_t* ptd) try
         ALARM("jsonstr format error. log_id[%u] host[%s] cltname[%s] jsonstr[%s]",
                 ptd->RecvHead->log_id, ptd->cltip,
                 ptd->RecvHead->srvname, srcstr);
+        ptd->SendHead->status = ERROR;
         ptd->SendHead->reserved = RET_JSON_FORMAT_INVALID;
         return 0;
     }
@@ -87,17 +91,19 @@ int ServiceApp(thread_data_t* ptd) try
         filelinkblock* pflb = myConfig->GetQueue();
         if (0 != pflb->write_message(ptd->SendHead->log_id, srcstr, ptd->RecvHead->detail_len))
         {
+            ptd->SendHead->status = ERROR;
             ptd->SendHead->reserved = RET_WRITE_MQUEUE_FAIL;
         }
     }
     else
     {
+        ptd->SendHead->status = ERROR;
         ptd->SendHead->reserved = RET_PROTOCOL_ERROR;
     }
 
-    gettimeofday(&tv2, NULL );
-    ROUTN( "log_id[%u] err[%d] cltname[%s] cltip[%s] timecost[%u] string[%s]",
-            ptd->RecvHead->log_id, ptd->SendHead->reserved,
+    gettimeofday(&tv2, NULL);
+    ROUTN( "log_id[%u] status[%u] err[%d] cltname[%s] cltip[%s] timecost[%u] string[%s]",
+            ptd->RecvHead->log_id, ptd->SendHead->status, ptd->SendHead->reserved,
             ptd->RecvHead->srvname, ptd->cltip,
             TIME_US_COST(tv1, tv2), srcstr);
 

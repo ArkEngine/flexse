@@ -14,6 +14,7 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/myutils/include/ \
 	  -I ../../utils/equeue/include/ \
 	  -I ../../opensrc/jsoncpp/include/ \
+	  -I ../sender/ \
 
 LDFLAGS= -L ../../opensrc/jsoncpp/lib/     -ljson \
 		 -L ../../utils/filelinkblock/lib/ -lfilelinkblock \
