@@ -9,6 +9,7 @@ enum
 {
     OK = 0,
     ROLL_BACK = 1,
+    ERROR     = 2,
 };
 
 struct sender_config_t
