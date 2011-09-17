@@ -5,16 +5,21 @@
 /*
  * Name : xHead
  * Feature:
- * (1) ¿¿¿¿¿¿¿
- * (2) ¿¿¿¿¿¿¿/¿¿¿log_id/¿¿buffer
  */
 typedef struct _xhead_t
 {
-	uint32_t log_id;       // ¿¿¿¿¿ log_id
-	char     srvname[16];  // ¿¿¿¿¿¿
-	uint32_t version;      // ¿¿¿¿
-	uint32_t reserved;     // ¿¿¿¿
-	uint32_t detail_len;   // xhead_t ¿¿¿buffer¿¿
+    uint32_t log_id;       
+    char     srvname[16];  
+    union{
+        uint32_t version;      // æ¥å£ç‰ˆæœ¬
+        uint32_t file_no;      // æ¶ˆæ¯é˜Ÿåˆ—è¿›åº¦ä¸­çš„å½“å‰æ–‡ä»¶å·
+    };
+    union{
+        uint32_t reserved;     // ä¿ç•™ä½
+        uint32_t block_id;     // æ¶ˆæ¯é˜Ÿåˆ—è¿›åº¦ä¸­çš„å—å·
+    };
+    uint32_t status;       // çŠ¶æ€ä½
+    uint32_t detail_len;   // xhead_tåé¢çš„å˜é•¿æ•°æ®
 }xhead_t;
 
 // [xhead_t]+[buffer]

@@ -28,6 +28,7 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../utils/indexer/base_indexer/include/ \
 	  -I ../utils/indexer/disk_indexer/include/ \
 	  -I ../utils/indexer/mem_indexer/include/ \
+	  -I ../ciqueue/sender/ \
 	  -I ../opensrc/jsoncpp/include/ \
 	  -I ../plugin/flexse/include/ \
 

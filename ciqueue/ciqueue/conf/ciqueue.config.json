@@ -1,15 +1,14 @@
 {
     "LOG":
     {
-        "LogLevel" : 1,           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
-        "LogName"  : "ciqueue"    // extend to "./log/%s.log" default = "PROJNAME"
+        "LogLevel" : 1           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
     },
     "CI_SERVER":
     {
         "EpollSize"        : 128,     // default as 128
         "SendTimeOut_MS"   : 1000,    // default as 1000
         "RecvTimeOut_MS"   : 1000,    // default as 1000
-        "CiPort"           : 1984,    // default as 1983
+        "CiPort"           : 2011,    // default as 1983
         "ServiceThreadNum" : 10,      // default as 20
         "ThreadBufferSize" : 10485760,// default as 10M
         "NeedIpControl"    : 1        // default as 0, 不需要IP控制, 如果需要IP控制，则在./conf/ip_list中注明允许提交的IP

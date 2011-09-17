@@ -24,10 +24,18 @@ class index_group
 
         static const char* const STR_INDEX_NAME;
         static const char* const STR_INDEX_CUR_NO_FILE;
+        static const char* const STR_CHECK_POINT_FILE;
         static const char* const STR_DAY_INDEX_DIR;
         static const char* const STR_HIS_INDEX_DIR;
         static const char* const STR_FMT_DAY_INDEX_PATH;
         static const char* const STR_FMT_HIS_INDEX_PATH;
+
+        // 消息队列的进度
+        uint32_t m_file_no;
+        uint32_t m_block_id;
+        uint32_t m_dump_file_no;
+        uint32_t m_dump_block_id;
+        char m_check_point_file[128];
 
         uint32_t m_cell_size;
         uint32_t m_bucket_size;
@@ -38,7 +46,7 @@ class index_group
         base_indexer* m_mem[2];
         base_indexer* m_day[3]; // 0/1用于当mem满了时切换，2专门用于与his合并
         base_indexer* m_his[2];
-        
+
         bool     m_his_merge_ready;
         bool     m_can_dump_day2;
         uint32_t m_dump_hour_min;
@@ -70,6 +78,7 @@ class index_group
         // -3- 启动持久化过程(直接dump或merge)
         mem_indexer* swap_mem_indexer();
         mem_indexer*  get_cur_mem_indexer();
+        void set_check_point(const uint32_t last_file_no, const uint32_t last_block_id);
     public:
         index_group(const uint32_t cell_size, const uint32_t bucket_size,
                 const uint32_t headlist_size, const uint32_t* blocknum_list, const uint32_t blocknum_list_size);
@@ -85,7 +94,7 @@ class index_group
         void update_his_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
-        int32_t set_posting_list(const uint32_t id, const vector<term_info_t>& termlist);
+        int32_t set_posting_list(const uint32_t file_no, const uint32_t block_id, const vector<term_info_t>& termlist);
 
         // 设置dump到day2的时间段，min, max 在0-23之间，且min <= max，只会在这个时间段dump一次
         // 这也是每天例行启动his索引合并的设置时间段
@@ -94,6 +103,8 @@ class index_group
         // 设置间隔dump到day的时间间隔，默认是1小时, 3600s，最小不少于60，最多不多于43200(半天)
         // 单位是秒，到达这个时间间隔时，就启动dump，dump的磁盘索引，可能是day0,day1,day2
         int set_dump2day_interval(const uint32_t interval_seconds);
+        // 消息队列进度点
+        void get_check_point(uint32_t& last_file_no, uint32_t& last_block_id);
 };
 
 #endif

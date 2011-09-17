@@ -49,13 +49,13 @@ class ciclient:
                 return True
 
     def commit(self, log_id, queue_name, operation, dict4commit):
-        FMT_XHEAD = "I16sIII"
+        FMT_XHEAD = "I16sIIII"
         dd = {}
         dd['__QUEUE_NAME__']      = queue_name
         dd['__OPERATION__']       = operation
         dd['__OPERATION_BODY__']  = dict4commit
         jsonstr = json.dumps(dd)
-        sbuf = struct.pack(FMT_XHEAD, log_id, "pyclient", 0, 0, len(jsonstr))
+        sbuf = struct.pack(FMT_XHEAD, log_id, "pyclient", 0, 0, 0, len(jsonstr))
         sbuf += jsonstr
         if self._check_connect():
             try:
@@ -63,10 +63,10 @@ class ciclient:
             except socket.error, arg:
                 print "error message [%s]" % (arg, )
                 return False
-            rbuf = self.sock.recv(32)
-            log_id, srvname, version, reserved, detail_len = struct.unpack(FMT_XHEAD, rbuf)
-            print "logid[%u] srvname[%s] version[%u] reserved[%u] detail_len[%u]" % (log_id, \
-                    srvname, version, reserved, detail_len)
+            rbuf = self.sock.recv(36)
+            log_id, srvname, version, reserved, status, detail_len = struct.unpack(FMT_XHEAD, rbuf)
+            print "logid[%u] srvname[%s] version[%u] reserved[%u] status[%u] detail_len[%u]" % (log_id, \
+                    srvname, version, reserved, status, detail_len)
             return reserved == 0
         else:
             return False

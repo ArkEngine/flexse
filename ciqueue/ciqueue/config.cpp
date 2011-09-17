@@ -36,7 +36,6 @@ Config::Config(const char* configpath)
     m_queue_name = "mqueue";
     m_log_level = mylog :: ROUTN;
     m_log_name  = PROJNAME;
-    SETLOG(m_log_level, m_log_name);
 
     m_pollsize           = 128;
     m_wtimeout_ms        = 1000;
@@ -65,8 +64,8 @@ Config::Config(const char* configpath)
     if (! logConfig.isNull()) {
         m_log_level = logConfig[m_StrLogLevel].isNull() ? m_log_level : logConfig[m_StrLogLevel].asInt();
         m_log_name  = logConfig[m_StrLogName].isNull()  ? m_log_name  : logConfig[m_StrLogName].asCString();
-        SETLOG(m_log_level, m_log_name);
     }
+    SETLOG(m_log_level, m_log_name);
 
     Json::Value qSrvConfig = root["CI_SERVER"];
     if (! qSrvConfig.isNull()) {
