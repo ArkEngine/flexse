@@ -32,6 +32,7 @@ void PrintHelp(void)
 	printf("    -c:  #conf path\n");
 	printf("    -v:  #version\n");
 	printf("    -h:  #This page\n");
+	printf("sizeof(xhead_t) = %u\n", sizeof(xhead_t));
 	printf("\n\n");
 }
 

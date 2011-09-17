@@ -111,7 +111,6 @@ void* send_message(void* arg)
 			continue;
 		}
 
-
 		while(1)
 		{
 			if (sock == -1)
@@ -151,18 +150,7 @@ void* send_message(void* arg)
             }
             else
             {
-                if (rxhead.reserved != 0)
-                {
-                    // 对方返回错误
-                    ALARM("remote server error log_id[%u] errno[%u] file_no[%u] block_id[%u] "
-                            "channel[%s] event[%s] msglen[%u] e[%m]",
-                            log_id, rxhead.reserved, file_no, block_id,
-                            psender_config->channel, event_string, message_len);
-                    close(sock);
-                    sock = -1;
-                    continue;
-                }
-                else
+                if (rxhead.status == OK)
                 {
                     // 成功了，保存进度
                     myflb.save_offset();
@@ -175,6 +163,22 @@ void* send_message(void* arg)
                         sock = -1;
                     }
                     break;
+                }
+                else if (rxhead.status == ROLL_BACK)
+                {
+                    // 对方要求回滚
+                    myflb.seek_message(rxhead.file_no, rxhead.block_id);
+                    ROUTN("channel[%s] roll back to file_no[%u] block_id[%u]",
+                            psender_config->channel, rxhead.file_no, rxhead.block_id);
+                    break;
+                }
+                else
+                {
+                    ALARM("remote server error log_id[%u] status[%u] errno[%u] file_no[%u] block_id[%u] "
+                            "channel[%s] event[%s] msglen[%u] e[%m]",
+                            log_id, rxhead.status, rxhead.reserved, file_no, block_id,
+                            psender_config->channel, event_string, message_len);
+                    continue;
                 }
             }
         }

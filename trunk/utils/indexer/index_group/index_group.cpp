@@ -13,6 +13,7 @@
 
 const char* const index_group :: STR_INDEX_NAME = "index";
 const char* const index_group :: STR_INDEX_CUR_NO_FILE = "cur";
+const char* const index_group :: STR_CHECK_POINT_FILE = "./data/index/check_point";
 const char* const index_group :: STR_DAY_INDEX_DIR = "./data/index/day/";
 const char* const index_group :: STR_HIS_INDEX_DIR = "./data/index/his/";
 const char* const index_group :: STR_FMT_DAY_INDEX_PATH = "./data/index/day/%u/";
@@ -72,6 +73,13 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
     m_dump_hour_max = 5;
     m_day2dump_day  = 0;
     m_daydump_interval = 3600;
+    
+    // 读取上次的消息队列进度 TODO
+    snprintf(m_check_point_file, sizeof(m_check_point_file), "%s", STR_CHECK_POINT_FILE);
+    get_check_point(m_file_no, m_block_id);
+    // 例行的初始化，实际上每次dump前，这都会被重新设置
+    m_dump_file_no  = m_file_no;
+    m_dump_block_id = m_block_id;
 }
 
 index_group :: ~index_group()
@@ -93,6 +101,8 @@ mem_indexer* index_group :: swap_mem_indexer()
 
     // -1- 调换位置
     _swap_mem_indexer();
+    m_dump_file_no  = m_file_no;
+    m_dump_block_id = m_block_id;
     // -2- 通知merge线程可以把mem1持久化了
     pthread_cond_signal(&m_mem_dump_cond);
     pthread_mutex_unlock(&m_mutex);
@@ -165,7 +175,6 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while (!src1_indexer->is_end())
     {
         int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
-//        ROUTN("num1[%u] key1[%llu]", num1, key1.sign64);
         if (num1 > 0)
         {
             dest_indexer->set_posting_list(id, key1, src1_list, num1*m_cell_size);
@@ -176,7 +185,6 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     while (!src2_indexer->is_end())
     {
         int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
-//        ROUTN("num2[%u] key2[%llu]", num2, key2.sign64);
         if (num2 > 0)
         {
             dest_indexer->set_posting_list(id, key2, src2_list, num2*m_cell_size);
@@ -288,6 +296,9 @@ void index_group :: update_day_indexer()
     uint32_t cur = (pdst_indexer == m_day[0]) ? 0 : 1;
     set_cur_no(STR_DAY_INDEX_DIR, STR_INDEX_CUR_NO_FILE, cur);
 
+    // -4- 设置持久化的check_point
+    set_check_point(m_dump_file_no, m_dump_block_id);
+
     pthread_rwlock_wrlock(&m_list_rwlock);
     delete m_index_list[MEM1];
     m_index_list[MEM1] = NULL;
@@ -387,8 +398,14 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
     return lstnum;
 }
 
-int32_t index_group :: set_posting_list(const uint32_t id, const vector<term_info_t>& termlist)
+int32_t index_group :: set_posting_list(const uint32_t file_no, const uint32_t block_id,
+        const vector<term_info_t>& termlist)
 {
+    if (0 == termlist.size())
+    {
+        return 0;
+    }
+    const uint32_t id = termlist[0].id; 
     pthread_mutex_lock(&m_mutex);
 
     mem_indexer* pindexer = get_cur_mem_indexer();
@@ -422,6 +439,8 @@ int32_t index_group :: set_posting_list(const uint32_t id, const vector<term_inf
         pindexer = swap_mem_indexer();
         ROUTN( "SET POSTING LIST NEARLY_FULL. SWAPED. ID[%u]", id);
     }
+    m_file_no  = file_no;
+    m_block_id = block_id;
     pthread_mutex_unlock(&m_mutex);
 
     return 0;
@@ -496,4 +515,32 @@ int index_group :: set_dump2day_interval(const uint32_t interval_seconds)
     m_daydump_interval = interval_seconds;
 
     return 0;
+}
+
+void index_group :: get_check_point(uint32_t& file_no, uint32_t& block_id)
+{
+    MySuicideAssert (0 < strlen(m_check_point_file));
+    FILE* fp = fopen(m_check_point_file, "r");
+    MySuicideAssert (fp != NULL);
+    char rbuff[128];
+    fgets(rbuff, sizeof(rbuff), fp);
+    MySuicideAssert (1 == sscanf (rbuff, "file_no  : %u", &file_no));
+    fgets(rbuff, sizeof(rbuff), fp);
+    MySuicideAssert (1 == sscanf (rbuff, "block_id : %u", &block_id));
+    DEBUG("file_no[%u] block_id[%u]", file_no, block_id);
+    fclose(fp);
+}
+
+void index_group :: set_check_point(const uint32_t file_no, const uint32_t block_id)
+{
+    MySuicideAssert (0 < strlen(m_check_point_file));
+    int wfd = open(m_check_point_file, O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    MySuicideAssert(wfd > 0);
+    char wbuff[1024];
+    int wlen = snprintf(wbuff, sizeof(wbuff),
+            "file_no  : %u\nblock_id : %u\n", file_no, block_id);
+    MySuicideAssert(wlen == write(wfd, wbuff, wlen));
+    MySuicideAssert( 0 == ftruncate(wfd, wlen));
+    close(wfd);
+    return;
 }

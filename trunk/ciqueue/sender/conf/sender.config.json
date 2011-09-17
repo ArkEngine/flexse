@@ -1,28 +1,25 @@
 {
-	"LogLevel" : 0,
+	"LogLevel" : 1,
 	"LogPath"  : "sender",
 
-	"qpath" : "video",
-	"qfile" : "video",
+	"qpath" : "mqueue",
+	"qfile" : "mqueue",
 	"followers":
 	[
 		{
-			"name"         : "demo",
+			"name"         : "test",
 			"host"         : "127.0.0.1",
 			"port"         : 12345,
 			"long_connect" : 1,
 			"send_toms"    : 1000,
 			"recv_toms"    : 1000,
 			"conn_toms"    : 100,
+			"enable"       : 1,
 			"events"       :
 			[
 				{
-					"name"      : "video",
-					"operation" : "delete"
-				},
-				{
-					"name"      : "video",
-					"operation" : "add"
+					"name"      : "test",
+					"operation" : "test"
 				}
 			]
 		}

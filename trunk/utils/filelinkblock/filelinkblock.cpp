@@ -37,9 +37,10 @@ filelinkblock::filelinkblock(const char* path, const char* name, bool readonly)
 
     DEBUG ("path[%s] name[%s]", path, name);
     pthread_mutex_init(&m_mutex, NULL);
-    m_flb_w_fd      = -1;
-    m_last_file_no  =  0;
-    m_block_id      =  0;
+    m_flb_w_fd       = -1;
+    m_flb_r_fd       = -1;
+    m_last_file_no   =  0;
+    m_block_id       =  1;
     m_channel_name[0] =  0;
     m_read_file_name[0] =  0;
 
@@ -69,7 +70,7 @@ int filelinkblock:: newfile (const char* strfile)
     m_flb_w_fd = open(strfile, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     DEBUG ("fd[%d] file[%s]", m_flb_w_fd, strfile);
     MySuicideAssert(m_flb_w_fd != -1);
-    m_block_id = 0;
+    m_block_id = 1;
     return m_flb_w_fd;
 }
 
@@ -324,7 +325,10 @@ int filelinkblock::seek_message(const uint32_t file_no, const uint32_t block_id)
         return seek_message(file_no, 0, block_id);
     }
     snprintf(m_read_file_name, sizeof(m_read_file_name), "%s/%s.%u", m_flb_path, m_flb_name, file_no);
-    m_flb_r_fd = open(m_read_file_name, O_RDONLY);
+    if (m_flb_r_fd <= 0)
+    {
+        m_flb_r_fd = open(m_read_file_name, O_RDONLY);
+    }
     MySuicideAssert(m_flb_r_fd > 0);
     MySuicideAssert(0 == lseek(m_flb_r_fd, 0, SEEK_SET));
     struct file_link_block_head myhead;
@@ -341,7 +345,7 @@ int filelinkblock::seek_message(const uint32_t file_no, const uint32_t block_id)
         MySuicideAssert (-1 != lseek(m_flb_r_fd, stepsize, SEEK_CUR));
         m_flb_read_offset   = lseek(m_flb_r_fd, 0, SEEK_CUR);
         // 校验block_id即可，就不用计算check_num了
-        if (block_id - 1 == myhead.block_id)
+        if (block_id == myhead.block_id)
         {
             m_flb_read_block_id = block_id;
             m_flb_read_file_no  = file_no;
@@ -420,10 +424,10 @@ int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
             block_id          = myhead.block_id;
 			file_no           = m_flb_read_file_no;
             // 校验block_id即可，就不用计算check_num了
-            MySuicideAssert(m_flb_read_block_id == myhead.block_id);
-            DEBUG("get new data! name[%s] size [%u] block_id[%u] try[%u]",
-                    m_read_file_name, myhead.block_size, myhead.block_id, try_count); 
+            DEBUG("get new data! name[%s] size [%u] m_flb_read_block_id[%u] head.block_id[%u] try[%u]",
+                    m_read_file_name, myhead.block_size, m_flb_read_block_id, myhead.block_id, try_count); 
             m_flb_read_block_id ++;
+            MySuicideAssert(m_flb_read_block_id == myhead.block_id);
             read_size = myhead.block_size;
             break;
         }

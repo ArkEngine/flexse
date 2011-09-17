@@ -31,6 +31,7 @@ $(MAIN): $(OBJ)
 	rm -rf bin/ log/
 	mkdir log bin
 	cp $(MAIN) ../ciqueue/bin/ -f
+	cp $(MAIN) ./bin/ -f
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@

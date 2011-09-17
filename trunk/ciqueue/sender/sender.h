@@ -5,6 +5,12 @@ using namespace std;
 
 #define FORMAT_QUEUE_OP "%s # %s"
 
+enum
+{
+    OK = 0,
+    ROLL_BACK = 1,
+};
+
 struct sender_config_t
 {
 	uint32_t sender_id;
