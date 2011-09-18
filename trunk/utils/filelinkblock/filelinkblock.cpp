@@ -67,6 +67,11 @@ filelinkblock::~filelinkblock()
 int filelinkblock:: newfile (const char* strfile)
 {
     mode_t amode = (0 == access(strfile, F_OK)) ? O_WRONLY|O_APPEND|O_TRUNC : O_WRONLY|O_CREAT|O_APPEND|O_TRUNC;
+    if(m_flb_w_fd > 0)
+    {
+        close(m_flb_w_fd);
+        m_flb_w_fd = -1;
+    }
     m_flb_w_fd = open(strfile, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     DEBUG ("fd[%d] file[%s]", m_flb_w_fd, strfile);
     MySuicideAssert(m_flb_w_fd != -1);
@@ -259,8 +264,6 @@ int filelinkblock::__write_message(const uint32_t log_id, const char* buff, cons
     if (cur_offset + wlen > FILE_MAX_SIZE)
     {
         ROUTN("Need a New File. cur_file_no[%d] cur_offset[%d] wlen[%d]", m_last_file_no, cur_offset, wlen);
-        close(m_flb_w_fd);
-        m_flb_w_fd = -1;
 
         char last_file_name[128];
         m_last_file_no++;
@@ -307,6 +310,10 @@ int filelinkblock::write_message(const uint32_t log_id, const char* buff, const 
 int filelinkblock::seek_message(const uint32_t file_no, const uint32_t file_offset, const uint32_t block_id)
 {
     snprintf(m_read_file_name, sizeof(m_read_file_name), "%s/%s.%u", m_flb_path, m_flb_name, file_no);
+    if (m_flb_r_fd > 0)
+    {
+        close(m_flb_r_fd);
+    }
     m_flb_r_fd = open(m_read_file_name, O_RDONLY);
     MySuicideAssert(m_flb_r_fd > 0);
     MySuicideAssert(file_offset == (uint32_t)lseek(m_flb_r_fd, file_offset, SEEK_SET));
@@ -325,10 +332,11 @@ int filelinkblock::seek_message(const uint32_t file_no, const uint32_t block_id)
         return seek_message(file_no, 0, block_id);
     }
     snprintf(m_read_file_name, sizeof(m_read_file_name), "%s/%s.%u", m_flb_path, m_flb_name, file_no);
-    if (m_flb_r_fd <= 0)
+    if (m_flb_r_fd > 0)
     {
-        m_flb_r_fd = open(m_read_file_name, O_RDONLY);
+        close(m_flb_r_fd);
     }
+    m_flb_r_fd = open(m_read_file_name, O_RDONLY);
     MySuicideAssert(m_flb_r_fd > 0);
     MySuicideAssert(0 == lseek(m_flb_r_fd, 0, SEEK_SET));
     struct file_link_block_head myhead;

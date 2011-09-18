@@ -69,14 +69,15 @@ void* update_thread(void* args)
                         myConfig->UpdateSocketTimeOutMS())))
         {
             // 判断是否需要重放数据
-            // 如果 file_no == 0 && block_id == 0 可以认为是从头开始，这个特殊case要放过
-            // 如果仅仅 block_id == 0，则表示从头开始了。
+            // 如果 file_no == 0 && block_id == 1 可以认为是整个消息从头开始，这个特殊case要放过
+            // 如果仅仅 block_id == 1，则表示一个新文件从头开始了。
             if (  (recv_head->block_id == 1 && recv_head->file_no != 0 && (last_file_no+1) != recv_head->file_no)
-                || (recv_head->block_id != 1 && recv_head->file_no != 0 && last_file_no != recv_head->file_no && (last_block_id+1) != recv_head->block_id))
+                ||(recv_head->block_id != 1 && recv_head->file_no != 0 && last_file_no != recv_head->file_no && (last_block_id+1) != recv_head->block_id))
             {
                 send_head.status   = ROLL_BACK;
                 send_head.file_no  = last_file_no; // 告诉消息队列成功接受的节点，让其发送下一个
                 send_head.block_id = last_block_id;
+                ROUTN("PLEASE ROLL BACK TO NEXT BY FILE_NO[%u] BLOCK_ID[%u]", last_file_no, last_block_id);
                 if(0 != xsend(clientfd, &send_head, myConfig->UpdateSocketTimeOutMS()))
                 {
                     ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
