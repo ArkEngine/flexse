@@ -135,17 +135,21 @@ void* send_message(void* arg)
                         psender_config->channel, event_string, message_len);
                 close(sock);
                 sock = -1;
+                // 防止日志打太多
+                sleep(1);
                 continue;
             }
             if (0 != xrecv(sock, &rxhead, sizeof(xhead_t), psender_config->recv_toms))
             {
                 // 对方没返回，应该重试
-				ALARM("xrecv error log_id[%u] file_no[%u] block_id[%u] "
+                ALARM("xrecv error log_id[%u] file_no[%u] block_id[%u] "
                         "channel[%s] event[%s] msglen[%u] e[%m]",
-						log_id, file_no, block_id,
+                        log_id, file_no, block_id,
                         psender_config->channel, event_string, message_len);
                 close(sock);
                 sock = -1;
+                // 防止日志打太多
+                sleep(1);
                 continue;
             }
             else
@@ -178,6 +182,8 @@ void* send_message(void* arg)
                             "channel[%s] event[%s] msglen[%u] e[%m]",
                             log_id, rxhead.status, rxhead.reserved, file_no, block_id,
                             psender_config->channel, event_string, message_len);
+                    // 防止日志打太多
+                    sleep(1);
                     continue;
                 }
             }
