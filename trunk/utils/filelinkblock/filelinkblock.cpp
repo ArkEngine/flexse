@@ -201,6 +201,7 @@ void filelinkblock:: check_and_repaire()
         close(flb_r_fd);
         free (tmpbuf);
     }
+    seek_message(max_file_no, 0, 0);
     return;
 }
 int filelinkblock::detect_file( )
