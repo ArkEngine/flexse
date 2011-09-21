@@ -62,7 +62,7 @@ void* send_message(void* arg)
 	char channel[128];
 	snprintf(channel, sizeof(channel), "%s.offset", psender_config->channel);
 	myflb.set_channel(channel);
-	myflb.seek_message();
+//	myflb.seek_message();
 	const uint32_t READ_BUFF_SIZE = 10*1024*1024;
 	xhead_t* sxhead = (xhead_t*) malloc(READ_BUFF_SIZE + sizeof(xhead_t));
 	char*    msgbuf = (char*)    malloc(READ_BUFF_SIZE);
