@@ -72,9 +72,16 @@ void* update_thread(void* args)
             // 判断是否需要重放数据
             // 如果 file_no == 0 && block_id == 1 可以认为是整个消息从头开始，这个特殊case要放过
             // 如果仅仅 block_id == 1，则表示一个新文件从头开始了。
-            if (  (recv_head->block_id == 1 && recv_head->file_no != 0 && (last_file_no+1) != recv_head->file_no)
-                ||(recv_head->block_id != 1 && (last_block_id+1) != recv_head->block_id))
+            // 几个特殊的case
+            // 消息队列的第一个数据包 file_no = 0, block_id = 1 直接更新
+            // 消息队列的文件的第一个数据包 file_no > 0, block_id = 1 那么file_no要比现在的大
+            // 消息队列中的一般数据包 block_id > 1 file_no > 0 file_no 相等，block_id要大
+            if ((last_file_no > recv_head->file_no)
+                    || (last_file_no == recv_head->file_no && last_block_id >= recv_head->block_id))
             {
+                // 数据回滚时的几个特殊case
+                // file_no = 0, block_id = 0，表示从消息的第一个消息开始放数据
+                // file_no > 0, block_id > 0, 表示要file_no && block_id更大的消息，这可能触发消息队列切换文件的
                 send_head.status   = ROLL_BACK;
                 send_head.file_no  = last_file_no; // 告诉消息队列成功接受的节点，让其发送下一个
                 send_head.block_id = last_block_id;
