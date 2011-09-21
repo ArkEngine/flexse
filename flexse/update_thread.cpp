@@ -190,42 +190,47 @@ int add(const uint32_t file_no, const uint32_t block_id,
         return -1;
     }
 
-    // 为doc_id分配内部id
-    // 检查一下以前有没有内部id，如果有的话，则把mod_bitmap置位
     uint32_t* puint_attr = pflexse_plugin->mysecore->m_docattr_bitlist->puint;
     uint32_t  cell_size  = pflexse_plugin->mysecore->m_docattr_bitlist->m_cellsize;
-    void* tmp_attr = &(puint_attr[0]);
-    uint32_t tmpid = pflexse_plugin->mysecore->m_idmap->getInnerID(doc_id);
-    if (tmpid > 0)
+    uint32_t  tmpid      = pflexse_plugin->mysecore->m_idmap->getInnerID(doc_id);
+    uint32_t* src_attr   = (puint_attr + tmpid*cell_size);
+    // 如果termlist的大小不为0，则表示需要分配一个内部ID
+    // 否则只需要更新文档属性即可
+    if (0 == termlist.size())
     {
-        _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_mod_bitmap), tmpid);
-        // 存在内部ID，需要把之前的attr信息复制到attrlist的第0个位置(懒得分配内存了)
-        // 然后后面更新这个attr
-        // 最后复制到新的innerID的位置
-        void* src_attr = (puint_attr + tmpid*cell_size);
-        memmove(tmp_attr, src_attr, cell_size);
+        // 设置属性信息
+        for(uint32_t i=0; i<attrlist.size(); i++)
+        {
+            _SET_SOLO_VALUE_(src_attr, attrlist[i].key_mask, attrlist[i].value);
+        }
+        return 0;
     }
-    uint32_t innerid = pflexse_plugin->mysecore->m_idmap->allocInnerID(doc_id);
-    if (innerid == 0)
+    else
     {
-        ALARM("allocInnerID Fail.");
-        return -1;
-    }
-    // 设置属性信息
-    for(uint32_t i=0; i<attrlist.size(); i++)
-    {
-        _SET_SOLO_VALUE_(tmp_attr, attrlist[i].key_mask, attrlist[i].value);
-    }
-    void* dst_attr = (puint_attr + innerid*cell_size);
-    memmove(dst_attr, tmp_attr, cell_size);
+        // 为doc_id分配内部id
+        // 检查一下以前有没有内部id，如果有的话，则把mod_bitmap置位
+        uint32_t innerid = pflexse_plugin->mysecore->m_idmap->allocInnerID(doc_id);
+        if (innerid == 0)
+        {
+            ALARM("allocInnerID Fail.");
+            return -1;
+        }
+        if (tmpid > 0)
+        {
+            _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_mod_bitmap), tmpid);
+        }
+        void* dst_attr = (puint_attr + innerid*cell_size);
+        memmove(dst_attr, src_attr, cell_size);
 
-    // 把termlist中的id设置为内部的ID
-    for(uint32_t i=0; i<termlist.size(); i++)
-    {
-        termlist[i].id = innerid;
+        // 把termlist中的id设置为内部的ID
+        for(uint32_t i=0; i<termlist.size(); i++)
+        {
+            termlist[i].id = innerid;
+        }
+        index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
+        return myIndexGroup->set_posting_list(file_no, block_id, termlist);
     }
-    index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
-    return myIndexGroup->set_posting_list(file_no, block_id, termlist);
+    return 0;
 }
 
 int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
