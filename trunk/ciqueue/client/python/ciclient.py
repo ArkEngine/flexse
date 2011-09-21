@@ -74,8 +74,10 @@ class ciclient:
 
 if __name__ == "__main__":
     mycc = ciclient()
-    for x in range(int(sys.argv[1])):
+    extra = "XXOO"*10000
+    for x in range(int(sys.argv[1]), int(sys.argv[2])):
         dd={}
-        dd["vid"] = x + 1
-        dd["title"] = "beauty girls [%08u]" % (x+1,)
+        dd["vid"] = x
+        dd["title"] = "beauty girls [%08u] " % (x,)
+        dd["title"] += extra
         mycc.commit(x, "test", "test", dd)
