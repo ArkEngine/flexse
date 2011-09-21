@@ -194,7 +194,7 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
             case OP_NLP:
                 if (root[strkey].isNull() || !root[strkey].isString())
                 {
-                    ALARM("jsonstr NOT contain 'CONTENT'.");
+                    ALARM("jsonstr NOT contain '%s' [%u].", strkey, root[strkey].isNull());
                     return -1;
                 }
                 else
