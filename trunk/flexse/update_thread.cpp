@@ -84,8 +84,9 @@ void* update_thread(void* args)
                 {
                     ALARM("send socket error. ret[%d] detail_len[%u] timeoutMS[%u] msg[%m]",
                             ret, send_head.detail_len, myConfig->UpdateSocketTimeOutMS());
-                    continue;
+                    break;
                 }
+                continue;
             }
 
             char* jsonstr = (char*)(&recv_head[1]);

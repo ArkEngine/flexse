@@ -100,8 +100,6 @@ mem_indexer* index_group :: swap_mem_indexer()
 
     // -1- 调换位置
     _swap_mem_indexer();
-    m_dump_file_no  = m_file_no;
-    m_dump_block_id = m_block_id;
     // -2- 通知merge线程可以把mem1持久化了
     pthread_cond_signal(&m_mem_dump_cond);
     // -3- 返回一个新的mem
@@ -258,6 +256,8 @@ void index_group :: update_day_indexer()
         PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] ++++++",
                 ret, ETIMEDOUT, m_index_list[MEM0]->empty());
     }
+    m_dump_file_no  = m_file_no;
+    m_dump_block_id = m_block_id;
     pthread_mutex_unlock(&m_mutex);
 
     // 合并过程:
