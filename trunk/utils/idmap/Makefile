@@ -18,7 +18,8 @@ INCS= -I ../mylog/include/\
 	  -I ../MyException/include/\
 	  -I ../bitmap/include\
 	  -I ../myutils/include\
-	  -I ./include/
+	  -I ./include/ \
+
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \

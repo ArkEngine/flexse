@@ -12,6 +12,7 @@ class ciclient:
 				return True
 		return False
     def _connect(self, strHost, intPort):
+        print "connect--------------------------------"
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(0.1)
         try:
@@ -19,7 +20,7 @@ class ciclient:
             self.sock.settimeout(1)
             return True
         except socket.timeout:
-            print "connect TimeOut"
+#           print "connect TimeOut"
             self.sock.close()
             self.sock = None
             return False
@@ -27,7 +28,7 @@ class ciclient:
             (errno, err_msg) = arg
             self.sock.close()
             self.sock = None
-            print "Connect server failed: %s, errno=%d" % (err_msg, errno)
+#           print "Connect server failed: %s, errno=%d" % (err_msg, errno)
             return False
 
     def _check_connect(self):
@@ -39,13 +40,13 @@ class ciclient:
                 self.sock.setblocking(False)
                 rstr= self.sock.recv(1)
                 if rstr == "" or len(rstr) == 1:
-                    print "remote server closed or left data len[%u]" % (len(rstr),)
+#                   print "remote server closed or left data len[%u]" % (len(rstr),)
                     self.sock.close()
                     self.sock = None
                     return self._rand_connect()
             except socket.error, e:
                 self.sock.settimeout(1)
-                print 'rstr[%s] len[%u] socket:%s' % (rstr, len(rstr), e,)
+#               print 'rstr[%s] len[%u] socket:%s' % (rstr, len(rstr), e,)
                 return True
 
     def commit(self, log_id, queue_name, operation, dict4commit):
@@ -61,12 +62,12 @@ class ciclient:
             try:
                 self.sock.send(sbuf)
             except socket.error, arg:
-                print "error message [%s]" % (arg, )
+#               print "error message [%s]" % (arg, )
                 return False
             rbuf = self.sock.recv(36)
             log_id, srvname, version, reserved, status, detail_len = struct.unpack(FMT_XHEAD, rbuf)
-            print "logid[%u] srvname[%s] version[%u] reserved[%u] status[%u] detail_len[%u]" % (log_id, \
-                    srvname, version, reserved, status, detail_len)
+#           print "logid[%u] srvname[%s] version[%u] reserved[%u] status[%u] detail_len[%u]" % (log_id, \
+#                   srvname, version, reserved, status, detail_len)
             return reserved == 0
         else:
             return False

@@ -4,6 +4,10 @@
 #include <fstream>
 using namespace std;
 
+const char* const secore::CONFIGCATEGORY_STRUCTMASK = "STRUCTMASK";
+const char* const secore::STRUCTMASK_POST           = "posting_list_cell";
+const char* const secore::STRUCTMASK_ATTR           = "document_attribute";
+
 const char* const secore::m_StrInsideKey_DocIDList = "id_list";
 const char* const secore::m_StrInsideKey_DocID     = "id";
 
@@ -26,12 +30,12 @@ const char* const secore::m_StrBucketSize = "PostingBucketSize";
 const char* const secore::m_StrHeadListSize = "PostingHeadListSize";
 const char* const secore::m_StrMemBlockNumList = "PostingMemBlockNumList";
 
-secore:: secore(const char* config_path)
+secore:: secore(const char* plugin_config_path)
 {
     // PLUGIN CONFIG
     Json::Value root;
     Json::Reader reader;
-    ifstream in(config_path);
+    ifstream in(plugin_config_path);
     MySuicideAssert (reader.parse(in, root));
 
     // GENERAL CONFIG
@@ -90,7 +94,15 @@ secore:: secore(const char* config_path)
     m_mod_bitmap = new bitmap(m_attr_data_dir, "mod_bitmap", m_max_inner_id/8);
     m_idmap      = new idmap(m_idmap_data_dir, m_max_outer_id, m_max_inner_id);
     m_detaildb   = new detaildb(m_detail_data_dir, "detail");
-    m_docattr_bitlist = NULL;
+
+    // 读取插件的配置
+//    Json::Value rootPlugin;
+//    Json::Reader readerPlugin;
+//    ifstream inPlugin(plugin_config_path);
+//    MySuicideAssert (readerPlugin.parse(in, root));
+    m_attr_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_ATTR]);
+    m_post_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_POST]);
+    m_docattr_bitlist = new bitlist(m_attr_data_dir, "attr_bitlist", m_attr_maskmap->get_section_size(), m_max_inner_id);
 }
 
 secore:: ~secore()
@@ -102,4 +114,6 @@ secore:: ~secore()
     delete m_pnlp_processor;
     delete m_docattr_bitlist;
     delete m_detaildb;
+    delete m_post_maskmap;
+    delete m_attr_maskmap;
 }

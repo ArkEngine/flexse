@@ -37,6 +37,7 @@ class structmask
 {
     private:
         map<string, mask_item_t> m_mask_map;
+        map<string, mask_item_t>::iterator m_map_it;
         char     m_section_name[128];
         uint32_t m_section_size;
 
@@ -74,6 +75,11 @@ class structmask
          * @return : item number of this section
          */
         uint32_t get_segment_size() const ;
+        // 迭代的接口
+        void begin();
+        void next();
+        bool is_end();
+        bool itget(char* keyname, const uint32_t bufsiz, mask_item_t* mask_item);
 };
 
 

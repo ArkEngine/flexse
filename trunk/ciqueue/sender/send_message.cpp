@@ -65,10 +65,10 @@ void* send_message(void* arg)
 	myflb.seek_message();
 	const uint32_t READ_BUFF_SIZE = 10*1024*1024;
 	xhead_t* sxhead = (xhead_t*) malloc(READ_BUFF_SIZE + sizeof(xhead_t));
-	MyThrowAssert(sxhead != NULL);
+	char*    msgbuf = (char*)    malloc(READ_BUFF_SIZE);
+	MyThrowAssert(sxhead != NULL && msgbuf != NULL);
 	snprintf(sxhead->srvname, sizeof(sxhead->srvname), "%s", PROJNAME);
 	xhead_t  rxhead;
-	char* readbuff = (char*)(&sxhead[1]);
 
 	char all_event_string[128];
 	snprintf(all_event_string, sizeof(all_event_string), FORMAT_QUEUE_OP,
@@ -83,16 +83,16 @@ void* send_message(void* arg)
 		uint32_t block_id = 0;
 		uint32_t log_id   = 0;
 		uint32_t message_len = myflb.read_message(log_id, file_no, block_id,
-				readbuff, READ_BUFF_SIZE);
-		readbuff[message_len] = '\0';
+				msgbuf, READ_BUFF_SIZE);
+		msgbuf[message_len] = '\0';
 
 		// 检查是否在监听的事件中
 		Json::Value root;
 		Json::Reader reader;
 
-		if (! reader.parse(readbuff, root))
+		if (! reader.parse(msgbuf, root))
 		{
-			ALARM("json[%s] format error.", readbuff);
+			ALARM("json[%s] format error.", msgbuf);
 			continue;
 		}
 
@@ -111,27 +111,43 @@ void* send_message(void* arg)
 			continue;
 		}
 
-		while(1)
-		{
-			if (sock == -1)
-			{
-				sock = myconnect(psender_config);
-				if (sock == -1)
-				{
-					sleep(1);
-					continue;
-				}
-			}
+        Json::FastWriter fwriter;
+        string msgbody = fwriter.write(root["__OPERATION_BODY__"]);
+        char* sendbody = (char*)(&sxhead[1]);
+        uint32_t bodysize = msgbody.size();
+        memmove(sendbody, msgbody.c_str(), bodysize);
+        if (bodysize <= 0)
+        {
+			continue;
+        }
+        if (sendbody[bodysize - 1] == '\n')
+        {
+            bodysize--;
+            sendbody[bodysize] = '\0';
+        }
 
-			sxhead->log_id = log_id;
-			sxhead->version = file_no;
-			sxhead->reserved = block_id;
-			sxhead->detail_len = message_len;
-			if (0 != xsend(sock, sxhead, psender_config->send_toms))
-			{
-				ALARM("xsend error log_id[%u] file_no[%u] block_id[%u] "
+        sxhead->log_id = log_id;
+        sxhead->version = file_no;
+        sxhead->reserved = block_id;
+        sxhead->detail_len = bodysize;
+
+        while(1)
+        {
+            if (sock == -1)
+            {
+                sock = myconnect(psender_config);
+                if (sock == -1)
+                {
+                    sleep(1);
+                    continue;
+                }
+            }
+
+            if (0 != xsend(sock, sxhead, psender_config->send_toms))
+            {
+                ALARM("xsend error log_id[%u] file_no[%u] block_id[%u] "
                         "channel[%s] event[%s] msglen[%u] e[%m]",
-						log_id, file_no, block_id,
+                        log_id, file_no, block_id,
                         psender_config->channel, event_string, message_len);
                 close(sock);
                 sock = -1;

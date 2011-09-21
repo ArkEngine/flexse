@@ -72,7 +72,7 @@ index_group :: index_group(const uint32_t cell_size, const uint32_t bucket_size,
     m_dump_hour_min = 1;
     m_dump_hour_max = 5;
     m_day2dump_day  = 0;
-    m_daydump_interval = 3600;
+    m_daydump_interval = 300;
     
     // 读取上次的消息队列进度 TODO
     snprintf(m_check_point_file, sizeof(m_check_point_file), "%s", STR_CHECK_POINT_FILE);
@@ -93,7 +93,6 @@ index_group :: ~index_group()
 mem_indexer* index_group :: swap_mem_indexer()
 {
     // 阻塞于等待 m_index_list[1]清空
-    pthread_mutex_lock(&m_mutex);
     while(m_index_list[MEM1] != NULL)
     {
         pthread_cond_wait(&m_mem_dump_cond, &m_mutex);
@@ -105,7 +104,6 @@ mem_indexer* index_group :: swap_mem_indexer()
     m_dump_block_id = m_block_id;
     // -2- 通知merge线程可以把mem1持久化了
     pthread_cond_signal(&m_mem_dump_cond);
-    pthread_mutex_unlock(&m_mutex);
     // -3- 返回一个新的mem
     return dynamic_cast<mem_indexer*>(m_index_list[MEM0]);
 }
@@ -251,14 +249,14 @@ void index_group :: update_day_indexer()
         // m_index_list[MEM1] == NULL是恒成立的。
         // 但是m_index_list[MEM0]->empty()这个条件却可能在m_mutex保护期间改变
         // 因为更新线程可能时刻在向MEM0中插入数据
-        PRINT("ret[%d] erron[%d] ETIMEDOUT[%d] EINTR[%d] empty[%d] ------",
-                ret, errno, ETIMEDOUT, EINTR, m_index_list[MEM0]->empty());
+        PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] ------",
+                ret, ETIMEDOUT, m_index_list[MEM0]->empty());
         _swap_mem_indexer();
     }
     else
     {
-        PRINT("ret[%d] erron[%d] ETIMEDOUT[%d] EINTR[%d] empty[%d] ++++++",
-                ret, errno, ETIMEDOUT, EINTR, m_index_list[MEM0]->empty());
+        PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] ++++++",
+                ret, ETIMEDOUT, m_index_list[MEM0]->empty());
     }
     pthread_mutex_unlock(&m_mutex);
 
@@ -490,7 +488,7 @@ uint32_t index_group :: get_cur_day()
 
     time(&now);
     localtime_r(&now, &mytm);
-    return 10000*mytm.tm_year + 100*mytm.tm_mon + mytm.tm_mday;
+    return 10000*(mytm.tm_year+1900) + 100*(mytm.tm_mon+1) + mytm.tm_mday;
 }
 
 int index_group :: set_dump2day2_timezone(const uint32_t min_hour, const uint32_t max_hour)

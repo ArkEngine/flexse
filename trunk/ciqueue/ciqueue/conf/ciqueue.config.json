@@ -1,7 +1,7 @@
 {
     "LOG":
     {
-        "LogLevel" : 1           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
+        "LogLevel" : 2           // enum {DEBUG = 0, ROUTN, ALARM, FATAL,}, default as 1
     },
     "CI_SERVER":
     {
