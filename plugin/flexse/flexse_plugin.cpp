@@ -10,9 +10,6 @@ const char* const flexse_plugin:: FLEXINDEX_KEY_OP              = "op";
 const char* const flexse_plugin:: FLEXINDEX_KEY_TYPE            = "type";
 const char* const flexse_plugin:: FLEXINDEX_KEY_TOKEN           = "token";
 const char* const flexse_plugin:: FLEXINDEX_KEY_FIELD           = "field";
-const char* const flexse_plugin:: CONFIGCATEGORY_STRUCTMASK     = "STRUCTMASK";
-const char* const flexse_plugin:: STRUCTMASK_POST               = "posting_list_cell";
-const char* const flexse_plugin:: STRUCTMASK_ATTR               = "document_attribute";
 const char* const flexse_plugin:: FLEXINDEX_VALUE_OP_NLP        = "NLP";
 const char* const flexse_plugin:: FLEXINDEX_VALUE_OP_DOC_ID     = "DOC_ID";
 const char* const flexse_plugin:: FLEXINDEX_VALUE_OP_PREFIX     = "PREFIX";
@@ -31,8 +28,8 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
     ifstream in(config_path);
     MySuicideAssert (reader.parse(in, root));
 
-    m_post_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_POST]);
-    m_attr_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_ATTR]);
+    m_post_maskmap = insecore->m_post_maskmap;
+    m_attr_maskmap = insecore->m_attr_maskmap;
 
     Json::Value flexindex = root[CONFIGCATEGORY_FLEXINDEX];
     MySuicideAssert (!flexindex.isNull());
@@ -106,16 +103,14 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
         m_key_op_map[strkey] = mkey_op;
     }
 
-    // 迭代 m_attr_maskmap , 保存文档属性的数据
 }
 
 flexse_plugin:: ~flexse_plugin()
 {
-    delete m_post_maskmap;
-    delete m_attr_maskmap;
 }
 
-int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist)
+int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
+        vector<term_info_t> & termlist, vector<attr_field_t>& attrlist)
 {
     Json::Value root;
     Json::Reader reader;
@@ -212,13 +207,36 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id, vector<term_info_
                 break;
         }
     }
+    // 迭代 m_attr_maskmap , 保存文档属性的数据
+    
+    char key[128];
+    mask_item_t key_mask;
+    attrlist.clear();
+    for(m_attr_maskmap->begin(); !m_attr_maskmap->is_end(); m_attr_maskmap->next())
+    {
+        m_attr_maskmap->itget(key, sizeof(key), &key_mask);
+//        PRINT("key[%s] uint_off[%u] item_mask[0x%08x] move_count[%02u] uint32_count[%02u]\n",
+//                key,
+//                key_mask.uint_offset, 
+//                key_mask.item_mask,
+//                key_mask.move_count,
+//                key_mask.uint32_count);
+        if (!root[key].isNull() && root[key].isInt())
+        {
+            attr_field_t attr_field;
+            attr_field.value = root[key].asInt();
+            attr_field.key_mask = key_mask;
+            attrlist.push_back(attr_field);
+        }
+    }
 
     return 0;
 }
 
-int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist)
+int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id,
+        vector<term_info_t> & termlist, vector<attr_field_t>& attrlist)
 {
-    return add(jsonstr, doc_id, termlist);
+    return add(jsonstr, doc_id, termlist, attrlist);
 }
 
 int flexse_plugin:: del(const char* jsonstr, vector<uint32_t> & id_list)

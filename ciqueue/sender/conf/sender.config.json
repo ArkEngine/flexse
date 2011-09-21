@@ -1,5 +1,5 @@
 {
-	"LogLevel" : 1,
+	"LogLevel" : 2,
 	"LogPath"  : "sender",
 
 	"qpath" : "mqueue",
@@ -9,7 +9,7 @@
 		{
 			"name"         : "test",
 			"host"         : "127.0.0.1",
-			"port"         : 12345,
+			"port"         : 1984,
 			"long_connect" : 1,
 			"send_toms"    : 1000,
 			"recv_toms"    : 1000,

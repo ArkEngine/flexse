@@ -5,7 +5,11 @@ RANLIB=ranlib
 LIB= libmyutils.a
 LIBOBJ= myutils.o
 
-INCS= -I ../mylog/include/ -I ../MyException/include/
+INCS= -I ../mylog/include/ \
+	  -I ../MyException/include/ \
+	  -I ../structmask/include/ \
+	  -I ../../opensrc/jsoncpp/include/
+
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \

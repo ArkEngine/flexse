@@ -50,6 +50,7 @@ void* update_thread(void* args)
     index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
     // 得到的进度点是已经完成持久化的点
     myIndexGroup->get_check_point(last_file_no, last_block_id);
+    PRINT("last_file_no[%u] last_block_id[%u]", last_file_no, last_block_id);
 
     while(1)
     {
@@ -72,11 +73,12 @@ void* update_thread(void* args)
             // 如果 file_no == 0 && block_id == 1 可以认为是整个消息从头开始，这个特殊case要放过
             // 如果仅仅 block_id == 1，则表示一个新文件从头开始了。
             if (  (recv_head->block_id == 1 && recv_head->file_no != 0 && (last_file_no+1) != recv_head->file_no)
-                ||(recv_head->block_id != 1 && recv_head->file_no != 0 && last_file_no != recv_head->file_no && (last_block_id+1) != recv_head->block_id))
+                ||(recv_head->block_id != 1 && (last_block_id+1) != recv_head->block_id))
             {
                 send_head.status   = ROLL_BACK;
                 send_head.file_no  = last_file_no; // 告诉消息队列成功接受的节点，让其发送下一个
                 send_head.block_id = last_block_id;
+                PRINT("PLEASE ROLL BACK TO NEXT BY FILE_NO[%u] BLOCK_ID[%u]", last_file_no, last_block_id);
                 ROUTN("PLEASE ROLL BACK TO NEXT BY FILE_NO[%u] BLOCK_ID[%u]", last_file_no, last_block_id);
                 if(0 != xsend(clientfd, &send_head, myConfig->UpdateSocketTimeOutMS()))
                 {
@@ -171,9 +173,10 @@ void* update_thread(void* args)
 int add(const uint32_t file_no, const uint32_t block_id,
         flexse_plugin* pflexse_plugin, const char* jsonstr)
 {
-    vector<term_info_t> termlist;
-    uint32_t       doc_id;
-    int retp = pflexse_plugin->add(jsonstr, doc_id, termlist);
+    vector<term_info_t>  termlist;
+    vector<attr_field_t> attrlist;
+    uint32_t             doc_id;
+    int retp = pflexse_plugin->add(jsonstr, doc_id, termlist, attrlist);
     if (retp != 0)
     {
         return -1;
@@ -181,10 +184,18 @@ int add(const uint32_t file_no, const uint32_t block_id,
 
     // 为doc_id分配内部id
     // 检查一下以前有没有内部id，如果有的话，则把mod_bitmap置位
+    uint32_t* puint_attr = pflexse_plugin->mysecore->m_docattr_bitlist->puint;
+    uint32_t  cell_size  = pflexse_plugin->mysecore->m_docattr_bitlist->m_cellsize;
+    void* tmp_attr = &(puint_attr[0]);
     uint32_t tmpid = pflexse_plugin->mysecore->m_idmap->getInnerID(doc_id);
     if (tmpid > 0)
     {
         _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_mod_bitmap), tmpid);
+        // 存在内部ID，需要把之前的attr信息复制到attrlist的第0个位置(懒得分配内存了)
+        // 然后后面更新这个attr
+        // 最后复制到新的innerID的位置
+        void* src_attr = (puint_attr + tmpid*cell_size);
+        memmove(tmp_attr, src_attr, cell_size);
     }
     uint32_t innerid = pflexse_plugin->mysecore->m_idmap->allocInnerID(doc_id);
     if (innerid == 0)
@@ -192,6 +203,14 @@ int add(const uint32_t file_no, const uint32_t block_id,
         ALARM("allocInnerID Fail.");
         return -1;
     }
+    // 设置属性信息
+    for(uint32_t i=0; i<attrlist.size(); i++)
+    {
+        _SET_SOLO_VALUE_(tmp_attr, attrlist[i].key_mask, attrlist[i].value);
+    }
+    void* dst_attr = (puint_attr + innerid*cell_size);
+    memmove(dst_attr, tmp_attr, cell_size);
+
     // 把termlist中的id设置为内部的ID
     for(uint32_t i=0; i<termlist.size(); i++)
     {

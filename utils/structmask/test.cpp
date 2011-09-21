@@ -43,6 +43,21 @@ int main(int argc, char** argv) try
     structmask mymask(field_array);
     printf ("uint32_t size[%u]\n", mymask.get_section_size());
     printf ("segment  size[%u]\n", mymask.get_segment_size());
+
+    char key[128];
+    mask_item_t key_mask;
+    for(mymask.begin(); !mymask.is_end(); mymask.next())
+    {
+        assert(mymask.itget(key, sizeof(key), &key_mask));
+        printf("key[%s] uint_off[%u] item_mask[0x%08x] move_count[%02u] uint32_count[%02u]\n",
+                key,
+                key_mask.uint_offset, 
+                key_mask.item_mask,
+                key_mask.move_count,
+                key_mask.uint32_count);
+    }
+    printf("--------it end---------\n");
+
     mask_item_t* mask_item = (mask_item_t*)malloc(mymask.get_segment_size()*sizeof(mask_item_t));
     const char* keylist[] = {"id0", "id1", "id2", "id3", "id4", "id5"};
     for (uint32_t i=0; i<mymask.get_segment_size(); i++)

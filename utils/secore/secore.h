@@ -8,13 +8,24 @@
 #include "idmap.h"
 #include "detaildb.h"
 #include "myutils.h"
+#include "structmask.h"
 #include <json/json.h>
 #include <string>
+
+struct attr_field_t
+{
+    uint32_t    value;        ///> 字段的取值
+    mask_item_t key_mask;     ///> 字段的描述
+};
 
 class secore
 {
     private:
         static const uint32_t MAX_FILENAME_LENGTH = 128;
+
+        static const char* const CONFIGCATEGORY_STRUCTMASK;
+        static const char* const STRUCTMASK_POST;
+        static const char* const STRUCTMASK_ATTR;
 
         static const char* const CONFIGCATEGORY_INDEXCONFIG;
         static const char* const CONFIGCATEGORY_FLEXINDEX;
@@ -63,8 +74,10 @@ class secore
         idmap*         m_idmap;
         bitlist*       m_docattr_bitlist;
         detaildb*      m_detaildb;
+        structmask*    m_post_maskmap;
+        structmask*    m_attr_maskmap;
 
-        secore(const char* config_path);
+        secore(const char* plugin_config_path);
         ~secore();
 };
 #endif

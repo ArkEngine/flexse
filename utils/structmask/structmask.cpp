@@ -28,7 +28,7 @@ structmask::structmask(const Json::Value& field_array)
 
         mask_item_t mask_item;
 
-        if (seg == 0 || seg > 32 || ( bit_count + seg ) > 32 || 0 == strkey.size())
+        if (seg == 0 || seg > 32 || ( bit_count + seg ) > 32 || 0 == strkey.size() || strkey.size() > 100)
         {
             FATAL("SEG_LIST CONFIG ERROR. key[%s] seg[%u]", strkey.c_str(), seg);
             MyToolThrow("SEG_LIST CONFIG ERROR.");
@@ -77,6 +77,8 @@ structmask::structmask(const Json::Value& field_array)
     {
         it->second.uint32_count = m_section_size;
     }
+
+    m_map_it = m_mask_map.begin();
 }
 
 structmask::~structmask()
@@ -105,6 +107,23 @@ uint32_t structmask::get_segment_size() const
     return m_mask_map.size();
 }
 
+void structmask :: begin()
+{
+    m_map_it = m_mask_map.begin();
+}
+void structmask :: next()
+{
+    m_map_it++;
+}
+bool structmask :: is_end()
+{
+    return m_map_it == m_mask_map.end();
+}
+bool structmask :: itget(char* keyname, const uint32_t bufsiz, mask_item_t* mask_item)
+{
+    memmove(mask_item, &m_map_it->second, sizeof(mask_item_t));
+    return (int)strlen(m_map_it->first.c_str()) == snprintf(keyname, bufsiz, "%s", m_map_it->first.c_str());
+}
 
 
 
