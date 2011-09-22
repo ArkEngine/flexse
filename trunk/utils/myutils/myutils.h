@@ -26,5 +26,7 @@ namespace flexse {
     char* strip(char* str);
 
     int read_file_all(const char* file, char* buff, const uint32_t bufsize);
+
+    int connect_ms(const char* host, const uint16_t port, const uint32_t timeout_ms);
 }
 #endif
