@@ -143,4 +143,41 @@ namespace flexse
         close(fd);
         return offset;
     }
+
+    int connect_ms(const char* host, const uint16_t port, const uint32_t timeout_ms)
+    {
+        struct sockaddr_in adr_srvr;  /* AF_INET */
+        int len_inet = sizeof (adr_srvr);
+        memset (&adr_srvr, 0, len_inet);
+        adr_srvr.sin_family = AF_INET;
+        adr_srvr.sin_port = htons (port);
+        adr_srvr.sin_addr.s_addr = inet_addr (host);
+
+        if (adr_srvr.sin_addr.s_addr == INADDR_NONE)
+        {
+            return -1;
+        }
+
+        int sockfd = socket (PF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0)
+        {
+            ALARM("socket() fail. msg[%m]");
+            return -1;
+        }
+        struct timeval timeout = {0, 0};
+        timeout.tv_sec  = timeout_ms/1000;
+        timeout.tv_usec = 1000*(timeout_ms%1000);
+        setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval));
+
+        if (0 == connect (sockfd, (struct sockaddr *) &adr_srvr, len_inet))
+        {
+            return sockfd;
+        }
+        else
+        {
+            ALARM("connect() fail. msg[%m]");
+            close(sockfd);
+        }
+        return -1;
+    }
 }
