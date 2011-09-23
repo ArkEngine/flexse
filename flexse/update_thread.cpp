@@ -76,6 +76,9 @@ void* update_thread(void* args)
             // 消息队列的第一个数据包 file_no = 0, block_id = 1 直接更新
             // 消息队列的文件的第一个数据包 file_no > 0, block_id = 1 那么file_no要比现在的大
             // 消息队列中的一般数据包 block_id > 1 file_no > 0 file_no 相等，block_id要大
+            //
+            // !!!
+            // 如果要考虑到分布式消息队列的话，就得小心了。要加上消息服务器的比较
             if ((last_file_no > recv_head->file_no)
                     || (last_file_no == recv_head->file_no && last_block_id >= recv_head->block_id))
             {

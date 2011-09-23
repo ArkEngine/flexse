@@ -13,14 +13,14 @@ void func(const char* str, uint32_t length)
 void myfunc(const char* mychar, uint32_t count)
 {
     char str[120];
-    union{
+    union uuu{
         uint32_t sign[2];
         uint64_t key;
-    };
+    }uu;
     int len = snprintf(str, sizeof(str), "%s[%u]", mychar, count);
-    creat_sign_64(str, len, &sign[0], &sign[1]);
+    creat_sign_64(str, len, &uu.sign[0], &uu.sign[1]);
 //    printf("%llu %s\n", key, str);
-    printf("%llu\n", key);
+    printf("%llu\n", uu.key);
 }
 
 
@@ -43,7 +43,8 @@ int main(int argc, char** argv)
     //    func("明天", 7);
     //    func("明天", 6);
     //    func("明天", 7);
-    for (uint32_t i=0; i<SIZE; i++)
+    uint32_t i=0;
+    for (i=0; i<SIZE; i++)
     {
         myfunc("a", i);
         myfunc("b", i);
