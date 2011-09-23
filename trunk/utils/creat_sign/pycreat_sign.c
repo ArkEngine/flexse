@@ -1,8 +1,9 @@
-#include <Python.h>
-#include "creat_sign.h"
+#include "pycreat_sign.h"
+#include <assert.h>
 
 PyObject* wrap_creat_sign(PyObject* self, PyObject* args) 
 {
+    assert (self != NULL || self == NULL);
     uint32_t sign1 = 0;
     uint32_t sign2 = 0;
     const char* str = NULL;
@@ -21,7 +22,7 @@ PyObject* wrap_creat_sign(PyObject* self, PyObject* args)
 static PyMethodDef creat_signMethods[] = 
 {
     {"creat_sign", wrap_creat_sign, METH_VARARGS, "create sign tuple(int int) for row data"},
-    {NULL, NULL}
+    {NULL, NULL, 0, NULL}
 };
 
 void initcreat_sign() 

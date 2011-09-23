@@ -13,13 +13,13 @@ MAINOBJ= test.o
 
 INCS= -I -fpic -I/usr/include/python2.7 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
-		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
-		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
+#	  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
+#	  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-#all: clean $(LIB) $(PYEXT) $(MAIN)
-all: clean $(LIB) $(MAIN)
+all: clean $(LIB) $(PYEXT) $(MAIN)
 	rm *.o -f
+#all: clean $(LIB) $(MAIN)
 
 $(LIB): $(LIBOBJ)
 	ar cr $(LIB) $(LIBOBJ)
@@ -31,7 +31,7 @@ $(LIB): $(LIBOBJ)
 	cp creat_sign.h include/
 
 $(PYEXT): $(PYEXTOBJ)
-	gcc -o $@ $^ -shared
+	$(CC) -o $@ $^ -shared
 	mv creat_sign.so lib/
 
 %.o: %.cpp %.h
