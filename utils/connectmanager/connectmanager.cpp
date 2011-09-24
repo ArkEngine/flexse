@@ -16,29 +16,6 @@ const char* const ConnectManager :: m_StrUseResourceServer    = "use_resource_se
 const char* const ConnectManager :: m_StrUseCarpBalance       = "use_carp_balance";
 const char* const ConnectManager :: m_StrServerConfigList     = "server_config_list";
 
-bool ConnectManager::find_idx(const char* resourcename, const resource_info_t* presource_info,
-		const u_int array_size, int& ridx)
-{
-	ridx = -1;
-	for (u_int i = 0; i < RESOURCE_MAXNUM && i < array_size; i++)
-	{
-		if (presource_info[i].name[0] == '\0')
-		{
-			// got a new cell
-			ridx = i;
-			return false;
-		}
-		if (0 == strcmp(presource_info[i].name, resourcename))
-		{
-			// get a old cell
-			ridx = i;
-			return true;
-		}
-	}
-	// cells all full
-	return false;
-}
-
 ConnectManager::ConnectManager(Json::Value config_json) : 
 	m_connectmap()
 {
@@ -123,7 +100,94 @@ ConnectManager::ConnectManager(Json::Value config_json) :
 	m_connectmap.SetCheckInterval(m_check_interval);
 	m_connectmap.SetPunishMode   (m_server_punish_mode != 0);
 
-	MySuicideAssert(true == InitLocalResource(config_json));
+    Json::Value resourcelist = config_json[m_StrServerConfigList];
+    for (uint32_t i=0; i<resourcelist.size(); i++)
+    {
+        Json::Value resource = resourcelist[i];
+        ProcessResource(resource, m_local_resource_info, RESOURCE_MAXNUM);
+    }
+}
+
+ConnectManager::~ConnectManager()
+{
+    // TODO
+}
+
+int ConnectManager::FreeSocket(const int sock, bool errclose)
+{
+    return m_connectmap.FreeSocket(sock, errclose);
+}
+
+int ConnectManager::FetchSocket(const char* key, const char* strbalance)
+{
+    int sock = 0;
+    m_manager_service++;
+    uint32_t servernum = 0;
+    module_info_t server[MODULE_MAXNUM_PER_RESOURCE];
+    memset (server, 0, sizeof(server));
+    servernum = GetServerList(key, server, MODULE_MAXNUM_PER_RESOURCE);
+    if (servernum <= 0)
+    {
+        ALARM("GetServerList fail servernum[%d]. key[%s]", servernum, key);
+        return -1;
+    }
+    CarpCalculate(server, servernum, strbalance);
+    for (u_int sid=0; sid<servernum; sid++)
+    {
+        sock = m_connectmap.FetchSocket(server[sid]);
+        if (sock > 0)
+        {
+            DEBUG(
+                    "Key[%s] FetchSocket[%d] success. carpidx[%d] snum[%d]"
+                    " host[%s] port[%d] longconnect[%d] balance[%s]",
+                    key, sock, sid, servernum,
+                    server[sid].host, server[sid].port, server[sid].longconnect, strbalance);
+            return sock;
+        }
+        else
+        {
+            ALARM("FetchSocket from connectmap fail[%d]. querykey[%s] host[%s] port[%d]",
+                    sock, key, server[sid].host, server[sid].port);
+        }
+    }
+    // damn, all servers was blocked by health check
+    bool healthcheck = false;
+    for (u_int lucksid=0; lucksid<servernum; lucksid++)
+    {
+        uint32_t sid = (lucksid + m_randseed ++ ) % servernum;
+        sock = m_connectmap.FetchSocket(server[sid], healthcheck);
+        if (sock > 0)
+        {
+            DEBUG("Lucky~ FetchSocket[%d] success. carpidx[%d] snum[%d]host[%s] port[%d] longconnect[%d] balance[%s]",
+                    sock, sid, servernum, server[sid].host, server[sid].port, server[sid].longconnect, strbalance);
+            return sock;
+        }
+    }
+
+    m_manager_fail++;
+    return -1;
+}
+bool ConnectManager::find_idx(const char* resourcename, const resource_info_t* presource_info,
+		const u_int array_size, int& ridx)
+{
+	ridx = -1;
+	for (u_int i = 0; i < RESOURCE_MAXNUM && i < array_size; i++)
+	{
+		if (presource_info[i].name[0] == '\0')
+		{
+			// got a new cell
+			ridx = i;
+			return false;
+		}
+		if (0 == strcmp(presource_info[i].name, resourcename))
+		{
+			// get a old cell
+			ridx = i;
+			return true;
+		}
+	}
+	// cells all full
+	return false;
 }
 
 uint32_t ConnectManager::FailCount()
@@ -144,6 +208,7 @@ uint32_t ConnectManager::ServerSockFullCount()
 {
 	return m_connectmap.ServerSockFullCount();
 }
+
 uint32_t ConnectManager::ServerErrConnectCount()
 {
 	return m_connectmap.ServerErrConnectCount();
@@ -255,25 +320,6 @@ void ConnectManager::ProcessResource(Json::Value resource,
     return;
 }
 
-bool ConnectManager::InitLocalResource(Json::Value json_config)
-{
-    // read the resource information
-    Json::Value resourcelist = json_config[m_StrServerConfigList];
-    // TODO
-
-    for (uint32_t i=0; i<resourcelist.size(); i++)
-    {
-        Json::Value resource = resourcelist[i];
-        ProcessResource(resource, m_local_resource_info, RESOURCE_MAXNUM);
-    }
-
-    return true;
-}
-
-ConnectManager::~ConnectManager()
-{
-}
-
 uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, const uint32_t listsize)
 {
     MySuicideAssert (key && server && listsize > 0);
@@ -324,61 +370,6 @@ uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, c
     return servernum;
 }
 
-int ConnectManager::FreeSocket(const int sock, bool errclose)
-{
-    return m_connectmap.FreeSocket(sock, errclose);
-}
-
-int ConnectManager::FetchSocket(const char* key, const char* strbalance)
-{
-    int sock = 0;
-    m_manager_service++;
-    uint32_t servernum = 0;
-    module_info_t server[MODULE_MAXNUM_PER_RESOURCE];
-    memset (server, 0, sizeof(server));
-    servernum = GetServerList(key, server, MODULE_MAXNUM_PER_RESOURCE);
-    if (servernum <= 0)
-    {
-        ALARM("GetServerList fail servernum[%d]. key[%s]", servernum, key);
-        return -1;
-    }
-    CarpCalculate(server, servernum, strbalance);
-    for (u_int sid=0; sid<servernum; sid++)
-    {
-        sock = m_connectmap.FetchSocket(server[sid]);
-        if (sock > 0)
-        {
-            DEBUG(
-                    "Key[%s] FetchSocket[%d] success. carpidx[%d] snum[%d]"
-                    " host[%s] port[%d] longconnect[%d] balance[%s]",
-                    key, sock, sid, servernum,
-                    server[sid].host, server[sid].port, server[sid].longconnect, strbalance);
-            return sock;
-        }
-        else
-        {
-            ALARM("FetchSocket from connectmap fail[%d]. querykey[%s] host[%s] port[%d]",
-                    sock, key, server[sid].host, server[sid].port);
-        }
-    }
-    // damn, all servers was blocked by health check
-    bool healthcheck = false;
-    for (u_int lucksid=0; lucksid<servernum; lucksid++)
-    {
-        uint32_t sid = (lucksid + m_randseed ++ ) % servernum;
-        sock = m_connectmap.FetchSocket(server[sid], healthcheck);
-        if (sock > 0)
-        {
-            DEBUG("Lucky~ FetchSocket[%d] success. carpidx[%d] snum[%d]host[%s] port[%d] longconnect[%d] balance[%s]",
-                    sock, sid, servernum, server[sid].host, server[sid].port, server[sid].longconnect, strbalance);
-            return sock;
-        }
-    }
-
-    m_manager_fail++;
-    return -1;
-}
-
 int Compare_Carp(const void *a, const void *b)
 {
     const module_info_t* pa = (module_info_t*)a;
@@ -391,10 +382,6 @@ void ConnectManager::CarpCalculate(module_info_t* server,
 {
     char tmp[MAX_KEY_MERGE_LEN];
     memset(tmp, 0, sizeof(tmp));
-    int prioffset[PRIORITY_MAXLEVEL] = {0};
-    prioffset[0] = 0;
-    prioffset[1] = prioffset[0];
-    prioffset[2] = prioffset[0] + prioffset[1];
     // 计算每个server的carp 值
     for (uint32_t i=0; i<servernum; i++)
     {

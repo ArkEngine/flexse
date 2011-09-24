@@ -15,7 +15,6 @@ using namespace std;
 #define RESOURCE_NAME_MAXLEN (128)
 #define MODULE_MAXNUM_PER_RESOURCE (32)
 #define REGISTERMCPACK_MAXLEN (64*1024)
-#define TMPBUFFER_MAXSIZE     (1024*1024)
 
 typedef struct __resource_info_t
 {
@@ -112,10 +111,6 @@ class ConnectManager
 	private:
 
 	void ProcessResource(Json::Value resource, resource_info_t* resourcelist, const int listsize);
-	/*
-	 * @brief this is for local
-	 */
-	bool InitLocalResource(Json::Value json_config);
 
 	/*
 	 * @brief: find if resourcename is in resource_info array

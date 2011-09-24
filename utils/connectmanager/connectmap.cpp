@@ -50,25 +50,25 @@ void ConnectMap::SetPunishMode(bool mode)
     m_punish_mode = mode;
 }
 
-void ConnectMap::SetConnectTO(const int ctimeout)
+void ConnectMap::SetConnectTO(const uint32_t ctimeout)
 {
     m_connectto_ms = ctimeout;
 }
 
-void ConnectMap::SetRetryLine(const int rline)
+void ConnectMap::SetRetryLine(const uint32_t rline)
 {
     m_retry_line = rline;
 }
-void ConnectMap::SetHealthLine(const int hline)
+void ConnectMap::SetHealthLine(const uint32_t hline)
 {
     m_health_line = hline;
 }
-void ConnectMap::SetDeadline  (const int dline)
+void ConnectMap::SetDeadline  (const uint32_t dline)
 {
     m_server_deadline = dline;
 }
 
-void ConnectMap::SetCheckInterval(const int checkinterval)
+void ConnectMap::SetCheckInterval(const uint32_t checkinterval)
 {
     m_check_interval = checkinterval;
 }
@@ -159,6 +159,7 @@ int ConnectMap::__AddServer  (const module_info_t& module_info)
     {
         FATAL("shit happens, insidekey[%s], outsidekey[%s]",
                 m_icm->first.c_str(), key);
+        MySuicideAssert(0);
     }
     else if (m_icm->second.status != SERVER_DELETE)
     {

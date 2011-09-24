@@ -7,7 +7,6 @@
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #include "mylog.h"
-#define PRIORITY_MAXLEVEL (3)
 #define SOCK_MAXNUM_PER_SERVER (64)
 #define MODULE_NAME_MAXLEN (128)
 #define MODULE_ADDRESS_MAXLEN (128)
@@ -15,7 +14,6 @@ using namespace std;
 
 typedef struct __module_info_t
 {
-//	int  status;
 	char     name[MODULE_NAME_MAXLEN];
 	char     host[MODULE_ADDRESS_MAXLEN];
 	uint16_t port;
@@ -81,7 +79,7 @@ class ConnectMap
 			module_info_t module;
 			uint32_t  fail_count;
 			uint32_t  freenum; // READY和EMPTY状态的cell数目
-			u_int service; // 服务次数
+			uint32_t  service; // 服务次数
 			sock_info_t  sockarr[SOCK_MAXNUM_PER_SERVER];
 		};
 		map <string, connect_info_t> m_connectmap;
@@ -162,11 +160,11 @@ class ConnectMap
 		 * @return  void
 		 * @retval  void
 		 **/
-		void SetConnectTO(const int ctimeout);
-		void SetRetryLine(const int rline);
-		void SetHealthLine(const int hline);
-		void SetDeadline  (const int dline);
-		void SetCheckInterval(const int checkinterval);
+		void SetConnectTO    (const uint32_t ctimeout);
+		void SetRetryLine    (const uint32_t rline);
+		void SetHealthLine   (const uint32_t hline);
+		void SetDeadline     (const uint32_t dline);
+		void SetCheckInterval(const uint32_t checkinterval);
 		void SetPunishMode(bool mode); // 当因为错误而 FreeSocket 时，惩罚这个server
 
 		/**
