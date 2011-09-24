@@ -14,10 +14,7 @@ const char* const ConnectManager :: m_StrServerPunishMode     = "server_punish_m
 const char* const ConnectManager :: m_StrCheckInterval        = "server_check_interval";
 const char* const ConnectManager :: m_StrUseResourceServer    = "use_resource_server";
 const char* const ConnectManager :: m_StrUseCarpBalance       = "use_carp_balance";
-const char* const ConnectManager :: m_StrResourcePackPath     = "resource_pack_path";
-const char* const ConnectManager :: m_DefaultResourcePackPath = "./conf/resourcepack";
-const char* const ConnectManager :: m_StrResourceDumpPath     = "resource_dump_path";
-const char* const ConnectManager :: m_DefaultResourceDumpPath = "./data/resourcedump";
+const char* const ConnectManager :: m_StrServerConfigList     = "server_config_list";
 
 bool ConnectManager::find_idx(const char* resourcename, const resource_info_t* presource_info,
 		const u_int array_size, int& ridx)
@@ -42,190 +39,91 @@ bool ConnectManager::find_idx(const char* resourcename, const resource_info_t* p
 	return false;
 }
 
-ConnectManager::ConnectManager(const char* config_path) : 
+ConnectManager::ConnectManager(Json::Value config_json) : 
 	m_connectmap()
 {
-	m_first_run = 1;
 	m_manager_service = 0;
 	m_randseed = 0;
 	m_manager_fail    = 0;
 	m_server_punish_mode = 0;
-	memset (m_local_resource_info,  0, sizeof(m_local_resource_info));
-	memset (m_register_text, 0, sizeof(m_register_text));
-	memset (m_register_pack, 0, sizeof(m_register_pack));
-	memset (m_resource_pack, 0, sizeof(m_resource_pack));
-    MySuicideAssert(NULL != config_path);
 
-	m_tmpbuff  =  new char[TMPBUFFER_MAXSIZE];
-	m_dumppack =  new char[TMPBUFFER_MAXSIZE];
-	if (m_tmpbuff == NULL || m_dumppack == NULL)
+    m_connect_retry_line = m_DefaultRetryLine;
+	if (!config_json[m_StrRetryLine].isNull() && config_json[m_StrRetryLine].isInt() )
 	{
-		MyToolThrow("mem alloc fail");
+        m_connect_retry_line = config_json[m_StrRetryLine].asInt();
+		if (m_connect_retry_line > ConnectMap :: RECONNECT_BOUNDRY)
+		{
+			MyToolThrow("Read server_retry_line error, Over ReconnectBoundry");
+		}
 	}
+    ROUTN("[%s] : [%u]", m_StrRetryLine, m_connect_retry_line);
 
-//	if ( NULL == (m_pconfdata = ul_initconf( ConfigMaxNum )) )
-//	{
-//		throw SpaceException("ul_initconf fail");
-//	}
-//
-//	if ( ul_readconf( configdir, configfile, m_pconfdata) < 0 )
-//	{
-//		ul_freeconf( m_pconfdata );
-//		throw SpaceException("can't open config file", configfile);
-//	}
-//
-//	if ( ul_getconfint( m_pconfdata, m_StrUseResourceServer, &m_use_resource_server) <=0 )
-//	{
-//		m_use_resource_server = 1; // default
-//	}
-//	else
-//	{
-//		m_use_resource_server = (m_use_resource_server != 0);
-//	}
-//
-//	if (listen_port <=0 || listen_port > 65535)
-//	{
-//		throw SpaceException ("query_port error", "boundary < 0 or > 65535");
-//	}
-//	m_query_listen_port = listen_port;
-//
-//	if (( ul_getconfint( m_pconfdata, m_StrRetryLine, &m_connect_retry_line) <=0 )
-//			|| (m_connect_retry_line <= 0))
-//	{
-//		ROUTN("read [%s] err. use default [%u]", m_StrRetryLine, m_DefaultRetryLine);
-//		m_connect_retry_line = m_DefaultRetryLine;
-//	}
-//	else
-//	{
-//		if (m_connect_retry_line > ConnectMap :: RECONNECT_BOUNDRY)
-//		{
-//			throw SpaceException ("Read server_retry_line error", "Over ReconnectBoundry");
-//		}
-//		ROUTN("[%s] : [%u]", m_StrRetryLine, m_connect_retry_line);
-//	}
-//
-//	if (( ul_getconfint( m_pconfdata, m_StrServerHealthLine, &m_server_health_line) <=0 )
-//			|| (m_server_health_line <= 0))
-//	{
-//		m_server_health_line = m_DefaultServerHealthLine;
-//		ROUTN("read [%s] err. use default [%u]", m_StrServerHealthLine, m_DefaultServerHealthLine);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%u]", m_StrServerHealthLine, m_server_health_line);
-//	}
-//
-//	if (( ul_getconfint( m_pconfdata, m_StrConnectTimeOut, &m_connect_timeout) <=0 )
-//			|| (m_connect_timeout < 10))
-//	{
-//		m_connect_timeout = m_DefaultConnectTimeOut;
-//		ROUTN("read [%s] err. use default [%u]", m_StrConnectTimeOut, m_DefaultConnectTimeOut);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%u]", m_StrConnectTimeOut, m_connect_timeout);
-//	}
-//
-//	if (( ul_getconfint( m_pconfdata, m_StrServerDeadline, &m_server_deadline) <=0 )
-//			|| (m_server_deadline < 100))
-//	{
-//		m_server_deadline = m_DefaultServerDeadline;
-//		ROUTN("read [%s] err. use default [%u]", m_StrServerDeadline, m_DefaultServerDeadline);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%u]", m_StrServerDeadline, m_server_deadline);
-//	}
-//
-//	if ( ul_getconfint( m_pconfdata, m_StrServerPunishMode, &m_server_punish_mode) <=0 )
-//	{
-//		m_server_punish_mode = true;
-//		ROUTN("read [%s] err. use default [false]", m_StrServerPunishMode);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%u]", m_StrServerPunishMode, m_server_punish_mode);
-//	}
-//
-//
-//	if (( ul_getconfint( m_pconfdata, m_StrCheckInterval, &m_check_interval) <=0 )
-//			|| (m_check_interval < 100))
-//	{
-//		m_check_interval = m_DefaultCheckInterval;
-//		ROUTN("read [%s] err. use default [%u]", m_StrCheckInterval, m_DefaultCheckInterval);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%u]", m_StrCheckInterval, m_check_interval);
-//	}
-//
-//	if ( ul_getconfstr( m_pconfdata, m_StrResourcePackPath, m_ResourceLoadPath) <=0 )
-//	{
-//		snprintf(m_ResourceLoadPath, sizeof(m_ResourceLoadPath), "%s", m_DefaultResourcePackPath);
-//		ROUTN("read [%s] err. use default [%s]", m_StrResourcePackPath, m_DefaultResourcePackPath);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%s]", m_StrResourcePackPath, m_ResourceLoadPath);
-//	}
-//
-//	if ( ul_getconfstr( m_pconfdata, m_StrResourceDumpPath, m_ResourceDumpPath) <=0 )
-//	{
-//		snprintf(m_ResourceDumpPath, sizeof(m_ResourceDumpPath), "%s", m_DefaultResourceDumpPath);
-//		ROUTN("read [%s] err. use default [%s]", m_StrResourceDumpPath, m_DefaultResourceDumpPath);
-//	}
-//	else
-//	{
-//		ROUTN("[%s] : [%s]", m_StrResourceDumpPath, m_ResourceDumpPath);
-//	}
-//
-//	if ( ul_getconfint( m_pconfdata, m_StrUseCarpBalance, &m_use_carp_balance) <=0 )
-//	{
-//		m_use_carp_balance = 1; // default
-//	}
-//	else
-//	{
-//		m_use_carp_balance = (m_use_carp_balance != 0);
-//	}
-//	ROUTN("[%s] : [%d]", m_StrUseCarpBalance, m_use_carp_balance);
-//
-//	m_connectmap.SetConnectTO    (m_connect_timeout);
-//	m_connectmap.SetRetryLine    (m_connect_retry_line);
-//	m_connectmap.SetHealthLine   (m_server_health_line);
-//	m_connectmap.SetDeadline     (m_server_deadline);
-//	m_connectmap.SetCheckInterval(m_check_interval);
-//	m_connectmap.SetPunishMode   (m_server_punish_mode != 0);
-//
-//	if (false == InitLocalResource())
-//	{
-//		if (! m_use_resource_server)
-//		{
-//			throw SpaceException("Load local resource failed", "FATAL");
-//		}
-//		else
-//		{
-//			ALARM("some err happened when loading local resource, i will continue");
-//		}
-//	}
-//	else
-//	{
-//		ROUTN("loading local resource OK");
-//	}
-//
-//	if (m_use_resource_server)
-//	{
-//		if (!ResourceClientInit(configdir, configfile))
-//		{
-//			FATAL("Init ResourceClient failed");
-//			throw SpaceException("Init ResourceClient failed");
-//		}
-//		if (! RegisterByFile())
-//		{
-//			FATAL("Register to ResourceServer failed");
-//			throw SpaceException("Register to ResourceServer failed");
-//		}
-//	}
-//	MyThrowAssert(1 == ul_freeconf( m_pconfdata ));
+    m_server_health_line = m_DefaultServerHealthLine;
+	if (!config_json[m_StrServerHealthLine].isNull() && config_json[m_StrServerHealthLine].isInt())
+	{
+		m_server_health_line = config_json[m_StrServerHealthLine].asInt();
+        if (m_server_health_line <= 0)
+        {
+            m_server_health_line = m_DefaultServerHealthLine;
+        }
+	}
+    ROUTN("[%s] : [%u]", m_StrServerHealthLine, m_server_health_line);
+
+    m_connect_timeout = m_DefaultConnectTimeOut;
+	if (!config_json[m_StrConnectTimeOut].isNull() && config_json[m_StrConnectTimeOut].isInt() )
+	{
+        m_connect_timeout = config_json[m_StrConnectTimeOut].asInt();
+        if (m_connect_timeout < 10 || m_connect_timeout > 1000)
+        {
+            m_connect_timeout = m_DefaultConnectTimeOut;
+        }
+	}
+    ROUTN("[%s] : [%u]", m_StrConnectTimeOut, m_connect_timeout);
+
+    m_server_deadline = m_DefaultServerDeadline;
+	if (!config_json[m_StrServerDeadline].isNull() && config_json[m_StrServerDeadline].isInt() )
+	{
+		m_server_deadline = config_json[m_StrServerDeadline].asInt();
+        if (m_server_deadline < 100)
+        {
+            m_server_deadline = m_DefaultServerDeadline;
+        }
+	}
+    ROUTN("[%s] : [%u]", m_StrServerDeadline, m_server_deadline);
+
+    m_server_punish_mode = true;
+	if (!config_json[m_StrServerPunishMode].isNull() && config_json[m_StrServerPunishMode].isInt() )
+	{
+		m_server_punish_mode = 0 != config_json[m_StrServerPunishMode].asInt();
+	}
+    ROUTN("[%s] : [%u]", m_StrServerPunishMode, m_server_punish_mode);
+
+    m_check_interval = m_DefaultCheckInterval;
+	if (!config_json[m_StrCheckInterval].isNull() && config_json[m_StrCheckInterval].isInt())
+	{
+		m_check_interval = config_json[m_StrCheckInterval].asInt();
+		if (m_connect_retry_line > m_DefaultCheckInterval)
+		{
+            m_check_interval = m_DefaultCheckInterval;
+		}
+	}
+    ROUTN("[%s] : [%u]", m_StrCheckInterval, m_check_interval);
+
+    m_use_carp_balance = true;
+	if (!config_json[m_StrUseCarpBalance].isNull() && config_json[m_StrUseCarpBalance].isInt())
+	{
+		m_use_carp_balance = 0 != config_json[m_StrUseCarpBalance].asInt();
+	}
+	ROUTN("[%s] : [%d]", m_StrUseCarpBalance, m_use_carp_balance);
+
+	m_connectmap.SetConnectTO    (m_connect_timeout);
+	m_connectmap.SetRetryLine    (m_connect_retry_line);
+	m_connectmap.SetHealthLine   (m_server_health_line);
+	m_connectmap.SetDeadline     (m_server_deadline);
+	m_connectmap.SetCheckInterval(m_check_interval);
+	m_connectmap.SetPunishMode   (m_server_punish_mode != 0);
+
+	MySuicideAssert(true == InitLocalResource(config_json));
 }
 
 uint32_t ConnectManager::FailCount()
@@ -240,11 +138,6 @@ uint32_t ConnectManager::ServiceCount()
 	uint32_t tmp = m_manager_service;
 	m_manager_service = 0;
 	return tmp;
-}
-
-const char* ConnectManager::ResourceLoadPath()
-{
-	return m_ResourceLoadPath;
 }
 
 uint32_t ConnectManager::ServerSockFullCount()
@@ -330,11 +223,6 @@ void ConnectManager::ProcessResource(Json::Value resource,
         }
         resourcelist[cur_ridx].modules[midx].port = (uint16_t)port;
 
-        resourcelist[cur_ridx].modules[midx].priority = 444;
-        u_int priority = resource["priority"].asInt();
-        priority = priority > PRIORITY_MAXLEVEL-1 ? PRIORITY_MAXLEVEL-1 : priority;
-        resourcelist[cur_ridx].modules[midx].priority = priority;
-
         resourcelist[cur_ridx].modules[midx].longconnect = 444;
         u_int longconnect = resource["longconnect"].asInt();
         longconnect = longconnect > 1 ? 1 : longconnect;
@@ -345,12 +233,11 @@ void ConnectManager::ProcessResource(Json::Value resource,
         socknum = socknum > SOCK_MAXNUM_PER_SERVER ? SOCK_MAXNUM_PER_SERVER : socknum;
         resourcelist[cur_ridx].modules[midx].socknum = socknum;
         DEBUG("Process resource[%s] @ subsystem[%s] OK. "
-                "address[%s:%d] priority[%d] longconnect[%d] socknum[%d] cur_ridx[%d] resourcenum[%u]",
+                "address[%s:%d] longconnect[%d] socknum[%d] cur_ridx[%d] resourcenum[%u]",
                 resourcelist[cur_ridx].name,
                 resourcelist[cur_ridx].modules[midx].name,
                 resourcelist[cur_ridx].modules[midx].host,
                 resourcelist[cur_ridx].modules[midx].port,
-                resourcelist[cur_ridx].modules[midx].priority,
                 resourcelist[cur_ridx].modules[midx].longconnect,
                 resourcelist[cur_ridx].modules[midx].socknum,
                 cur_ridx,
@@ -368,16 +255,10 @@ void ConnectManager::ProcessResource(Json::Value resource,
     return;
 }
 
-bool ConnectManager::InitLocalResource()
+bool ConnectManager::InitLocalResource(Json::Value json_config)
 {
     // read the resource information
-    memset(m_local_resource_info, 0, sizeof(m_local_resource_info));
-    if (0 >= read_file_all(m_ResourceDumpPath, m_tmpbuff, TMPBUFFER_MAXSIZE))
-    {
-        FATAL("read dump file[%s] fail", m_ResourceDumpPath);
-        return false;
-    }
-    Json::Value resourcelist;
+    Json::Value resourcelist = json_config[m_StrServerConfigList];
     // TODO
 
     for (uint32_t i=0; i<resourcelist.size(); i++)
@@ -391,12 +272,9 @@ bool ConnectManager::InitLocalResource()
 
 ConnectManager::~ConnectManager()
 {
-    delete [] m_dumppack;
-    delete [] m_tmpbuff;
 }
 
-uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, const uint32_t listsize, 
-        int* prinum)
+uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, const uint32_t listsize)
 {
     MySuicideAssert (key && server && listsize > 0);
     uint32_t servernum = 0;
@@ -412,44 +290,37 @@ uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, c
     strncpy(resourcename, pslash+1, sizeof(resourcename));
 
     uint32_t localresourcesize = sizeof(m_local_resource_info)/sizeof(m_local_resource_info[0]);
-    for (int pri=0; pri < PRIORITY_MAXLEVEL; pri++)
+    for (uint32_t i=0; i<localresourcesize; i++)
     {
-        prinum[pri] = 0;
-        for (uint32_t i=0; i<localresourcesize; i++)
+        if (0 == m_local_resource_info[i].name[0])
         {
-            if (0 == m_local_resource_info[i].name[0])
+            break;
+        }
+        if (0 == strcmp(resourcename, m_local_resource_info[i].name))
+        {
+            for (int j=0; j<m_local_resource_info[i].module_num; j++)
             {
-                break;
-            }
-            if (0 == strcmp(resourcename, m_local_resource_info[i].name))
-            {
-                for (int j=0; j<m_local_resource_info[i].module_num; j++)
+                if (servernum < listsize)
                 {
-                    if (m_local_resource_info[i].modules[j].priority == pri && servernum < listsize)
+                    if (0 == snprintf(server[servernum].host, sizeof(server[0].host),
+                                "%s", m_local_resource_info[i].modules[j].host))
                     {
-                        if (0 == snprintf(server[servernum].host, sizeof(server[0].host),
-                                    "%s", m_local_resource_info[i].modules[j].host))
-                        {
-                            break;
-                        }
-                        if (0 == m_local_resource_info[i].modules[j].port)
-                        {
-                            break;
-                        }
-                        server[servernum].port        = m_local_resource_info[i].modules[j].port;
-                        server[servernum].longconnect = m_local_resource_info[i].modules[j].longconnect;
-                        server[servernum].socknum     = m_local_resource_info[i].modules[j].socknum;
-                        server[servernum].priority    = m_local_resource_info[i].modules[j].priority;
-                        snprintf(server[servernum].name, sizeof(server[0].name), "%s", m_local_resource_info[i].modules[j].name);
-                        servernum++;
-                        prinum[pri] ++;
+                        break;
                     }
+                    if (0 == m_local_resource_info[i].modules[j].port)
+                    {
+                        break;
+                    }
+                    server[servernum].port        = m_local_resource_info[i].modules[j].port;
+                    server[servernum].longconnect = m_local_resource_info[i].modules[j].longconnect;
+                    server[servernum].socknum     = m_local_resource_info[i].modules[j].socknum;
+                    snprintf(server[servernum].name, sizeof(server[0].name), "%s", m_local_resource_info[i].modules[j].name);
+                    servernum++;
                 }
             }
         }
     }
-    DEBUG("get %u servers. key[%s] pri0[%d] pri1[%d] pri2[%d]",
-            servernum, key, prinum[0], prinum[1], prinum[2]);
+    DEBUG("get %u servers. key[%s]", servernum, key);
     return servernum;
 }
 
@@ -462,17 +333,16 @@ int ConnectManager::FetchSocket(const char* key, const char* strbalance)
 {
     int sock = 0;
     m_manager_service++;
-    u_int servernum;
+    uint32_t servernum = 0;
     module_info_t server[MODULE_MAXNUM_PER_RESOURCE];
     memset (server, 0, sizeof(server));
-    int prinum[PRIORITY_MAXLEVEL] = {0};
-    servernum = GetServerList(key, server, MODULE_MAXNUM_PER_RESOURCE, prinum);
+    servernum = GetServerList(key, server, MODULE_MAXNUM_PER_RESOURCE);
     if (servernum <= 0)
     {
         ALARM("GetServerList fail servernum[%d]. key[%s]", servernum, key);
         return -1;
     }
-    CarpCalculate(server, servernum, strbalance, prinum);
+    CarpCalculate(server, servernum, strbalance);
     for (u_int sid=0; sid<servernum; sid++)
     {
         sock = m_connectmap.FetchSocket(server[sid]);
@@ -517,7 +387,7 @@ int Compare_Carp(const void *a, const void *b)
 }
 
 void ConnectManager::CarpCalculate(module_info_t* server,
-        const u_int servernum, const char* strbalance, int* prinum)
+        const u_int servernum, const char* strbalance)
 {
     char tmp[MAX_KEY_MERGE_LEN];
     memset(tmp, 0, sizeof(tmp));
@@ -547,14 +417,6 @@ void ConnectManager::CarpCalculate(module_info_t* server,
                 server[i].host, server[i].port, strbalance, server[i].carpvalue, sign1, sign2);
     }
     // 按照优先级pri和carp值进行排序, 优先级高的放在前面，然后同一优先级的carp值大的放在前面
-    for (int pri = 0; pri < PRIORITY_MAXLEVEL; pri++)
-    {
-        if (prinum[pri] == 0)
-        {
-            continue;
-        }
-        int myoffset = prioffset[pri];
-        qsort(&server[myoffset], prinum[pri], sizeof(module_info_t), Compare_Carp);
-    }
+    qsort(&server, servernum, sizeof(module_info_t), Compare_Carp);
     return;
 }
