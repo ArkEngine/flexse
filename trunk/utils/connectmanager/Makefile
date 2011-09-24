@@ -10,6 +10,8 @@ MAINOBJ= test.o
 
 MAINLIBS= -L ./lib/ -lconnectmanager \
 		  -L ../../opensrc/jsoncpp/lib/ -ljson \
+		  -L ../creat_sign/lib/ -lcreat_sign \
+		  -L ../myutils/lib/ -lmyutils \
 		  -L ../MyException/lib/ -lMyException \
 		  -L ../mylog/lib/ -lmylog
 

@@ -37,20 +37,10 @@ class ConnectManager
 {
 	ConnectMap m_connectmap;
 	resource_info_t m_local_resource_info [RESOURCE_MAXNUM];
-	char m_register_text[REGISTERMCPACK_MAXLEN];
-	// 存储text2mcpack结果
-	char m_resource_pack[REGISTERMCPACK_MAXLEN];
-	// 存储重新set_port后的mcpack
-	char m_register_pack[REGISTERMCPACK_MAXLEN];
-	char m_ResourceLoadPath[FILE_PATH_MAXLEN];
-	// 存储上次最新的资源信息
-	char m_ResourceDumpPath[FILE_PATH_MAXLEN];
 	uint32_t m_manager_fail;
 	uint32_t m_randseed;
 	uint32_t m_manager_success;
 	uint32_t m_manager_service;
-	char* m_tmpbuff;
-	char* m_dumppack;
 
 	static const uint32_t    ConfigMaxNum              = 1024;
 	static const uint32_t    m_DefaultConnectTimeOut   = 100;
@@ -71,30 +61,29 @@ class ConnectManager
 	static const char* const m_DefaultResourceDumpPath;
 	static const char* const m_StrQueryListenPort;
 	static const char* const m_StrServerPunishMode;
-	int m_connect_timeout;
-	int m_server_health_line;
-	int m_connect_retry_line;
-	int m_server_deadline;
-	int m_check_interval;
-	int m_query_listen_port;
-	int m_server_punish_mode;
-	int m_first_run;
+    static const char* const m_StrServerConfigList;
+	uint32_t m_connect_timeout;
+	uint32_t m_server_health_line;
+	uint32_t m_connect_retry_line;
+	uint32_t m_server_deadline;
+	uint32_t m_check_interval;
+	uint32_t m_query_listen_port;
+	uint32_t m_server_punish_mode;
+	uint32_t m_first_run;
 
-	int m_use_resource_server;
 	int m_use_carp_balance;
 
 	ConnectManager(const ConnectManager&);
 	ConnectManager();
 
 	public:
-	ConnectManager(const char* config_path);
+	ConnectManager(Json::Value config_json);
 	~ConnectManager();
 
 	uint32_t FailCount();
 	uint32_t ServiceCount();
 	uint32_t ServerSockFullCount();
 	uint32_t ServerErrConnectCount();
-	const char* ResourceLoadPath();
 
 	/**
 	 * @brief   fetch sock by key and balance
@@ -126,7 +115,7 @@ class ConnectManager
 	/*
 	 * @brief this is for local
 	 */
-	bool InitLocalResource();
+	bool InitLocalResource(Json::Value json_config);
 
 	/*
 	 * @brief: find if resourcename is in resource_info array
@@ -145,14 +134,13 @@ class ConnectManager
 	 * @brief   Get server list
 	 *
 	 * param [in]  key : const char* -- sublogicname or resourcename
-	 * param [in]  priority :  int   -- priority
 	 * param [out] server  :   server_list_t  -- serverlist for return
 	 * @return  int
 	 * @retval  u_int
 	 *       >=0 : servernum
 	 *       <0  : error happen
 	 **/
-	uint32_t  GetServerList(const char* key, module_info_t* server, const uint32_t listsize, int* prinum);
+	uint32_t  GetServerList(const char* key, module_info_t* server, const uint32_t listsize);
 
 	/**
 	 * @brief   Calculate the CARP value
@@ -163,7 +151,7 @@ class ConnectManager
 	 * param [out] carpidx   : int*        -- server index array sort by carp-value
 	 * @return  void
 	 **/
-	void CarpCalculate(module_info_t* server, const u_int servernum, const char* balance, int* prinum);
+	void CarpCalculate(module_info_t* server, const uint32_t servernum, const char* balance);
 };
 
 #endif

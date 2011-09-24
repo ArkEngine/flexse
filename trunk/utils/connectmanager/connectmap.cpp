@@ -96,7 +96,7 @@ int ConnectMap::DelServer  (const char* host, const int port)
         connect_info_t& myconnect_info = m_icm->second;
         myconnect_info.status = SERVER_DELETE;
         int has_busy_sock = 0;
-        for (int i=0; i<myconnect_info.module.socknum; i++)
+        for (uint32_t i=0; i<myconnect_info.module.socknum; i++)
         {
             if (myconnect_info.sockarr[i].status == SOCK_READY)
             {
@@ -140,7 +140,7 @@ int ConnectMap::__AddServer  (const module_info_t& module_info)
     connect_info.service = 0;
     connect_info.timestamp = 0;
     connect_info.freenum = connect_info.module.socknum;
-    for (int i=0; i<SOCK_MAXNUM_PER_SERVER; i++)
+    for (uint32_t i=0; i<SOCK_MAXNUM_PER_SERVER; i++)
     {
         connect_info.sockarr[i].sock = -1;
         connect_info.sockarr[i].status = SOCK_EMPTY;
@@ -195,7 +195,7 @@ int ConnectMap::FreeSocket(const int sock, bool errclose)
     for (m_icm = m_connectmap.begin(); m_icm != m_connectmap.end(); m_icm++)
     {
         connect_info_t& connect_info = m_icm->second;
-        int idx = 0;
+        uint32_t idx = 0;
         while (idx < connect_info.module.socknum)
         {
             if (connect_info.sockarr[idx].sock == sock)
@@ -211,7 +211,7 @@ int ConnectMap::FreeSocket(const int sock, bool errclose)
                     if (connect_info.freenum == connect_info.module.socknum)
                     {
                         // ASSERT
-                        for (int i=0; i<connect_info.module.socknum; i++)
+                        for (uint32_t i=0; i<connect_info.module.socknum; i++)
                         {
                             MySuicideAssert (connect_info.sockarr[idx].status == SOCK_EMPTY);
                         }
@@ -292,7 +292,7 @@ int ConnectMap::__FetchSocket(const char* host, const int port)
     }
     else
     {
-        int idx=0;
+        uint32_t idx=0;
         while (idx<connect_info.module.socknum)
         {
             if (connect_info.sockarr[idx].status == SOCK_BUSY)
@@ -418,7 +418,7 @@ int ConnectMap::FetchSocket(const module_info_t& module_info, bool healthcheck)
             && connect_info.fail_count > m_health_line
             && ((connect_info.fail_count*MAGIC_NUM)&RECONNECT_BOUNDRY) < m_retry_line)
     {
-        DEBUG("Too much fail on Server[%s:%d] failcount[%d], healthline[%d] retryline[%d]",
+        DEBUG("Too much fail on Server[%s:%u] failcount[%u], healthline[%u] retryline[%u]",
                 host, port, connect_info.fail_count, m_health_line, m_retry_line);
         connect_info.fail_count++;
         sock = ECONNECT_SRVDOWN;
@@ -510,21 +510,6 @@ void ConnectMap::__UpdateServerInfo(connect_info_t& connect_info, const module_i
                 host, port, connect_info.module.longconnect, src_module.longconnect);
         connect_info.module.longconnect = (src_module.longconnect == 0? 0 : 1);
     }
-    if (connect_info.module.priority != src_module.priority)
-    {
-        u_int pri = 0;
-        if (src_module.priority >= PRIORITY_MAXLEVEL)
-        {
-            pri = PRIORITY_MAXLEVEL - 1;
-        }
-        else if (src_module.priority < 0)
-        {
-            pri = 0;
-        }
-        DEBUG("server[%s:%d] priority[%d] change to [%d]",
-                host, port, connect_info.module.priority, pri);
-        connect_info.module.priority = pri;
-    }
 }
 
 void ConnectMap::__CheckDeadServer()
@@ -541,11 +526,11 @@ void ConnectMap::__CheckDeadServer()
     m_last_check = now.tv_sec;
     for (m_icm = m_connectmap.begin(); m_icm != m_connectmap.end(); m_icm++)
     {
-        if ((now.tv_sec - m_icm->second.timestamp) > m_server_deadline)
+        if ((now.tv_sec - m_icm->second.timestamp) > (int)m_server_deadline)
         {
             int has_busy_sock = 0;
             connect_info_t connect_info = m_icm->second;
-            for (int i=0; i< connect_info.module.socknum; i++)
+            for (uint32_t i=0; i< connect_info.module.socknum; i++)
             {
                 if (connect_info.sockarr[i].status == SOCK_READY)
                 {
@@ -562,7 +547,7 @@ void ConnectMap::__CheckDeadServer()
             {
                 ROUTN("DelServer[%s:%d] success in ConnectMap, Real delete immediately",
                         connect_info.module.host, connect_info.module.port);
-                for (int i=connect_info.module.socknum; i<SOCK_MAXNUM_PER_SERVER; i++)
+                for (uint32_t i=connect_info.module.socknum; i<SOCK_MAXNUM_PER_SERVER; i++)
                 {
                     MySuicideAssert(connect_info.sockarr[i].status == SOCK_EMPTY);
                 }

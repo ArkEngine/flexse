@@ -19,9 +19,8 @@ typedef struct __module_info_t
 	char     name[MODULE_NAME_MAXLEN];
 	char     host[MODULE_ADDRESS_MAXLEN];
 	uint16_t port;
-	int      longconnect;
-	int      priority;
-	int      socknum;
+	uint32_t longconnect;
+	uint32_t socknum;
 	uint32_t carpvalue;
 }module_info_t;
 enum error_code
@@ -39,22 +38,22 @@ enum error_code
 class ConnectMap
 {
 	private:
-		int m_health_line;
-		int m_retry_line;
-		int m_check_interval;
-		int m_last_check;
-		int m_server_deadline;
-		int m_connectto_ms;
+		uint32_t m_health_line;
+		uint32_t m_retry_line;
+		uint32_t m_check_interval;
+		uint32_t m_last_check;
+		uint32_t m_server_deadline;
+		uint32_t m_connectto_ms;
 		bool m_punish_mode;
-		u_int m_err_server_miss;
-		u_int m_err_server_conn;
-		u_int m_err_server_full;
-		static const int DFT_CONNECT_TIMEOUT = 100;
-		static const int DFT_HEALTH_LINE = 10;
-		static const int DFT_RETRY_LINE = 100;
-		static const int DFT_CHECK_INTERVAL = 3600;
-		static const int DFT_SERVER_DEADLINE = 3600;
-		static const int MAGIC_NUM = 0x4A3B2C1D;
+		uint32_t m_err_server_miss;
+		uint32_t m_err_server_conn;
+		uint32_t m_err_server_full;
+		static const uint32_t DFT_CONNECT_TIMEOUT = 100;
+		static const uint32_t DFT_HEALTH_LINE = 10;
+		static const uint32_t DFT_RETRY_LINE = 100;
+		static const uint32_t DFT_CHECK_INTERVAL = 3600;
+		static const uint32_t DFT_SERVER_DEADLINE = 3600;
+		static const uint32_t MAGIC_NUM = 0x4A3B2C1D;
 
 		pthread_mutex_t m_mutex;
 
@@ -80,8 +79,8 @@ class ConnectMap
 			server_status status;
 			time_t timestamp;
 			module_info_t module;
-			int  fail_count;
-			int  freenum; // READY和EMPTY状态的cell数目
+			uint32_t  fail_count;
+			uint32_t  freenum; // READY和EMPTY状态的cell数目
 			u_int service; // 服务次数
 			sock_info_t  sockarr[SOCK_MAXNUM_PER_SERVER];
 		};
@@ -148,7 +147,7 @@ class ConnectMap
 
 	public:
 
-		static const int RECONNECT_BOUNDRY = 0x0000007F;
+		static const uint32_t RECONNECT_BOUNDRY = 0x0000007F;
 
 		ConnectMap();
 		~ConnectMap();
