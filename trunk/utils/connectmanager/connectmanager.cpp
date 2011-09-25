@@ -6,15 +6,14 @@
 
 using namespace flexse;
 
-const char* const ConnectManager :: m_StrConnectTimeOut       = "connect_timeout_ms";
-const char* const ConnectManager :: m_StrServerHealthLine     = "server_health_line";
-const char* const ConnectManager :: m_StrRetryLine            = "server_retry_line";
-const char* const ConnectManager :: m_StrServerDeadline       = "server_dead_line";
-const char* const ConnectManager :: m_StrServerPunishMode     = "server_punish_mode";
-const char* const ConnectManager :: m_StrCheckInterval        = "server_check_interval";
-const char* const ConnectManager :: m_StrUseResourceServer    = "use_resource_server";
-const char* const ConnectManager :: m_StrUseCarpBalance       = "use_carp_balance";
-const char* const ConnectManager :: m_StrServerConfigList     = "server_config_list";
+const char* const ConnectManager :: m_StrConnectTimeOut   = "connect_timeout_ms";
+const char* const ConnectManager :: m_StrServerHealthLine = "server_health_line";
+const char* const ConnectManager :: m_StrRetryLine        = "server_retry_line";
+const char* const ConnectManager :: m_StrServerDeadline   = "server_dead_line";
+const char* const ConnectManager :: m_StrCheckInterval    = "server_check_interval";
+const char* const ConnectManager :: m_StrServerPunishMode = "server_punish_mode";
+const char* const ConnectManager :: m_StrUseCarpBalance   = "use_carp_balance";
+const char* const ConnectManager :: m_StrServerConfigList = "server_config_list";
 
 ConnectManager::ConnectManager(Json::Value config_json) : 
 	m_connectmap()

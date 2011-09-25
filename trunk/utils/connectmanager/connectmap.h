@@ -42,7 +42,7 @@ class ConnectMap
 		uint32_t m_last_check;
 		uint32_t m_server_deadline;
 		uint32_t m_connectto_ms;
-		bool m_punish_mode;
+		bool     m_punish_mode;
 		uint32_t m_err_server_miss;
 		uint32_t m_err_server_conn;
 		uint32_t m_err_server_full;
@@ -75,12 +75,12 @@ class ConnectMap
 		struct connect_info_t
 		{
 			server_status status;
-			time_t timestamp;
+			time_t        timestamp;
 			module_info_t module;
-			uint32_t  fail_count;
-			uint32_t  freenum; // READY和EMPTY状态的cell数目
-			uint32_t  service; // 服务次数
-			sock_info_t  sockarr[SOCK_MAXNUM_PER_SERVER];
+			uint32_t      fail_count;
+			uint32_t      freenum; // READY和EMPTY状态的cell数目
+			uint32_t      service; // 服务次数
+			sock_info_t   sockarr[SOCK_MAXNUM_PER_SERVER];
 		};
 		map <string, connect_info_t> m_connectmap;
 		map <string, connect_info_t>::iterator  m_icm;
@@ -143,55 +143,6 @@ class ConnectMap
 		 */
 		void __CheckDeadServer();
 
-	public:
-
-		static const uint32_t RECONNECT_BOUNDRY = 0x0000007F;
-
-		ConnectMap();
-		~ConnectMap();
-
-		uint32_t ServerSockFullCount();
-		uint32_t ServerErrConnectCount();
-
-		/**
-		 * @brief   set the timeout of connectmap
-		 *
-		 * param [in] ctimeout : const int -- ctimeout, ms
-		 * @return  void
-		 * @retval  void
-		 **/
-		void SetConnectTO    (const uint32_t ctimeout);
-		void SetRetryLine    (const uint32_t rline);
-		void SetHealthLine   (const uint32_t hline);
-		void SetDeadline     (const uint32_t dline);
-		void SetCheckInterval(const uint32_t checkinterval);
-		void SetPunishMode(bool mode); // 当因为错误而 FreeSocket 时，惩罚这个server
-
-		/**
-		 * @brief   fetch sock by module_info_t
-		 *
-		 * param [in] moduinfo: const module_info_t   -- module_info
-		 * if module_info change, update it
-		 * if no module exist, return, NOT add
-		 * @return  int
-		 * @retval  retval
-		 *  >=0 : success
-		 *   <0 : fail
-		 **/
-		int FetchSocket(const module_info_t& module_info, bool healthcheck = true);
-
-		/**
-		 * @brief   free sock
-		 *
-		 * param [in] sock     : const int -- sock to free
-		 * param [in] errclose : bool      -- is close by error?
-		 * @return  int
-		 * @retval  retval
-		 *   =0 : success
-		 *   <0 : fail
-		 **/
-		int FreeSocket (const int sock, bool errclose);
-
 		/**
 		 * @brief   add server in connect-map no mutex
 		 *
@@ -225,5 +176,54 @@ class ConnectMap
 		 *   <0 : fail
 		 **/
 		int DelServer  (const char* host, const int port);
+
+	public:
+
+		static const uint32_t RECONNECT_BOUNDRY = 0x0000007F;
+
+		ConnectMap();
+		~ConnectMap();
+
+		uint32_t ServerSockFullCount();
+		uint32_t ServerErrConnectCount();
+
+		/**
+		 * @brief   set the timeout of connectmap
+		 *
+		 * param [in] ctimeout : const int -- ctimeout, ms
+		 * @return  void
+		 * @retval  void
+		 **/
+		void SetConnectTO    (const uint32_t ctimeout);
+		void SetRetryLine    (const uint32_t rline);
+		void SetHealthLine   (const uint32_t hline);
+		void SetDeadline     (const uint32_t dline);
+		void SetCheckInterval(const uint32_t checkinterval);
+		void SetPunishMode   (bool mode); // 当因为错误而 FreeSocket 时，惩罚这个server
+
+		/**
+		 * @brief   fetch sock by module_info_t
+		 *
+		 * param [in] moduinfo: const module_info_t   -- module_info
+		 * if module_info change, update it
+		 * if no module exist, return, NOT add
+		 * @return  int
+		 * @retval  retval
+		 *  >=0 : success
+		 *   <0 : fail
+		 **/
+		int FetchSocket(const module_info_t& module_info, bool healthcheck = true);
+
+		/**
+		 * @brief   free sock
+		 *
+		 * param [in] sock     : const int -- sock to free
+		 * param [in] errclose : bool      -- is close by error?
+		 * @return  int
+		 * @retval  retval
+		 *   =0 : success
+		 *   <0 : fail
+		 **/
+		int FreeSocket (const int sock, bool errclose);
 };
 #endif
