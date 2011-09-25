@@ -49,15 +49,20 @@ class flexse_plugin
 
         structmask* m_post_maskmap;
         structmask* m_attr_maskmap;
+        
+        // 这个json对象可以当作一个通用的容器
+        Json::Value m_json_hell;
 
     public:
         secore* mysecore;
 
         flexse_plugin(const char* config_path, secore* insecore);
         ~flexse_plugin();
-        int add(  const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist, vector<attr_field_t> & attrlist);
-        int mod(  const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist, vector<attr_field_t> & attrlist);
-        int del(  const char* jsonstr, vector<uint32_t> & id_list);
-        int undel(const char* jsonstr, vector<uint32_t> & id_list);
+        int add   (const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist, vector<attr_field_t> & attrlist);
+        int mod   (const char* jsonstr, uint32_t& doc_id, vector<term_info_t> & termlist, vector<attr_field_t> & attrlist);
+        int del   (const char* jsonstr, vector<uint32_t> & id_list);
+        int undel (const char* jsonstr, vector<uint32_t> & id_list);
+        int query (const char* jsonstr, char* retBuff, const uint32_t retBuffSize);
+        // merger/filter/ranking的算法实现，参考algo.h
 };
 #endif

@@ -23,8 +23,8 @@ using namespace std;
  */
 int32_t filter(
 		void* pposting_list,
-		const mask_item_t& doc_id_mask,
 		const uint32_t nmemb, 
+		const mask_item_t& doc_id_mask,
 		const void* pattrlist,
         const filter_logic_t* logic_list,
         const uint32_t logic_num
@@ -118,9 +118,9 @@ int32_t filter(
  */
 int32_t ranking(
 		void* pposting_list,
+		const uint32_t nmemb, 
 		const mask_item_t& doc_id_mask,
 		const mask_item_t& weight_mask,
-		const uint32_t nmemb, 
 		const void* pattrlist,
         const ranking_logic_t* logic_list,
         const uint32_t logic_num

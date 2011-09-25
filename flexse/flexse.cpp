@@ -49,41 +49,6 @@ void PrintVersion(void)
 	printf("BuildDate  :  %s - %s\n", __DATE__, __TIME__);
 }
 
-int read_file_all(const char* file, unsigned char* buff, const uint32_t bufsize)
-{
-	if (file == NULL || buff == NULL || bufsize == 0) {
-		ALARM("param error. file[%p] buff[%p] bufsize[%u]",
-                file, buff, bufsize);
-		return -1;
-	}
-	int fd = open(file, O_RDONLY);
-	if (fd == -1) {
-		ALARM( "open file[%s] failed. %m", file);
-		return -1;
-	}
-    int32_t offset = lseek(fd, 0, SEEK_END);
-	if (offset == -1) {
-		ALARM( "lssek file[%s] failed. %m", file);
-		return -1;
-	}
-	if ((uint32_t)offset > bufsize || offset == 0) {
-		ALARM( "file[%s] size[%d] tooo big or small. bufsize[%d]", file, offset, bufsize);
-		return -1;
-	}
-	lseek(fd, 0, SEEK_SET);
-	int left = offset;  while (left > 0) {
-		int len = read(fd, buff+offset-left, left);
-		if (len == -1 || len == 0) {
-			ALARM( "readfile failed. ERROR[%m]");
-			return -1;
-		}
-		left -= len;
-	}
-	DEBUG( "read file[%s] all ok.", file);
-	close(fd);
-	return offset;
-}
-
 	void*
 ServiceThread(void* args)
 {
