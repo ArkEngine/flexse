@@ -48,7 +48,7 @@ namespace flexse
             return -1;
         }
 
-        const uint32_t maxBackLog = 10;
+        const uint32_t maxBackLog = 128;
         if ( -1 == listen (listenfd, maxBackLog))
         {
             FATAL( "listen(listenfd[%u], backlog[%u]) fail. msg[%m]", listenfd, maxBackLog);

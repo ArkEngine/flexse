@@ -17,9 +17,9 @@ CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 #	  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB) $(PYEXT) $(MAIN)
+#all: clean $(LIB) $(PYEXT) $(MAIN)
+all: clean $(LIB) $(MAIN)
 	rm *.o -f
-#all: clean $(LIB) $(MAIN)
 
 $(LIB): $(LIBOBJ)
 	ar cr $(LIB) $(LIBOBJ)

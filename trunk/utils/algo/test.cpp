@@ -100,7 +100,7 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+        rst_num = filter( post_list_org, SIZE, doc_id_mask,
                 attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+        rst_num = filter( post_list_org, SIZE, doc_id_mask,
                 attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+        rst_num = filter( post_list_org, SIZE, doc_id_mask,
                 attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+        rst_num = filter( post_list_org, SIZE, doc_id_mask,
                 attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
@@ -282,7 +282,7 @@ int main(int argc, char** argv)
         }
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+        rst_num = filter( post_list_org, SIZE, doc_id_mask,
                 attr_list_org, &mlogic, 1 );
         gettimeofday(&eetv, NULL); 
         all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
@@ -404,7 +404,7 @@ int main(int argc, char** argv)
         //        printf("mcount : %d\n", mcount);
 
         gettimeofday(&bbtv, NULL); 
-        rst_num = filter( post_list_org, doc_id_mask, SIZE,
+        rst_num = filter( post_list_org, SIZE, doc_id_mask,
                 attr_list_org, logic_list, 5 );
         gettimeofday(&eetv, NULL); 
         //        printf("rst_num: %d\n", rst_num);
