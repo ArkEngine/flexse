@@ -22,6 +22,12 @@ int main()
 
     ConnectManager* cm = new ConnectManager(root);
     MyThrowAssert(NULL != cm);
+    for (uint32_t i=0; i<5; i++)
+    {
+        int sock = cm->FetchSocket("/search/leaf0", "test");
+        PRINT("sock: %d", sock);
+        MyThrowAssert(0 == cm->FreeSocket(sock, false));
+    }
 
     return 0;
 }

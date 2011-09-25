@@ -14,7 +14,6 @@ using namespace std;
 #define RESOURCE_MAXNUM (128)
 #define RESOURCE_NAME_MAXLEN (128)
 #define MODULE_MAXNUM_PER_RESOURCE (32)
-#define REGISTERMCPACK_MAXLEN (64*1024)
 
 typedef struct __resource_info_t
 {
@@ -41,7 +40,6 @@ class ConnectManager
 	uint32_t m_manager_success;
 	uint32_t m_manager_service;
 
-	static const uint32_t    ConfigMaxNum              = 1024;
 	static const uint32_t    m_DefaultConnectTimeOut   = 100;
 	static const uint32_t    m_DefaultServerHealthLine = 10;
 	static const uint32_t    m_DefaultRetryLine        = 100;
@@ -52,13 +50,7 @@ class ConnectManager
 	static const char* const m_StrRetryLine;
 	static const char* const m_StrServerDeadline;
 	static const char* const m_StrCheckInterval;
-	static const char* const m_StrUseResourceServer;
 	static const char* const m_StrUseCarpBalance;
-	static const char* const m_StrResourcePackPath;
-	static const char* const m_DefaultResourcePackPath;
-	static const char* const m_StrResourceDumpPath;
-	static const char* const m_DefaultResourceDumpPath;
-	static const char* const m_StrQueryListenPort;
 	static const char* const m_StrServerPunishMode;
     static const char* const m_StrServerConfigList;
 	uint32_t m_connect_timeout;
@@ -66,11 +58,8 @@ class ConnectManager
 	uint32_t m_connect_retry_line;
 	uint32_t m_server_deadline;
 	uint32_t m_check_interval;
-	uint32_t m_query_listen_port;
 	uint32_t m_server_punish_mode;
-	uint32_t m_first_run;
-
-	int m_use_carp_balance;
+	uint32_t m_use_carp_balance;
 
 	ConnectManager(const ConnectManager&);
 	ConnectManager();

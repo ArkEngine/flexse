@@ -1,5 +1,23 @@
 {
-    "server_config_list":
+    // 链接超时时间，以ms为单位，默认为100ms
+    "connect_timeout_ms"    : 100,
+    // 当远程服务器出现连续10次故障时，启动屏蔽模式
+    "server_health_line"    : 10,
+    // 被屏蔽的服务器被使用的概率，总数是128，
+    // 当随机数超过server_retry_line时，此服务器被选中
+    "server_retry_line"     : 100,
+    // 当一个服务超过server_dead_line秒的这段时间内没有被使用
+    // 则表示此服务器被废弃
+    "server_dead_line"      : 3600,
+    // 检查废弃服务器的时间是server_check_interval秒
+    // 当检查到时，开始释放这些连接，在map中删除这个ip:port对
+    "server_check_interval" : 3600,
+    // 是否对FreeSocket(sock, true)启用惩罚机制，默认关闭
+    // 仅当启用时FreeSocket(sock, true)才算反馈，比如服务超时。
+    "server_punish_mode"    : 1,
+    // 是否使用carp均衡算法，默认启用，否则使用随机算法
+    "use_carp_balance"      : 1,
+    "server_config_list"    :
     [
         {
             "name"          : "leaf0",
