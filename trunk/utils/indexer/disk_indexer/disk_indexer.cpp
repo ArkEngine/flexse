@@ -51,9 +51,10 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
         m_diskv.clear();
         remove(m_second_index_file);
     }
-    close(fd);
-    m_index_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
-    MySuicideAssert(NULL != m_index_block);
+    if (fd >= 0)
+    {
+        close(fd);
+    }
     m_last_si.milestone = 0;
     m_last_si.ikey.sign64 = 0;
     m_readonly = (0 != m_second_index.size());
@@ -62,12 +63,15 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
             second_index_count,
             first_index_count,
             m_readonly);
+    pthread_mutex_init(&m_map_mutex, NULL);
 }
 
 disk_indexer :: ~disk_indexer()
 {
-    free(m_index_block);
-    m_index_block = NULL;
+    for(m_map_it=m_cache_map.begin(); m_map_it!=m_cache_map.end(); m_map_it++)
+    {
+        free(m_map_it->second.pbuff);
+    }
 }
 
 int disk_indexer :: ikey_comp (const void *m1, const void *m2)
@@ -110,6 +114,7 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     }
 
     // (1) 先读取二级索引，得到在fileblock中的第几块中
+    // 搞点cache能减少IO，那就搞起吧
     uint32_t last_offset = m_second_index.size()-1;
     second_index_t si;
     creat_sign_64(strTerm, len, &si.ikey.uint1, &si.ikey.uint2);
@@ -126,15 +131,45 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     // (2) 根据milestone读取fileblock中的连续块
     uint32_t block_no = (bounds->milestone == 0) ? 0 : bounds->milestone-TERM_MILESTONE;
     uint32_t rd_count = (bounds->milestone == m_last_si.milestone) ? m_last_si.milestone%TERM_MILESTONE : TERM_MILESTONE;
+    char cache_key[64];
+    snprintf(cache_key, sizeof(cache_key), "%u:%u", block_no, rd_count);
+    fb_index_t* pindex_block = NULL;
+    uint32_t rt_count = 0;
 
-    uint32_t rt_count = (uint32_t)m_fileblock.get(block_no, rd_count, m_index_block, TERM_MILESTONE*sizeof(fb_index_t));
-    DEBUG("rd_count[%u] rt_count[%u] block_no[%u]", rd_count, rt_count, block_no);
-    MyThrowAssert(rd_count*sizeof(fb_index_t) == (uint32_t)m_fileblock.get(block_no, rd_count,
-                m_index_block, TERM_MILESTONE*sizeof(fb_index_t)));
+    pthread_mutex_lock(&m_map_mutex);
+    m_map_it = m_cache_map.find(string(cache_key));
+    if (m_map_it == m_cache_map.end())
+    {
+        // cache没找到
+        pindex_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
+        if (NULL == pindex_block)
+        {
+            FATAL("Can't Alloc Memory for index_block term[%s]!!", strTerm);
+            pthread_mutex_unlock(&m_map_mutex);
+            return -1;
+        }
+        else
+        {
+            // 之后也不释放pindex_block，析构的时候统一释放
+            rt_count = (uint32_t)m_fileblock.get(block_no, rd_count, pindex_block, TERM_MILESTONE*sizeof(fb_index_t));
+            DEBUG("rd_count[%u] rt_count[%u] block_no[%u]", rd_count, rt_count, block_no);
+            MyThrowAssert(rd_count*sizeof(fb_index_t) == (uint32_t)m_fileblock.get(block_no, rd_count,
+                        pindex_block, TERM_MILESTONE*sizeof(fb_index_t)));
+            struct block_cache_t block_cache_item = {rd_count, pindex_block};
+            m_cache_map[string(cache_key)] = block_cache_item;
+        }
+    }
+    else
+    {
+        rt_count     = m_map_it->second.bufsiz;
+        pindex_block = m_map_it->second.pbuff;
+    }
+    pthread_mutex_unlock(&m_map_mutex);
+
     // (3) 执行二分查找
     fb_index_t theOne;
     theOne.ikey = si.ikey;
-    fb_index_t* pseRet = (fb_index_t*)bsearch(&theOne, m_index_block, rd_count, sizeof(fb_index_t), ikey_comp);
+    fb_index_t* pseRet = (fb_index_t*)bsearch(&theOne, pindex_block, rd_count, sizeof(fb_index_t), ikey_comp);
     if (pseRet == NULL)
     {
         ALARM("strTerm[%s]'s sign[%llu] NOT found in index blocks.",
@@ -143,7 +178,7 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     }
     // (4) 得到了diskv中的diskv_idx_t, 读取索引
     int ret = m_diskv.get(pseRet->idx, buff, length);
-    //    ROUTN("diskv readret[%u] idx.data_len[%u]", ret, pseRet->idx.data_len);
+    // ROUTN("diskv readret[%u] idx.data_len[%u]", ret, pseRet->idx.data_len);
     return (ret < 0) ? ret : ret/m_posting_cell_size;
 }
 
@@ -203,7 +238,6 @@ void disk_indexer :: set_finish()
 void disk_indexer :: clear()
 {
     // 清掉cache
-    // 清掉m_index_block;
     m_second_index.clear();
     // 清掉磁盘上的index_block;
     remove(m_second_index_file);
