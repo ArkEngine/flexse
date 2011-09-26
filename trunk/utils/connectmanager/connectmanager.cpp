@@ -225,7 +225,7 @@ void ConnectManager::ProcessResource(Json::Value resource,
 	bool bret = find_idx(resourcename, resourcelist, listsize, cur_ridx);
 	if (false == bret && cur_ridx >= 0 )
 	{
-		DEBUG("new server, new cell. path[%s] name[%s]", resource["path"].asCString(), resourcename);
+		DEBUG("new server, new cell. name[%s]", resourcename);
 		resourcenum++;
 	}
 	else if (false == bret && cur_ridx == -1)
@@ -235,7 +235,7 @@ void ConnectManager::ProcessResource(Json::Value resource,
 	}
 	else
 	{
-		DEBUG("new server, old cell. path[%s] name[%s]", resource["path"].asCString(), resourcename);
+		DEBUG("new server, old cell. name[%s]", resourcename);
 	}
 	if ( 0 == snprintf(resourcelist[cur_ridx].name,
 				sizeof(resourcelist[0].name), "%s", resourcename))
@@ -249,9 +249,8 @@ void ConnectManager::ProcessResource(Json::Value resource,
                 && 0 == strcmp(resourcelist[cur_ridx].modules[midx].host, resource["ip"].asCString()))
         {
             // repeat
-            DEBUG("repeat resource host[%s] port[%u] path[%s] name[%s]",
-                    resource["ip"].asCString(), resource["port"].asInt(),
-                    resource["path"].asCString(), resource["name"].asCString());
+            DEBUG("repeat resource host[%s] port[%u] name[%s]",
+                    resource["ip"].asCString(), resource["port"].asInt(), resource["name"].asCString());
             break;
         }
         if (resourcelist[cur_ridx].modules[midx].port != 0)
@@ -260,12 +259,6 @@ void ConnectManager::ProcessResource(Json::Value resource,
             continue;
         }
         resourcelist[cur_ridx].modules[midx].name[0] = 0;
-        const char* modulename = resource["path"].asCString();
-        if (0 == modulename[0])
-        {
-            ALARM("Can't get modulename in resourcepack @ resourcearray[%d]", cur_ridx);
-            return;
-        }
         snprintf(resourcelist[cur_ridx].modules[midx].name,
                 sizeof(resourcelist[0].modules[0].name), "%s", resourcename);
 
@@ -324,16 +317,6 @@ uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, c
     MySuicideAssert (key && server && listsize > 0);
     uint32_t servernum = 0;
 
-    char resourcename[RESOURCE_NAME_MAXLEN];
-    memset (resourcename, 0, sizeof(resourcename));
-    const char* pslash = strrchr(key, '/');
-    if (pslash == NULL)
-    {
-        ALARM("invalid key[%s]", key);
-        return 0;
-    }
-    strncpy(resourcename, pslash+1, sizeof(resourcename));
-
     uint32_t localresourcesize = sizeof(m_local_resource_info)/sizeof(m_local_resource_info[0]);
     for (uint32_t i=0; i<localresourcesize; i++)
     {
@@ -341,7 +324,7 @@ uint32_t ConnectManager::GetServerList(const char* key, module_info_t* server, c
         {
             break;
         }
-        if (0 == strcmp(resourcename, m_local_resource_info[i].name))
+        if (0 == strcmp(key, m_local_resource_info[i].name))
         {
             for (int j=0; j<m_local_resource_info[i].module_num; j++)
             {

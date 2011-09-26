@@ -16,12 +16,11 @@
     // 仅当启用时FreeSocket(sock, true)才算反馈，比如服务超时。
     "server_punish_mode"    : 1,
     // 是否使用carp均衡算法，默认启用，否则使用随机算法
-    "use_carp_balance"      : 1,
+    "use_carp_balance"      : 0,
     "server_config_list"    :
     [
         {
             "name"          : "leaf0",
-            "path"          : "search",
             "ip"            : "127.0.0.1",
             "port"          : 11111,
             "priority"      : 1,
@@ -30,7 +29,6 @@
         },
         {
             "name"          : "leaf0",
-            "path"          : "search",
             "ip"            : "127.0.0.1",
             "port"          : 11112,
             "priority"      : 1,
@@ -39,9 +37,8 @@
         },
         {
             "name"          : "leaf0",
-            "path"          : "search",
             "ip"            : "127.0.0.1",
-            "port"          : 11112,
+            "port"          : 11113,
             "priority"      : 1,
             "longconnect"   : 1,
             "sockperserver" : 30
