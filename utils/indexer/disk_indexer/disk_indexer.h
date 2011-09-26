@@ -5,6 +5,9 @@
 #include "fileblock.h"
 #include "diskv.h"
 #include <vector>
+#include <pthread.h>
+#include <string>
+#include <map>
 using namespace std;
 
 class disk_indexer : public base_indexer
@@ -39,8 +42,15 @@ class disk_indexer : public base_indexer
         second_index_t m_last_si;            ///< set过程中记录最后一个二级索引
         vector<second_index_t> m_second_index; ///< 二级索引
         char m_second_index_file[MAX_FILE_LENGTH];
-        fb_index_t* m_index_block;           ///< 用于每次存放索引分块
         ///< 考虑使用tcm作为索引分块的cache. TODO
+        pthread_mutex_t m_map_mutex;
+        struct block_cache_t
+        {
+            uint32_t    bufsiz;
+            fb_index_t* pbuff;
+        };
+        map<string, block_cache_t> m_cache_map;
+        map<string, block_cache_t>::iterator m_map_it;
 
         disk_indexer();
         disk_indexer(const disk_indexer&);
