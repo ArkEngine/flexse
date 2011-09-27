@@ -11,6 +11,7 @@ begin = int(sys.argv[1])
 end   = int(sys.argv[2]) + 1
 step  = int(sys.argv[3])
 
+block_id = 0
 FMT_XHEAD = "I16sIIII"
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect(("127.0.0.1", 1984));
@@ -28,7 +29,8 @@ for x in range(begin, end):
         dd['tags'] = ["nasty*"+str(x), "sexy*"+str(x), "pretty*"+str(x)]
         jsonstr = json.dumps(dd)
 #        print jsonstr
-        sbuf = struct.pack(FMT_XHEAD, 123, "pyclient", 0, 0, 0, len(jsonstr))
+        block_id += 1
+        sbuf = struct.pack(FMT_XHEAD, 123, "pyclient", 0, block_id, 0, len(jsonstr))
         sbuf += jsonstr
         sock.send(sbuf)
         rbuf = sock.recv(36)

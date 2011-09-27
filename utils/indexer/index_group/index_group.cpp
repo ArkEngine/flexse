@@ -383,12 +383,12 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
             {
                 lstnum += tmpnum;
                 offset = lstnum * m_cell_size;
-                printf("-- index_no[%u] lstnum[%u] --\n", i, tmpnum);
-                for (int32_t k=0; k<lstnum; k++)
-                {
-                    printf("[%u] ", ((uint32_t*)buff)[k]);
-                }
-                printf("\n");
+//                printf("-- index_no[%u] lstnum[%u] --\n", i, tmpnum);
+//                for (int32_t k=0; k<lstnum; k++)
+//                {
+//                    printf("[%u] ", ((uint32_t*)buff)[k]);
+//                }
+//                printf("\n");
             }
         }
     }

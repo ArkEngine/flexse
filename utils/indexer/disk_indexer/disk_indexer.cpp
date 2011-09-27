@@ -72,6 +72,7 @@ disk_indexer :: ~disk_indexer()
     {
         free(m_map_it->second.pbuff);
     }
+    m_cache_map.clear();
 }
 
 int disk_indexer :: ikey_comp (const void *m1, const void *m2)
@@ -138,7 +139,8 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
 
     pthread_mutex_lock(&m_map_mutex);
     m_map_it = m_cache_map.find(string(cache_key));
-    if (m_map_it == m_cache_map.end())
+    //if (m_map_it == m_cache_map.end())
+    if (true)
     {
         // cache没找到
         pindex_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
@@ -246,6 +248,12 @@ void disk_indexer :: clear()
     m_last_si.milestone = 0;
     m_last_si.ikey.sign64 = 0;
     m_readonly = false;
+
+    for(m_map_it=m_cache_map.begin(); m_map_it!=m_cache_map.end(); m_map_it++)
+    {
+        free(m_map_it->second.pbuff);
+    }
+    m_cache_map.clear();
 }
 
 bool disk_indexer :: empty()
