@@ -79,8 +79,10 @@ void* update_thread(void* args)
             //
             // !!!
             // 如果要考虑到分布式消息队列的话，就得小心了。要加上消息服务器的比较
-            if ((last_file_no > recv_head->file_no)
-                    || (last_file_no == recv_head->file_no && last_block_id >= recv_head->block_id))
+//            if ((last_file_no > recv_head->file_no)
+//                    || (last_file_no == recv_head->file_no && last_block_id >= recv_head->block_id))
+            if ((recv_head->block_id == 1 && recv_head->file_no != 0 && (last_file_no+1) != recv_head->file_no)
+                    ||(recv_head->block_id != 1 && (last_block_id+1) != recv_head->block_id))
             {
                 // 数据回滚时的几个特殊case
                 // file_no = 0, block_id = 0，表示从消息的第一个消息开始放数据

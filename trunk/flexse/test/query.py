@@ -10,7 +10,6 @@ sock.connect(("127.0.0.1", 1983));
 dd = {}
 dd['QUERY'] = sys.argv[1]
 jsonstr = json.dumps(dd)
-print jsonstr
 sbuf = struct.pack(FMT_XHEAD, 1234, "pyclient", 0, 0, 0, len(jsonstr))
 sbuf += jsonstr
 sock.send(sbuf)
