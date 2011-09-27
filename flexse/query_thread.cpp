@@ -62,17 +62,17 @@ int ServiceApp(thread_data_t* ptd)
     uint32_t* plist = ((uint32_t*)dststr);
     for (int i=0; i<list_num; i++)
     {
-        printf("[%u]-m[%u]-d[%u] ",
-                plist[i],
-                _GET_BITMAP_(*(ptd->plugin->mysecore->m_mod_bitmap), plist[i]),
-                _GET_BITMAP_(*(ptd->plugin->mysecore->m_del_bitmap), plist[i]));
+//        printf("[%u]-m[%u]-d[%u] ",
+//                plist[i],
+//                _GET_BITMAP_(*(ptd->plugin->mysecore->m_mod_bitmap), plist[i]),
+//                _GET_BITMAP_(*(ptd->plugin->mysecore->m_del_bitmap), plist[i]));
         if ((0 == _GET_BITMAP_(*(ptd->plugin->mysecore->m_mod_bitmap), plist[i]))
                 && (0 == _GET_BITMAP_(*(ptd->plugin->mysecore->m_del_bitmap), plist[i])))
         {
             plist[filter_num++] = plist[i];
         }
     }
-    printf("\n");
+//    printf("\n");
 
     ptd->SendHead->detail_len = filter_num <= 0? 0 : filter_num*sizeof(uint32_t);
 
