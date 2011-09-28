@@ -57,6 +57,10 @@ disk_indexer :: disk_indexer(const char* dir, const char* iname, const uint32_t 
     }
     m_last_si.milestone = 0;
     m_last_si.ikey.sign64 = 0;
+    if (0 != m_second_index.size())
+    {
+        m_last_si = m_second_index[m_second_index.size()-1];
+    }
     m_readonly = (0 != m_second_index.size());
     ROUTN("second_index size[%u] count[%u] first_index_count[%u] set freeze as [%u].",
             m_second_index.size(),
@@ -130,19 +134,25 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     vector<second_index_t>::iterator bounds;
     bounds = lower_bound (m_second_index.begin(), m_second_index.end(), si);
     // (2) 根据milestone读取fileblock中的连续块
-    uint32_t block_no = (bounds->milestone == 0) ? 0 : bounds->milestone-TERM_MILESTONE;
-    uint32_t rd_count = (bounds->milestone == m_last_si.milestone) ? m_last_si.milestone%TERM_MILESTONE : TERM_MILESTONE;
+    // 如果这个key正好是TERM_MILESTONE的采集点，也就是TERM_MILESTONE的倍数
+    // 则从自己的milestone开始读取TERM_MILESTONE个fb_index_t
+    // 否则从上一个milestone开始读取TERM_MILESTONE个fb_index_t，因为这是使用lower_bound的缘故
+    // 如果这个key是最后一个，则只读取1个即可
+    // 如果key是最后一个区间的，那么读取的个数介于1-TERM_MILESTONE之间
+    uint32_t block_no = (si.ikey.sign64 == bounds->ikey.sign64) ? bounds->milestone : bounds->milestone-TERM_MILESTONE;
+    //    uint32_t rd_count = (si.ikey.sign64 == m_last_si.ikey.sign64) ? 1 : TERM_MILESTONE - (bounds->milestone%TERM_MILESTONE);
+    uint32_t rd_count = TERM_MILESTONE;
+    uint32_t rt_count = 0;
     char cache_key[64];
     snprintf(cache_key, sizeof(cache_key), "%u:%u", block_no, rd_count);
     fb_index_t* pindex_block = NULL;
-    uint32_t rt_count = 0;
 
     pthread_mutex_lock(&m_map_mutex);
     m_map_it = m_cache_map.find(string(cache_key));
-    //if (m_map_it == m_cache_map.end())
-    if (true)
+    if (m_map_it == m_cache_map.end())
     {
         // cache没找到
+        DEBUG("term cache miss");
         pindex_block = (fb_index_t*)malloc(TERM_MILESTONE*sizeof(fb_index_t));
         if (NULL == pindex_block)
         {
@@ -155,15 +165,26 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
             // 之后也不释放pindex_block，析构的时候统一释放
             rt_count = (uint32_t)m_fileblock.get(block_no, rd_count, pindex_block, TERM_MILESTONE*sizeof(fb_index_t));
             DEBUG("rd_count[%u] rt_count[%u] block_no[%u]", rd_count, rt_count, block_no);
-            MyThrowAssert(rd_count*sizeof(fb_index_t) == (uint32_t)m_fileblock.get(block_no, rd_count,
-                        pindex_block, TERM_MILESTONE*sizeof(fb_index_t)));
-            struct block_cache_t block_cache_item = {rd_count, pindex_block};
+//            for (uint32_t i=0; i<rd_count; i++)
+//            {
+//                printf("%u - f:%u o:%u l:%u k:%llu\n",
+//                        i,
+//                        pindex_block[i].idx.file_no,
+//                        pindex_block[i].idx.offset,
+//                        pindex_block[i].idx.data_len,
+//                        pindex_block[i].ikey.sign64);
+//            }
+            MyThrowAssert(rt_count > 0 && (rt_count % sizeof(fb_index_t)) == 0);
+            rt_count = rt_count/sizeof(fb_index_t);
+            rd_count = rt_count;
+            struct block_cache_t block_cache_item = {rt_count, pindex_block};
             m_cache_map[string(cache_key)] = block_cache_item;
         }
     }
     else
     {
-        rt_count     = m_map_it->second.bufsiz;
+        DEBUG("term cache hit!");
+        rd_count     = m_map_it->second.bufsiz;
         pindex_block = m_map_it->second.pbuff;
     }
     pthread_mutex_unlock(&m_map_mutex);
@@ -174,13 +195,12 @@ int32_t disk_indexer :: get_posting_list(const char* strTerm, void* buff, const 
     fb_index_t* pseRet = (fb_index_t*)bsearch(&theOne, pindex_block, rd_count, sizeof(fb_index_t), ikey_comp);
     if (pseRet == NULL)
     {
-        ALARM("strTerm[%s]'s sign[%llu] NOT found in index blocks.",
-                strTerm, si.ikey.sign64);
+        ALARM("strTerm[%s]'s sign[%llu] NOT found in index blocks. rd_count[%u] rt_count[%u] milestone[%u]",
+                strTerm, si.ikey.sign64, rd_count, rt_count, bounds->milestone);
         return -1;
     }
     // (4) 得到了diskv中的diskv_idx_t, 读取索引
     int ret = m_diskv.get(pseRet->idx, buff, length);
-    // ROUTN("diskv readret[%u] idx.data_len[%u]", ret, pseRet->idx.data_len);
     return (ret < 0) ? ret : ret/m_posting_cell_size;
 }
 

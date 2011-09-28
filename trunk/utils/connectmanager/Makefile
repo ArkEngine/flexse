@@ -24,7 +24,8 @@ INCS= -I ../mylog/include/ \
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
-		  #			-Weffc++ \-Werror \
+		  -Werror \
+		  #-Weffc++ \
 
 all: clean $(LIB) $(MAIN)
 #all: clean $(LIB)

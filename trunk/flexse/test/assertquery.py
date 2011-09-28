@@ -1,4 +1,4 @@
-import socket, struct, sys, json
+import socket, struct, sys, json, creat_sign
 
 def query(sock, strQuery) :
     FMT_XHEAD = "I16sIIII"
@@ -35,4 +35,5 @@ if __name__ == "__main__":
                     assert postinglist[z] == prev - 1
                     prev = postinglist[z]
             else:
-                print strQuery, "------"
+                (s1, s2) = creat_sign.creat_sign(strQuery, len(strQuery))
+                print strQuery, (s2<<32) + s1, "------"

@@ -26,8 +26,8 @@ class ConnectManager;
 typedef struct __resource_callback_t
 {
 	resource_info_t* presource_info;
-	u_int maxnum;
-	u_int processnum;
+	uint32_t maxnum;
+	uint32_t processnum;
 	ConnectManager* cmanager;
 }resource_callback_t;
 
@@ -112,7 +112,7 @@ class ConnectManager
 	 * false no such resource. and idx set to -1 if no more space, idx set idx to first empty cell
 	 */
 	bool find_idx(const char* resourcename, const resource_info_t* presource_info,
-			const u_int array_size, int& ridx);
+			const uint32_t array_size, int& ridx);
 
 	/**
 	 * @brief   Get server list
@@ -120,7 +120,7 @@ class ConnectManager
 	 * param [in]  key : const char* -- sublogicname or resourcename
 	 * param [out] server  :   server_list_t  -- serverlist for return
 	 * @return  int
-	 * @retval  u_int
+	 * @retval  uint32_t
 	 *       >=0 : servernum
 	 *       <0  : error happen
 	 **/
