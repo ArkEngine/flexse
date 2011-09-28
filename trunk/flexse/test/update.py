@@ -22,7 +22,7 @@ for x in range(begin, end):
         dd['id'] = x + (step * 10 + k) * ( end-1 )
         dd['uid'] = x
         dd['title'] = "awesome#%u# search#%u# framwork#%u# " % (x, x, x)
-        dd['type'] = x
+        dd['type'] = x%16
         dd['content'] = "a[%u] b[%u] c[%u] d[%u] e[%u] f[%u] g[%u] h[%u] i[%u] j[%u]"\
                 " k[%u] l[%u] m[%u] n[%u] o[%u] p[%u] q[%u] r[%u] s[%u] t[%u] " % \
                 (x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x,)
