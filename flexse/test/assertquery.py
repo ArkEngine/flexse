@@ -25,7 +25,7 @@ if __name__ == "__main__":
     innerID = int(sys.argv[2])
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(("127.0.0.1", 1983));
-    for x in range(1, 1000001):
+    for x in range(1, 17113):
         for y in range(0,20):
             strQuery = "%s[%u]" % (strstr[y], x)
             postinglist = query(sock, strQuery)

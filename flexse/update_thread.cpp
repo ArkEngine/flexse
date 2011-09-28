@@ -201,16 +201,11 @@ int add(const uint32_t file_no, const uint32_t block_id,
     uint32_t* src_attr   = (puint_attr + tmpid*cell_size);
     // 如果termlist的大小不为0，则表示需要分配一个内部ID
     // 否则只需要更新文档属性即可
-    if (0 == termlist.size())
+    for(uint32_t i=0; i<attrlist.size(); i++)
     {
-        // 设置属性信息
-        for(uint32_t i=0; i<attrlist.size(); i++)
-        {
-            _SET_SOLO_VALUE_(src_attr, attrlist[i].key_mask, attrlist[i].value);
-        }
-        return 0;
+        _SET_SOLO_VALUE_(src_attr, attrlist[i].key_mask, attrlist[i].value);
     }
-    else
+    if (0 != termlist.size())
     {
         // 为doc_id分配内部id
         // 检查一下以前有没有内部id，如果有的话，则把mod_bitmap置位
@@ -225,7 +220,7 @@ int add(const uint32_t file_no, const uint32_t block_id,
             _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_mod_bitmap), tmpid);
         }
         void* dst_attr = (puint_attr + innerid*cell_size);
-        memmove(dst_attr, src_attr, cell_size);
+        memmove(dst_attr, src_attr, cell_size*sizeof(uint32_t));
 
         // 把termlist中的id设置为内部的ID
         for(uint32_t i=0; i<termlist.size(); i++)

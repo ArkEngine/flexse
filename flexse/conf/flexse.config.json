@@ -4,7 +4,7 @@
         // enum {PRINT = 0, DEBUG, ROUTN, ALARM, FATAL,}, default as 2
         // name by "./log/flexse.log.YYYYMMHH"
         // size default 2G
-        "LogLevel" : 2
+        "LogLevel" : 0
     },
     "QUERY_SERVER":
     {
