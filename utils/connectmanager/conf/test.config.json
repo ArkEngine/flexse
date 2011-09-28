@@ -12,11 +12,11 @@
     // 检查废弃服务器的时间是server_check_interval秒
     // 当检查到时，开始释放这些连接，在map中删除这个ip:port对
     "server_check_interval" : 3600,
-    // 是否对FreeSocket(sock, true)启用惩罚机制，默认关闭
+    // 是否对FreeSocket(sock, true)启用惩罚机制，默认开启
     // 仅当启用时FreeSocket(sock, true)才算反馈，比如服务超时。
     "server_punish_mode"    : 1,
     // 是否使用carp均衡算法，默认启用，否则使用随机算法
-    "use_carp_balance"      : 0,
+    "use_carp_balance"      : 1,
     "server_config_list"    :
     [
         {

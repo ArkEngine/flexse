@@ -48,6 +48,9 @@ filelinkblock::filelinkblock(const char* path, const char* name, bool readonly)
     {
         check_and_repaire();
     }
+    int max_file_no = detect_file();
+    uint32_t last_file_no = max_file_no < 0? 0 : max_file_no;
+    seek_message(last_file_no, 0, 0);
 }
 
 filelinkblock::~filelinkblock()
@@ -201,7 +204,6 @@ void filelinkblock:: check_and_repaire()
         close(flb_r_fd);
         free (tmpbuf);
     }
-    seek_message(max_file_no, 0, 0);
     return;
 }
 int filelinkblock::detect_file( )
@@ -410,7 +412,8 @@ int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
         }
         struct stat dstat;
         int ret = stat(m_read_file_name, &dstat);
-        DEBUG("name[%s] size [%ld] ret[%d] try[%d] %m", m_read_file_name, dstat.st_size, ret, try_count); 
+        DEBUG("name[%s] ret[%d] size [%ld] m_flb_read_offset[%u] try[%d] msg[%m]",
+                m_read_file_name, ret, dstat.st_size, m_flb_read_offset, try_count); 
         MySuicideAssert(0 == ret && dstat.st_size >= (int)m_flb_read_offset);
         // 检查是否有增加的数据
         if ( dstat.st_size == (int)m_flb_read_offset )

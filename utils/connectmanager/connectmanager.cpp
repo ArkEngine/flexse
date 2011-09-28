@@ -21,7 +21,7 @@ ConnectManager::ConnectManager(Json::Value config_json) :
 	m_manager_service = 0;
 	m_randseed = 0;
 	m_manager_fail    = 0;
-	m_server_punish_mode = 0;
+    m_server_punish_mode = true;
 
     m_connect_retry_line = m_DefaultRetryLine;
 	if (!config_json[m_StrRetryLine].isNull() && config_json[m_StrRetryLine].isInt() )
@@ -131,7 +131,7 @@ int ConnectManager::FetchSocket(const char* key, const char* strbalance)
         return -1;
     }
     CarpCalculate(server, servernum, strbalance);
-    for (u_int sid=0; sid<servernum; sid++)
+    for (uint32_t sid=0; sid<servernum; sid++)
     {
         sock = m_connectmap.FetchSocket(server[sid]);
         if (sock > 0)
@@ -151,7 +151,7 @@ int ConnectManager::FetchSocket(const char* key, const char* strbalance)
     }
     // damn, all servers was blocked by health check
     bool healthcheck = false;
-    for (u_int lucksid=0; lucksid<servernum; lucksid++)
+    for (uint32_t lucksid=0; lucksid<servernum; lucksid++)
     {
         uint32_t sid = (lucksid + m_randseed ++ ) % servernum;
         sock = m_connectmap.FetchSocket(server[sid], healthcheck);
@@ -167,10 +167,10 @@ int ConnectManager::FetchSocket(const char* key, const char* strbalance)
     return -1;
 }
 bool ConnectManager::find_idx(const char* resourcename, const resource_info_t* presource_info,
-		const u_int array_size, int& ridx)
+		const uint32_t array_size, int& ridx)
 {
 	ridx = -1;
-	for (u_int i = 0; i < RESOURCE_MAXNUM && i < array_size; i++)
+	for (uint32_t i = 0; i < RESOURCE_MAXNUM && i < array_size; i++)
 	{
 		if (presource_info[i].name[0] == '\0')
 		{
@@ -281,12 +281,12 @@ void ConnectManager::ProcessResource(Json::Value resource,
         resourcelist[cur_ridx].modules[midx].port = (uint16_t)port;
 
         resourcelist[cur_ridx].modules[midx].longconnect = 444;
-        u_int longconnect = resource["longconnect"].asInt();
+        uint32_t longconnect = resource["longconnect"].asInt();
         longconnect = longconnect > 1 ? 1 : longconnect;
         resourcelist[cur_ridx].modules[midx].longconnect = longconnect;
 
         resourcelist[cur_ridx].modules[midx].socknum = 31;
-        u_int socknum = resource["sockperserver"].asInt();
+        uint32_t socknum = resource["sockperserver"].asInt();
         socknum = socknum > SOCK_MAXNUM_PER_SERVER ? SOCK_MAXNUM_PER_SERVER : socknum;
         resourcelist[cur_ridx].modules[midx].socknum = socknum;
         DEBUG("Process resource[%s] @ subsystem[%s] OK. "
@@ -360,7 +360,7 @@ int Compare_Carp(const void *a, const void *b)
 }
 
 void ConnectManager::CarpCalculate(module_info_t* server,
-        const u_int servernum, const char* strbalance)
+        const uint32_t servernum, const char* strbalance)
 {
     char tmp[MAX_KEY_MERGE_LEN];
     memset(tmp, 0, sizeof(tmp));

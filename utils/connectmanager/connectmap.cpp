@@ -22,7 +22,7 @@ ConnectMap::ConnectMap()
     m_server_deadline = DFT_SERVER_DEADLINE;
     m_err_server_conn = 0;
     m_err_server_full = 0;
-    m_punish_mode = false;
+    m_punish_mode = true;
     pthread_mutex_init(&m_mutex, NULL);
 }
 
@@ -133,7 +133,7 @@ int ConnectMap::__AddServer  (const module_info_t& module_info)
     connect_info_t connect_info;
     memset (&connect_info, 0, sizeof(connect_info));
     connect_info.module = module_info;
-    u_int socknum = connect_info.module.socknum;
+    uint32_t socknum = connect_info.module.socknum;
     connect_info.module.socknum = socknum > SOCK_MAXNUM_PER_SERVER ? SOCK_MAXNUM_PER_SERVER : socknum;
     connect_info.status = SERVER_BUSY;
     connect_info.fail_count = 0;
@@ -495,7 +495,7 @@ void ConnectMap::__UpdateServerInfo(connect_info_t& connect_info, const module_i
 
     if (connect_info.module.socknum < src_module.socknum)
     {
-        u_int tsocknum = src_module.socknum;
+        uint32_t tsocknum = src_module.socknum;
         if (src_module.socknum > SOCK_MAXNUM_PER_SERVER || src_module.socknum <= 0)
         {
             tsocknum = SOCK_MAXNUM_PER_SERVER;
