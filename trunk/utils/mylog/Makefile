@@ -5,14 +5,27 @@ RANLIB=ranlib
 LIB= libmylog.a
 LIBOBJ= mylog.o
 
-INCS= -I ../MyException/include/
+INCS= -I ../MyException/include/\
+	  -I ../include/
+
+LDFLAGS= -L ./lib -lmylog \
+		 -L ../MyException/lib/ -lMyException\
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
-		  #			-Weffc++ \-Werror \
+		  -Werror \
+		  #			-Weffc++ \
 
-all: clean $(LIB)
+COVER = false
+ifeq ($(COVER), true)
+export LD_LIBRARY_PATH=../../unittest/:$LD_LIBRARY_PATH
+LDFLAGS+= -L ../../unittest/ -lgcover
+CPPFLAGS+= -fprofile-arcs -ftest-coverage
+endif
+
+
+all: clean $(LIB) test 
 #all: clean $(LIB)
 	rm *.o -f
 
@@ -36,4 +49,5 @@ clean:
 
 test:
 	rm -f test
-	g++ $(CPPFLAGS) test.cpp -o test -I ./include/ -L ./lib -lmylog -L ../MyException/lib/ -lMyException
+	g++ $(CPPFLAGS) test.cpp -o test $(LDFLAGS)
+
