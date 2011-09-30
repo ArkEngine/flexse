@@ -51,6 +51,7 @@ void* update_thread(void* args)
     // 得到的进度点是已经完成持久化的点
     myIndexGroup->get_check_point(last_file_no, last_block_id);
     PRINT("last_file_no[%u] last_block_id[%u]", last_file_no, last_block_id);
+    bool need_roll_back = true;
 
     while(1)
     {
@@ -69,20 +70,7 @@ void* update_thread(void* args)
         while(0 == (ret = xrecv(clientfd, recv_head, myConfig->UpdateReadBufferSize(),
                         myConfig->UpdateSocketTimeOutMS())))
         {
-            // 判断是否需要重放数据
-            // 如果 file_no == 0 && block_id == 1 可以认为是整个消息从头开始，这个特殊case要放过
-            // 如果仅仅 block_id == 1，则表示一个新文件从头开始了。
-            // 几个特殊的case
-            // 消息队列的第一个数据包 file_no = 0, block_id = 1 直接更新
-            // 消息队列的文件的第一个数据包 file_no > 0, block_id = 1 那么file_no要比现在的大
-            // 消息队列中的一般数据包 block_id > 1 file_no > 0 file_no 相等，block_id要大
-            //
-            // !!!
-            // 如果要考虑到分布式消息队列的话，就得小心了。要加上消息服务器的比较
-//            if ((last_file_no > recv_head->file_no)
-//                    || (last_file_no == recv_head->file_no && last_block_id >= recv_head->block_id))
-            if ((recv_head->block_id == 1 && recv_head->file_no != 0 && (last_file_no+1) != recv_head->file_no)
-                    ||(recv_head->block_id != 1 && (last_block_id+1) != recv_head->block_id))
+            if (need_roll_back)
             {
                 // 数据回滚时的几个特殊case
                 // file_no = 0, block_id = 0，表示从消息的第一个消息开始放数据
@@ -98,6 +86,18 @@ void* update_thread(void* args)
                             ret, send_head.detail_len, myConfig->UpdateSocketTimeOutMS());
                     break;
                 }
+                need_roll_back = false;
+                continue;
+            }
+            // !!!
+            // 如果要考虑到分布式消息队列的话，就得小心了。要加上消息服务器的比较
+            // 消息队列rollback后，接受到的消息序号
+            // (recv_head->file_no > last_file_no)是正常的，因为消息队列切换文件
+            // (recv_head->file_no == last_file_no && recv_head->block_id > last_block_id)也是正常的，消息队列可能跳过消息
+            if ((recv_head->file_no < last_file_no)
+                    || (recv_head->file_no == last_file_no && recv_head->block_id <= last_block_id))
+            {
+                need_roll_back = true;
                 continue;
             }
 

@@ -1,3 +1,4 @@
+# 检测消息队列服务器进程是否存在
 import json, struct, sys, socket, random, ciclient_config
 
 class ciclient:

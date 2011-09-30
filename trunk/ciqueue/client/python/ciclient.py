@@ -74,7 +74,7 @@ class ciclient:
 
 if __name__ == "__main__":
     mycc = ciclient()
-    extra = "XXOO"*10000
+    extra = "XXOO"*10
     for x in range(int(sys.argv[1]), int(sys.argv[2])):
         dd={}
         dd["vid"] = x
