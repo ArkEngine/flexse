@@ -200,7 +200,7 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
 
                     // 释放被合并的内存块
                     // 这里其实存在一个危险的竟态条件的
-                    // 这些准备被释放的内存，不能保证正在使用。
+                    // 这些准备被释放的内存，可能正在被其他线程使用。
                     m_memblocks->FreeMem(toBeFree->next);
                     m_memblocks->FreeMem(toBeFree);
                 }

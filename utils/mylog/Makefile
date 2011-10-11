@@ -19,8 +19,7 @@ CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 
 COVER = false
 ifeq ($(COVER), true)
-export LD_LIBRARY_PATH=../../unittest/:$LD_LIBRARY_PATH
-LDFLAGS+= -L ../../unittest/ -lgcover
+LDFLAGS+= -L ../../unittest/lib/ -lgcover
 CPPFLAGS+= -fprofile-arcs -ftest-coverage
 endif
 
