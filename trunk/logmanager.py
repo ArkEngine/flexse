@@ -24,6 +24,7 @@ def renameFile(targetDir, targetName):
             if os.path.isfile(srcFile):
                 print "'%s' rename to '%s'" % (srcFile, dstFile,)
                 os.rename(srcFile, dstFile)
+            break
 
 def printHelp():
     print "--- remove ---"

@@ -1,4 +1,5 @@
 all:
+	make -C unittest/
 	make -C MyException/
 	make -C mylog/
 	make -C myutils/
