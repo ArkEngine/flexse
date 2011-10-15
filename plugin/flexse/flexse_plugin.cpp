@@ -269,3 +269,26 @@ int flexse_plugin:: undel(const char* jsonstr, vector<uint32_t> & id_list)
 {
     return del(jsonstr, id_list);
 }
+
+int query (const char* jsonstr, char* retBuff, const uint32_t retBuffSize)
+{
+    Json::Value root;
+    Json::Reader reader;
+    if (! reader.parse(jsonstr, root))
+    {
+        ALARM("jsonstr format error. [%s]", jsonstr);
+        return -1;
+    }
+
+    // 查询的语法定义
+    // -1- termlist
+    // -2- 过滤条件
+    // -3- 加权条件
+    // -4- 归并算法
+    // -5- 其他算法
+    //     [1] gourp by field
+    //     [2] order by field
+    //     [3] limit begin, end
+
+    return 0;
+}
