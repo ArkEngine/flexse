@@ -1,15 +1,25 @@
 import json
 dd={}
-dd["termlist"] = ["a[1]", "b[1]"]
+dd["termlist"] = []
+term = {}
+term["term"] = "a[1]"
+term["weight"] = 50
+dd["termlist"].append(term)
+term = {}
+term["TERM"] = "b[1]"
+term["WEIGHT"] = 50
+dd["termlist"].append(term)
 filt = []
 f_type = {}
-f_type["METHOD"] = "EQUAL"
-f_type["VALUE"] = 4
+f_type["method"] = "EQUAL"
+f_type["field"] = "type"
+f_type["value"] = 4
 filt.append(f_type)
 f_duration = {}
-f_duration["METHOD"] = "ZONE"
-f_duration["MIN"] = 4
-f_duration["MAX"] = 8
+f_duration["method"] = "ZONE"
+f_duration["field"] = "duration"
+f_duration["min"] = 4
+f_duration["max"] = 8
 filt.append(f_duration)
 dd["filter"] = filt
 dd["ranking"] = {}
@@ -19,5 +29,5 @@ limit["min"] = 0
 limit["max"] = 15
 dd["limit"] = limit
 dd["groupby"] = "type"
-dd["sortby"] = "id"
+#dd["sortby"] = "id"
 print json.dumps(dd)

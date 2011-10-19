@@ -333,8 +333,8 @@ bool compare_result(const result_pair_t &left, const result_pair_t &right)
  */
 
 int32_t weight_merge(
-        const terminfo_t* terminfo_list,
-        const uint32_t terminfo_size,   
+        const list_info_t* terminfo_list,
+        const uint32_t list_size,   
         const mask_item_t id_mask,
         const mask_item_t wt_mask,
         result_pair_t* result_list, 
@@ -342,9 +342,9 @@ int32_t weight_merge(
         )
 {
     uint32_t finish_term_num = 0;    ///< 有多少个term遍历完了
-    int current_pointer_list[terminfo_size];   ///< 每个term的拉链，当前指向的位置
+    int current_pointer_list[list_size];   ///< 每个term的拉链，当前指向的位置
     uint32_t result_guess_size = 0;
-    for(uint32_t i=0;i<terminfo_size;i++)
+    for(uint32_t i=0;i<list_size;i++)
     {
         result_guess_size = (terminfo_list[i].list_size > result_guess_size) ? terminfo_list[i].list_size : result_guess_size;
         if(terminfo_list[i].list_size == 0)
@@ -359,11 +359,11 @@ int32_t weight_merge(
     }
 
     vector<result_pair_t> result_pair_list;
-    while(finish_term_num < terminfo_size)
+    while(finish_term_num < list_size)
     {
         ///< 先找到，当前每个拉链中指针指向位置中的最大的id
         uint32_t max_id = 0x0;
-        for(unsigned int i=0;i<terminfo_size;i++)
+        for(unsigned int i=0;i<list_size;i++)
         {
             int32_t current_offset = current_pointer_list[i];
             if(current_offset>=0)  ///< 这个拉链还没有遍历完毕
@@ -376,7 +376,7 @@ int32_t weight_merge(
         ///< 把等于最大id的，算出它的weight，然后把对应的指针往下移动
         uint32_t weight = 0;
 
-        for(uint32_t i=0; i<terminfo_size; i++)
+        for(uint32_t i=0; i<list_size; i++)
         {
             int32_t& current_offset = current_pointer_list[i];
             if(current_offset >= 0)  ///<  这个拉链还没有遍历完毕

@@ -12,7 +12,7 @@ class ciclient:
 				return True
 		return False
     def _connect(self, strHost, intPort):
-        print "connect--------------------------------"
+#       print "connect--------------------------------"
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(0.1)
         try:
