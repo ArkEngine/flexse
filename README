@@ -77,23 +77,35 @@ flexse目前是一个搜索的框架，提供了搜索引擎中数据的存储�
     文档属性数据存储于文件中，以mmap的方式load到内存中，以数组的方式访问，使用内部ID作为偏移
     以structmask的机制来访问数据，structmask的原理见这个wiki
 (2) 更新
--1- 如何更新postinglist
+-1- 如何更新倒排索引postinglist
+    输入: xhead+json-string，有固定的格式，解析过程详见代码flexse/plugin/flexse/
+    输出: xhead.
+    测试工具: flexse/flexse/test/update.py，与配置文件flexse/flexse/conf/plugin.config.json
+    相互对应，目前支持分词/前缀/数组前缀这三种方式
     postinglist根据term形成的机制分为两种类型，NLP分词和前缀生成，视频搜索视需求来选择这两
     个类型
     a) NLP分词形成的term，在flexse/utils/nlp_processor/nlp_processor.cpp中可以设置分词形成
        的各个term的描述信息，如tf/idf/offset/title_hit/tag_hit等等，需要注意的是，视频全网
        搜索的offset计算，建议使用title即可，因为视频的描述信息在各大网站上看，基本都是空的
     b) 前缀生成的term，比如"TAG^搞笑"等等，term的描述一般都为默认值
--2- 如何更新document-attribute
+-2- 如何更新文档属性document-attribute
     这部分代码已经完成，原理是根据配置中，迭代STRUCTMASK/document_attr中各个字段，把其中的
     key<->value存入vector中，update_thread.cpp中对外部的doc_id进行内部ID分配，然后更新内部
     ID对应的document_attribute属性
 (3) 查询
+    输入为xhead+json-string，有固定的格式，解析过程详见代码flexse/plugin/flexse/
+    输出是xhead+struct数组(不使用json或其他序列化方案是为了性能考虑)，返回值表示struct数组
+    的sizeof大小
+    查询操作在flexse/plugin/flexse/flexse_plugin.cpp中实现
+    测试工具: flexse/flexse/test/qquery.py，与配置文件flexse/flexse/conf/plugin.config.json
+    相互对应，目前支持分词/前缀/数组前缀这三种方式
     查询的步骤一般可以分为
     a) 根据termlist，读取对应的postinglist。
-    b) 把一组postinglist交给归并算法进行合并
-    c) 对归并结果postinglist进行过滤
-    d) 对过滤结果postinglist进行调权
+    b) 把一组postinglist交给归并算法进行合并，目前已经支持按照term的权重进行归并(algo.cpp)。
+    c) 对归并结果postinglist进行过滤，目前已经支持按照某个字段执行(等于/小于/大于/大于小于
+        /集合这5种过滤)(algo.cpp)
+    d) 对过滤结果postinglist进行调权，目前已经支持按照某个字段执行(等于/小于/大于/大于小于
+        /集合这5种调权)(algo.cpp)
     e) 按照权重返回top2000的结果，把每个ID的document-attribute带上
 
 

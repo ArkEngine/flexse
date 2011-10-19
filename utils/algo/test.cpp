@@ -468,7 +468,7 @@ int main(int argc, char** argv)
         post_list_1 += post_uint_count_new;
     }
 
-    terminfo_t termlist[2];
+    list_info_t termlist[2];
     termlist[0].posting_list = post_list_org_0;
     termlist[1].posting_list = post_list_org_1;
     termlist[0].list_size = SIZE/2;

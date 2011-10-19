@@ -42,7 +42,7 @@ struct ranking_logic_t
     set<uint32_t> vset;           ///> for SET
 };
 
-struct terminfo_t
+struct list_info_t
 {
     void*    posting_list;
     uint32_t list_size;
@@ -114,8 +114,8 @@ int32_t ranking(
  */
 
 int32_t weight_merge(
-        const terminfo_t* terminfo_list,
-        const uint32_t terminfo_size,
+        const list_info_t* terminfo_list,
+        const uint32_t list_size,
         const mask_item_t id_mask,
         const mask_item_t wt_mask,
         result_pair_t* result_list,

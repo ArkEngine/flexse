@@ -90,18 +90,18 @@ int main(int argc, char** argv) try
     struct timeval etv;
 
     gettimeofday(&btv, NULL);
+    uint32_t k = 1;
     for (uint32_t i=0; i<SIZE; i++)
     {
-        uint32_t k = 0;
         k += ptest[i].id0;
         k += ptest[i].id1;
         k += ptest[i].id2;
         k += ptest[i].id3;
         k += ptest[i].id4;
         k += ptest[i].id5;
-        assert (k == 0 || k);
     }
     gettimeofday(&etv, NULL);
+    assert (k > 0);
     printf ("lcount: %u org-time-consumed: %lu us\n", SIZE,
             (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));
 
@@ -110,6 +110,7 @@ int main(int argc, char** argv) try
     gettimeofday(&btv, NULL);
     uint32_t* puint = (uint32_t*) ptest;
     const uint32_t uint_count = mymask.get_section_size();
+    k = 1;
     for (uint32_t i=0; i<SIZE; i++)
     {
         //        assert(ptest[i].id0 == ((puint[mask_item[0].uint_offset] & mask_item[0].item_mask) >> mask_item[0].move_count));
@@ -119,16 +120,15 @@ int main(int argc, char** argv) try
         //        assert(ptest[i].id3 == _GET_VALUE_(puint, mask_item[3]));
         //        assert(ptest[i].id4 == _GET_VALUE_(puint, mask_item[4]));
         //        assert(ptest[i].id5 == _GET_VALUE_(puint, mask_item[5]));
-        uint32_t k = 0;
         k += _GET_SOLO_VALUE_(puint, mask_item[0]);
         k += _GET_SOLO_VALUE_(puint, mask_item[1]);
         k += _GET_SOLO_VALUE_(puint, mask_item[2]);
         k += _GET_SOLO_VALUE_(puint, mask_item[3]);
         k += _GET_SOLO_VALUE_(puint, mask_item[4]);
         k += _GET_SOLO_VALUE_(puint, mask_item[5]);
-        assert (k == 0 || k);
         puint += uint_count;;
     }
+    assert (k > 0);
     gettimeofday(&etv, NULL);
     printf ("lcount: %u get-time-consumed: %lu us\n", SIZE,
             (etv.tv_sec - btv.tv_sec)*1000000+(etv.tv_usec - btv.tv_usec));

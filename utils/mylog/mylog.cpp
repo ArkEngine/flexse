@@ -62,7 +62,7 @@ void mylog :: WriteNByte(const int fd, const char* buff, const uint32_t size)
     uint32_t offset = size;
     while (left > 0)
     {
-        int len = write(fd, buff+offset-left, left);
+        int len = (int)write(fd, buff+offset-left, left);
         if (len == -1 || len == 0)
         {
             return;
@@ -137,7 +137,7 @@ void mylog :: LogFileCheckOpen()
                 __FILE__, __LINE__, logpath);
         while(0 != raise(SIGKILL)){}
     }
-    m_cur_logsize = lseek(m_log_fd, SEEK_END, 0);;
+    m_cur_logsize = (int)lseek(m_log_fd, SEEK_END, 0);;
 }
 
 void mylog :: LogFileSwitchCheck()

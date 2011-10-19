@@ -14,7 +14,7 @@ MAINLIBS= -L ./lib/ -lstructmask \
 		  -L ../mylog/lib/ -lmylog
 
 INCS= -I ../mylog/include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
-CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
+CPPFLAGS= $(INCS) -O3 -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
