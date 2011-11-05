@@ -27,23 +27,34 @@ int main(int argc, char** argv)
     }
     //    const uint32_t SIZE = atoi(argv[1]);
     const char* filedir = argv[1];
-    fileblock myfl(filedir, "index", sizeof(fb_index_t));
+    fileblock myfl(filedir, "test", sizeof(uint32_t));
+    // -1- 清空数据
+    // -2- 设置数据
+    // -3- 读取数据
+    // -4- 批量读取数据(跨块读取)
+    // -5- 清空数据
+    // -6- 批量设置数据
+    // -7- 读取数据
+    // -8- 批量读取数据(整块读取)
+    // -9- 小数据测试
+    // -0- 异常测试
     //    myfl.begin();
     //    for (uint32_t i=0; i<SIZE; i++)
     //    {
     //        myfl.write_next((char*)&i);
     //    }
-    myfl.begin();
-    uint32_t count = 0;
-    while(!myfl.is_end())
-    {
-        uint32_t v = 0;
-        fb_index_t fi;
-        int x = myfl.itget((char*)&fi, sizeof(fb_index_t));
-        assert(x == sizeof(fb_index_t));
-        printf("%08u - [f:%u] [o:%10u] [l:%4u] [k:%llu]\n", count++, fi.idx.file_no, fi.idx.offset, fi.idx.data_len, fi.key);
-        myfl.next();
-    }
+    //    myfl.begin();
+    //    uint32_t count = 0;
+    //    while(!myfl.is_end())
+    //    {
+    //        uint32_t v = 0;
+    //        fb_index_t fi;
+    //        int x = myfl.itget((char*)&fi, sizeof(fb_index_t));
+    //        assert(x == sizeof(fb_index_t));
+    //        printf("%08u - [f:%u] [o:%10u] [l:%4u] [k:%llu]\n",
+    //        count++, fi.idx.file_no, fi.idx.offset, fi.idx.data_len, fi.key);
+    //        myfl.next();
+    //    }
     //
     //    const uint32_t milestone = 1500;
     //    uint32_t ulist[milestone];
