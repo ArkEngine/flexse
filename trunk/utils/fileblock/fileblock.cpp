@@ -141,14 +141,26 @@ int32_t fileblock :: get(const uint32_t offset, const uint32_t count, void* buff
     {
         // 跨文件访问
         // 递归调用
+        int32_t ret1 = 0;
+        int32_t ret2 = 0;
         uint32_t count1 = m_cell_num_per_file - inoffset;
-        get(offset, count1, buff, count1 * m_cell_size);
+        ret1 = get(offset, count1, buff, count1 * m_cell_size);
 
-        int32_t retlen = get((file_no+1)*m_cell_num_per_file, count - count1,
-                &(((char*)buff)[count1*m_cell_size]), (count-count1)*m_cell_size);
-        DEBUG("offset1[%u] offset2[%u] count[%u] count1[%u] count2[%u]",
-                offset, (file_no+1)*m_cell_num_per_file, count, count1, count - count1);
-        return (retlen < 0) ? -1 : count1*m_cell_size + retlen;
+        if ((file_no+1) < m_max_file_no)
+        {
+            ret2 = get((file_no+1)*m_cell_num_per_file, count - count1,
+                    &(((char*)buff)[count1*m_cell_size]), (count-count1)*m_cell_size);
+        }
+        DEBUG("offset1[%u] offset2[%u] count[%u] count1[%u] count2[%u] ret1[%d] ret2[%d]",
+                offset, (file_no+1)*m_cell_num_per_file, count, count1, count - count1, ret1, ret2);
+        if (ret1 < 0)
+        {
+            return -1;
+        }
+        else
+        {
+            return (ret2 < 0) ? ret1 : ret1+ret2;
+        }
     }
     else
     {
@@ -229,7 +241,7 @@ int32_t fileblock::detect_file()
 
     while((dirp = readdir(dp)) != NULL)
     {
-//        DEBUG( "%s", dirp->d_name);
+        //        DEBUG( "%s", dirp->d_name);
         char* pn = strstr(dirp->d_name, prefix);
         if (pn != NULL)
         {
@@ -240,16 +252,16 @@ int32_t fileblock::detect_file()
             if (*cc == '\0')
             {
                 int n = atoi(&pn[len]);
-//                DEBUG( "-- %d", n);
+                //                DEBUG( "-- %d", n);
                 if (n > max)
                 {
                     max = n;
                 }
             }
-//            else
-//            {
-//                DEBUG( "^^ invalid file name : %s", dirp->d_name);
-//            }
+            //            else
+            //            {
+            //                DEBUG( "^^ invalid file name : %s", dirp->d_name);
+            //            }
         }
     }
 

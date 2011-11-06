@@ -34,4 +34,4 @@ clean:
 	rm lib/ -rf
 	rm include/ -rf
 test:
-	g++ -g test.cpp -L ./lib/ -lfileblock -L ../mylog/lib/ -lmylog -L ../MyException/lib/ -lMyException -o test
+	g++ -g test.cpp $(INCS) -L ./lib/ -lfileblock -L ../mylog/lib/ -lmylog -L ../MyException/lib/ -lMyException -o test
