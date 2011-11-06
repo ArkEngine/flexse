@@ -6,10 +6,7 @@
 
 int main()
 {
-    // 大数据量
     // 正确性
-    // 异常接口
-    printf("hello world\n");
     diskv dv("./data/", "test");
     diskv :: diskv_idx_t idx;
     const uint32_t SIZE = 16*1024*1024;
@@ -27,5 +24,8 @@ int main()
         assert('A' == str[i]);
     }
     free(str);
+    // 大数据量，当前文件写不下的情况
+    // 异常接口
+    // 句柄泄漏检查
     return 0;
 }

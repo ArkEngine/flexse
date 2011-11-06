@@ -7,7 +7,8 @@ class fileblock
     private:
         static const char* const FORMAT_FILE;
         static const char* const FORMAT_PATH;
-        static const uint32_t MAX_FILE_SIZE = 2*1024*1024*1000; 
+//        static const uint32_t MAX_FILE_SIZE = 2*1024*1024*1000; 
+        static const uint32_t MAX_FILE_SIZE = 4000; 
         static const uint32_t MAX_FILE_NO   = 1024; 
         const uint32_t m_cell_size;
         const uint32_t m_cell_num_per_file;
