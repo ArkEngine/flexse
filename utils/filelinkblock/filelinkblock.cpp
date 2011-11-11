@@ -84,11 +84,11 @@ int filelinkblock:: newfile (const char* strfile)
 
 void filelinkblock:: check_and_repaire()
 {
-    // ĞèÒª¼ì²é³öµ±Ç°ÎÄ¼ş¼ĞµÄ×îºóÒ»¸öÎÄ¼ş
-    // (1) Èç¹û°´ÕÕ´óĞ¡ÇĞ·Ö£¬É¨Ãèµ±Ç°ÎÄ¼ş¼Ğ£¬ÕÒµ½ name.n ÖĞ×î´óµÄÄÇ¸öÎÄ¼ş
-    // (2) Èç¹û°´ÕÕÊ±¼äÇĞ·Ö£¬ÔòÉ¨Ãè³ö name.YYYY-MM-DD-HH.n ÖĞ×î´óµÄÄÇ¸öÎÄ¼ş£¬
-    //     YYYY-MM-DD-HHµÄÊ±¼äÈç¹ûÊÇµ±Ç°Ê±¼ä£¬ÔòÔÚÕâ¸öÎÄ¼şºóÃæ×·¼ÓĞ´£¬Èç¹û²»ÊÇ£¬ÔòĞÂ½¨µ±Ç°Ê±¼äµÄÎÄ¼ş
-    // Ìì£¬CÓïÑÔ´¦ÀíÕâĞ©×Ö·û´®¼òÖ±ÊÇØ¬ÃÎ¡£¡£
+    // éœ€è¦æ£€æŸ¥å‡ºå½“å‰æ–‡ä»¶å¤¹çš„æœ€åä¸€ä¸ªæ–‡ä»¶
+    // (1) å¦‚æœæŒ‰ç…§å¤§å°åˆ‡åˆ†ï¼Œæ‰«æå½“å‰æ–‡ä»¶å¤¹ï¼Œæ‰¾åˆ° name.n ä¸­æœ€å¤§çš„é‚£ä¸ªæ–‡ä»¶
+    // (2) å¦‚æœæŒ‰ç…§æ—¶é—´åˆ‡åˆ†ï¼Œåˆ™æ‰«æå‡º name.YYYY-MM-DD-HH.n ä¸­æœ€å¤§çš„é‚£ä¸ªæ–‡ä»¶ï¼Œ
+    //     YYYY-MM-DD-HHçš„æ—¶é—´å¦‚æœæ˜¯å½“å‰æ—¶é—´ï¼Œåˆ™åœ¨è¿™ä¸ªæ–‡ä»¶åé¢è¿½åŠ å†™ï¼Œå¦‚æœä¸æ˜¯ï¼Œåˆ™æ–°å»ºå½“å‰æ—¶é—´çš„æ–‡ä»¶
+    //     å¤©ï¼ŒCè¯­è¨€å¤„ç†è¿™äº›å­—ç¬¦ä¸²ç®€ç›´æ˜¯å™©æ¢¦ã€‚ã€‚
 
     int max_file_no = detect_file();
     m_last_file_no = max_file_no < 0? 0 : max_file_no;
@@ -98,51 +98,52 @@ void filelinkblock:: check_and_repaire()
 
     if (0 > max_file_no )
     {
-        // Èç¹ûÎÄ¼ş²»´æÔÚ»òÕßÌ«Ğ¡ÁË£¬ĞèÒªĞÂ½¨ÎÄ¼ş
+        // ÃˆÃ§Â¹Ã»ÃÃ„Â¼Ã¾Â²Â»Â´Ã¦Ã”ÃšÂ»Ã²Ã•ÃŸÃŒÂ«ÃÂ¡ÃÃ‹Â£Â¬ÃÃ¨Ã’ÂªÃÃ‚Â½Â¨ÃÃ„Â¼Ã¾
         m_flb_w_fd = newfile(last_file_name);
     }
     else
     {
-        // ¼ì²é×îºóÒ»¸öÎÄ¼ş£¬¹Ø¼ü¾ÍÊÇÕÒµ½×îºóÒ»¿éÕı³£Ğ´ÈëµÄBlock
-        // (1) ÏÈÕÒµ½MAGIC_NUM£¬Èç¹ûÕÒµ½ÁË MAGIC_NUM£¬ÔòÊ¹ÓÃÇ©ÃûÅĞ¶ÏºóĞøµÄbuffÊÇ·ñÕı³£Ğ´Èë
-        //     Õı³£Ğ´ÈëÔò´ò¿ªÎÄ¼şÖ´ĞĞ×·¼ÓĞ´¼´¿É£¬Òª×¢Òâ°ÑºóÃæĞ´»µµÄ²¿·Ö¸øTRUNCµô¡£
-        //     ·ñÔò goto(1) Òª¼ÌĞøÏòÇ°Ñ°ÕÒ MAGIC_NUM;
-        // (2) Èç¹ûÃ»ÕÒµ½ MAGIC_NUM, ÇÒÎÄ¼ş³¤¶ÈĞ¡ÓÚ BLOCK_MAX_SIZE £¬ÔòĞÂ½¨ÎÄ¼ş
-        //     ·ñÔò±¨´íÍË³ö£¬ÒòÎª²»¿ÉÄÜÃ»ÓĞ MAGIC_NUM
-        // ¶ÁÈ¡ 2*BLOCK_MAX_SIZE ´óĞ¡ÊÇÎªÁË¿Ï¶¨ÄÜÕÒµ½Ò»¸öÕıÈ·Ğ´ÈëµÄ¿é
+        // æ£€æŸ¥æœ€åä¸€ä¸ªæ–‡ä»¶ï¼Œå…³é”®å°±æ˜¯æ‰¾åˆ°æœ€åä¸€å—æ­£å¸¸å†™å…¥çš„Block
+        // (1) å…ˆæ‰¾åˆ°MAGIC_NUMï¼Œå¦‚æœæ‰¾åˆ°äº†MAGIC_NUMï¼Œåˆ™ä½¿ç”¨ç­¾ååˆ¤æ–­åç»­çš„buffæ˜¯å¦æ­£å¸¸å†™å…¥
+        //     æ­£å¸¸å†™å…¥åˆ™æ‰“å¼€æ–‡ä»¶æ‰§è¡Œè¿½åŠ å†™å³å¯ï¼Œè¦æ³¨æ„æŠŠåé¢å†™åçš„éƒ¨åˆ†ç»™TRUNCæ‰ã€‚
+        //     å¦åˆ™ goto(1) è¦ç»§ç»­å‘å‰å¯»æ‰¾ MAGIC_NUM;
+        // (2) å¦‚æœæ²¡æ‰¾åˆ° MAGIC_NUM, ä¸”æ–‡ä»¶é•¿åº¦å°äº BLOCK_MAX_SIZE ï¼Œåˆ™æ–°å»ºæ–‡ä»¶
+        //     å¦åˆ™æŠ¥é”™é€€å‡ºï¼Œå› ä¸ºä¸å¯èƒ½æ²¡æœ‰ MAGIC_NUM
+        // è¯»å– 2*BLOCK_MAX_SIZE å¤§å°æ˜¯ä¸ºäº†è‚¯å®šèƒ½æ‰¾åˆ°ä¸€ä¸ªæ­£ç¡®å†™å…¥çš„å—
 
-        struct stat dstat;
+        struct stat dstat; 
         int ret = stat(last_file_name, &dstat);
         DEBUG("so[%s] size [%ld] ret[%d] %m", last_file_name, dstat.st_size, ret); 
         MySuicideAssert(0 == ret);
         if (dstat.st_size <= (int)sizeof(file_link_block_head))
         {
-            // Èç¹ûÃ»ÓĞ³¬¹ı head µÄ´óĞ¡£¬¿Ï¶¨ÊÇÒªĞÂ½¨ÎÄ¼şµÄ
+            // å¦‚æœæ²¡æœ‰è¶…è¿‡ head çš„å¤§å°ï¼Œè‚¯å®šæ˜¯è¦æ–°å»ºæ–‡ä»¶çš„
             m_flb_w_fd = newfile(last_file_name);
             return;
         }
 
-        // >>2<<2ÊÇÎªÁËÈ¥µôÎÄ¼şÄ©Î²µÄ¶àÓà×Ö·û(µ±ÎÄ¼ş´óĞ¡²»ÄÜ±»4Õû³ıÊ±)
-        // ÕâÑùÑ°ÕÒ MAGIC_NUM ¾Í¿ÉÒÔºÜ·½±ãÁË¡£
-        uint32_t cutlen  = ((dstat.st_size >> 2) << 2);
+        // >>2<<2æ˜¯ä¸ºäº†å»æ‰æ–‡ä»¶æœ«å°¾çš„å¤šä½™å­—ç¬¦(å½“æ–‡ä»¶å¤§å°ä¸èƒ½è¢«4æ•´é™¤æ—¶)
+        // è¿™æ ·å¯»æ‰¾ MAGIC_NUM å°±å¯ä»¥å¾ˆæ–¹ä¾¿äº†ã€‚
+        MySuicideAssert(0x80000000 > ((dstat.st_size >> 2) << 2));
+        uint32_t cutlen  = (uint32_t)((dstat.st_size >> 2) << 2);
         uint32_t readlen = cutlen >= 2*BLOCK_MAX_SIZE ?  2*BLOCK_MAX_SIZE : cutlen;
         uint32_t readoff = cutlen >= 2*BLOCK_MAX_SIZE ?  cutlen - 2*BLOCK_MAX_SIZE : 0;
 
-        // ¶ÁÈ¡ÎÄ¼şÎ²²¿À´Ñ°ÕÒ magic_num
+        // è¯»å–æ–‡ä»¶å°¾éƒ¨æ¥å¯»æ‰¾ magic_num
         uint32_t* tmpbuf = (uint32_t*) malloc(readlen);
         MySuicideAssert(tmpbuf != NULL);
         int flb_r_fd = open(last_file_name, O_RDONLY);
         MySuicideAssert(flb_r_fd > 0);
         MySuicideAssert(readoff == (uint32_t)lseek(flb_r_fd, readoff, SEEK_SET));
-        // ´Ó readoff Î»ÖÃ¶ÁÈ¡Êı¾İÖ±µ½ÎÄ¼şÄ©Î²
+        // ä» readoff ä½ç½®è¯»å–æ•°æ®ç›´åˆ°æ–‡ä»¶æœ«å°¾
         MySuicideAssert((int)readlen == read (flb_r_fd, tmpbuf, readlen));
         int step = readlen/sizeof(uint32_t);
         while (--step >= 0)
         {
             if (tmpbuf[step] == MAGIC_NUM)
             {
-                // ¼ì²éÒ»ÏÂÊÇ·ñÕæµÄ¾ÍÊÇhead£¬²»ÅÅ³ıÊı¾İÇøÖĞÕıºÃº¬ÓĞÕâ¸ömagic_num
-                // Òò´ËÔö¼ÓÒ»¸öÇ©ÃûµÄĞ£Ñé
+                // æ£€æŸ¥ä¸€ä¸‹æ˜¯å¦çœŸçš„å°±æ˜¯headï¼Œä¸æ’é™¤æ•°æ®åŒºä¸­æ­£å¥½å«æœ‰è¿™ä¸ªmagic_num
+                // å› æ­¤å¢åŠ ä¸€ä¸ªç­¾åçš„æ ¡éªŒ
                 struct file_link_block_head* phead = (struct file_link_block_head*) &tmpbuf[step];
                 MySuicideAssert(phead->magic_num == MAGIC_NUM);
                 // m_block_id = phead->block_id + 1;
@@ -164,11 +165,11 @@ void filelinkblock:: check_and_repaire()
                     creat_sign_64(phead->block_buff, phead->block_size, &sum0, &sum1);
                     if (phead->check_sum[0] == sum0 && phead->check_sum[1] == sum1)
                     {
-                        // Ğ£ÑéÍ¨¹ı£¬ÕâÊÇ×îºóÒ»¿éÕıÈ·
+                        // æ ¡éªŒé€šè¿‡ï¼Œè¿™æ˜¯æœ€åä¸€å—æ­£ç¡®
                         m_block_id = phead->block_id + 1;
-                        // ´ò¿ªĞ´¾ä±ú£¬°Ñ offset ¶¨Î»ÓÚ×·¼ÓĞ´µÄÎ»ÖÃ
-                        uint32_t woffset = readoff + step*4 +
-                            sizeof(file_link_block_head) + (((phead->block_size+3) >> 2) << 2);
+                        // æ‰“å¼€å†™å¥æŸ„ï¼ŒæŠŠ offset å®šä½äºè¿½åŠ å†™çš„ä½ç½®
+                        uint32_t woffset = (uint32_t)(readoff + step*4 +
+                                sizeof(file_link_block_head) + (((phead->block_size+3) >> 2) << 2));
                         ROUTN("Find normal end block. woffset[%u] filesize[%lu] block_id[%d]",
                                 woffset, dstat.st_size, phead->block_id);
                         MySuicideAssert(woffset <= (uint32_t)dstat.st_size);
@@ -220,32 +221,32 @@ int filelinkblock::detect_file( )
         MySuicideAssert(0);
     }
 
-    int len = strlen(prefix);
+    int len = (int)strlen(prefix);
     int max = -1;
 
     while((dirp = readdir(dp)) != NULL)
     {
-//        DEBUG( "%s", dirp->d_name);
+        //        DEBUG( "%s", dirp->d_name);
         char* pn = strstr(dirp->d_name, prefix);
         if (pn != NULL)
         {
             const char* pp = &pn[len];
             const char* cc = pp;
-            // ¼ì²éºó×ºÊÇ·ñÈ«ÊÇÊı×Ö
+            // æ£€æŸ¥åç¼€æ˜¯å¦å…¨æ˜¯æ•°å­—
             while (isdigit(*cc)) { cc++; }
             if (*cc == '\0')
             {
                 int n = atoi(&pn[len]);
-//                DEBUG( "-- %d", n);
+                //                DEBUG( "-- %d", n);
                 if (n > max)
                 {
                     max = n;
                 }
             }
-//            else
-//            {
-//                DEBUG( "^^ invalid file name : %s", dirp->d_name);
-//            }
+            //            else
+            //            {
+            //                DEBUG( "^^ invalid file name : %s", dirp->d_name);
+            //            }
         }
     }
 
@@ -255,15 +256,15 @@ int filelinkblock::detect_file( )
 
 int filelinkblock::__write_message(const uint32_t log_id, const char* buff, const uint32_t buff_size)
 {
-    // (buff_size>>2)<<2 ÊÇÎªÁË²¹Æë²»×ã4¸ö×Ö½Ú£¬ÕâÑù¿ÉÒÔÈÃmagic_numµÄ²éÕÒ¸ü¼Ó·½Ãæ
-    uint32_t wlen = (((buff_size+3)>>2)<<2) + sizeof(file_link_block_head);
+    // (buff_size>>2)<<2 æ˜¯ä¸ºäº†è¡¥é½ä¸è¶³4ä¸ªå­—èŠ‚ï¼Œè¿™æ ·å¯ä»¥è®©magic_numçš„æŸ¥æ‰¾æ›´åŠ æ–¹é¢
+    uint32_t wlen = (uint32_t)((((buff_size+3)>>2)<<2) + sizeof(file_link_block_head));
     if ( wlen > BLOCK_MAX_SIZE)
     {
         ALARM("buff_size[%d] too loooong. head[%u] wlen[%d]", buff_size, sizeof(file_link_block_head), wlen);
         return -1;
     }
-    // ¼ì²éÊÇ·ñÓ¦¸ÃĞÂ½¨Ò»¸öÎÄ¼şÀ´Ğ´
-    uint32_t cur_offset = lseek(m_flb_w_fd, 0, SEEK_CUR);
+    // æ£€æŸ¥æ˜¯å¦åº”è¯¥æ–°å»ºä¸€ä¸ªæ–‡ä»¶æ¥å†™
+    uint32_t cur_offset = (uint32_t)lseek(m_flb_w_fd, 0, SEEK_CUR);
     if (cur_offset + wlen > FILE_MAX_SIZE)
     {
         ROUTN("Need a New File. cur_file_no[%d] cur_offset[%d] wlen[%d]", m_last_file_no, cur_offset, wlen);
@@ -280,7 +281,7 @@ int filelinkblock::__write_message(const uint32_t log_id, const char* buff, cons
         memset (&myhead, 0, sizeof(file_link_block_head));
         myhead.magic_num  = MAGIC_NUM;
         myhead.block_id   = m_block_id;
-        myhead.timestamp  = time(NULL);
+        myhead.timestamp  = (uint32_t)time(NULL);
         myhead.log_id     = log_id;
         myhead.block_size = buff_size;
         creat_sign_64 (buff, buff_size, &myhead.check_sum[0] , &myhead.check_sum[1]);
@@ -294,7 +295,7 @@ int filelinkblock::__write_message(const uint32_t log_id, const char* buff, cons
         wblocks[1].iov_len  = buff_size;
         wblocks[2].iov_base = extra_buf;
         wblocks[2].iov_len  = extra_len;
-        int wwlen = writev(m_flb_w_fd, wblocks, 3);
+        int wwlen = (int)writev(m_flb_w_fd, wblocks, 3);
         DEBUG("wwlen[%d] wlen[%u] head[%u] bsize[%u] extrasize[%u]",
                 wwlen, wlen, sizeof(file_link_block_head), buff_size, extra_len);
         MySuicideAssert(wwlen == (int)wlen);
@@ -354,8 +355,8 @@ int filelinkblock::seek_message(const uint32_t file_no, const uint32_t block_id)
         MySuicideAssert(BLOCK_MAX_SIZE > myhead.block_size + sizeof(file_link_block_head));
         uint32_t stepsize = ((myhead.block_size + 3 ) >> 2 ) << 2;
         MySuicideAssert (-1 != lseek(m_flb_r_fd, stepsize, SEEK_CUR));
-        m_flb_read_offset   = lseek(m_flb_r_fd, 0, SEEK_CUR);
-        // Ğ£Ñéblock_id¼´¿É£¬¾Í²»ÓÃ¼ÆËãcheck_numÁË
+        m_flb_read_offset   = (uint32_t)lseek(m_flb_r_fd, 0, SEEK_CUR);
+        // æ ¡éªŒblock_idå³å¯ï¼Œå°±ä¸ç”¨è®¡ç®—check_numäº†
         if (block_id == myhead.block_id)
         {
             m_flb_read_block_id = block_id;
@@ -376,11 +377,11 @@ int filelinkblock::seek_message(const uint32_t file_no, const uint32_t block_id)
 
 int filelinkblock::seek_message()
 {
-	uint32_t file_no = 0;
-	uint32_t offset = 0;
-	uint32_t block_id = 0;
+    uint32_t file_no = 0;
+    uint32_t offset = 0;
+    uint32_t block_id = 0;
 
-	load_offset(file_no, offset, block_id);
+    load_offset(file_no, offset, block_id);
     if (offset == 0 && block_id != 0)
     {
         return seek_message(file_no, block_id);
@@ -399,10 +400,10 @@ int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
     uint32_t read_size = 0;
     while(1)
     {
-        // ¼ì²éÊÇ·ñÒÑ¾­ÇĞ»»ĞÂÎÄ¼şÁË
+        // æ£€æŸ¥æ˜¯å¦å·²ç»åˆ‡æ¢æ–°æ–‡ä»¶äº†
         if (try_count > 2 && ( (int)m_flb_read_file_no < detect_file()))
         {
-            // ÒÑ¾­ÇĞ»»ĞÂÎÄ¼şÁË
+            // å·²ç»åˆ‡æ¢æ–°æ–‡ä»¶äº†
             close (m_flb_r_fd);
             m_flb_r_fd = -1;
             DEBUG("change to new file. file_no[%d]", m_flb_read_file_no+1); 
@@ -415,7 +416,7 @@ int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
         DEBUG("name[%s] ret[%d] size [%ld] m_flb_read_offset[%u] try[%d] msg[%m]",
                 m_read_file_name, ret, dstat.st_size, m_flb_read_offset, try_count); 
         MySuicideAssert(0 == ret && dstat.st_size >= (int)m_flb_read_offset);
-        // ¼ì²éÊÇ·ñÓĞÔö¼ÓµÄÊı¾İ
+        // æ£€æŸ¥æ˜¯å¦æœ‰å¢åŠ çš„æ•°æ®
         if ( dstat.st_size == (int)m_flb_read_offset )
         {
             usleep(CHECK_INTERVAL);
@@ -424,18 +425,18 @@ int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
         }
         else
         {
-            // ¿ªÊ¼¶ÁÊı¾İ
+            // å¼€å§‹è¯»æ•°æ®
             MySuicideAssert(sizeof(myhead) == readn(m_flb_r_fd, (char*)&myhead, sizeof(myhead)));
             MySuicideAssert(myhead.magic_num == MAGIC_NUM);
             uint32_t stepsize = ((myhead.block_size + 3 ) >> 2 ) << 2;
             MySuicideAssert (stepsize < buff_size);
             MySuicideAssert(BLOCK_MAX_SIZE > myhead.block_size + sizeof(file_link_block_head));
             MySuicideAssert(stepsize == (uint32_t)readn(m_flb_r_fd, buff, stepsize));
-            m_flb_read_offset = lseek(m_flb_r_fd, 0, SEEK_CUR);
+            m_flb_read_offset = (uint32_t)lseek(m_flb_r_fd, 0, SEEK_CUR);
             log_id            = myhead.log_id;
             block_id          = myhead.block_id;
-			file_no           = m_flb_read_file_no;
-            // Ğ£Ñéblock_id¼´¿É£¬¾Í²»ÓÃ¼ÆËãcheck_numÁË
+            file_no           = m_flb_read_file_no;
+            // æ ¡éªŒblock_idå³å¯ï¼Œå°±ä¸ç”¨è®¡ç®—check_numäº†
             DEBUG("get new data! name[%s] size [%u] m_flb_read_block_id[%u] head.block_id[%u] try[%u]",
                     m_read_file_name, myhead.block_size, m_flb_read_block_id, myhead.block_id, try_count); 
             m_flb_read_block_id ++;
@@ -449,7 +450,7 @@ int filelinkblock::read_message(uint32_t& log_id, uint32_t& file_no, uint32_t& b
 
 void filelinkblock:: set_channel(const char* channel_name)
 {
-    // Ğ´ÈëÎÄ¼ş
+    // è®¾ç½®channel
     MySuicideAssert (channel_name != NULL && 0 < strlen(channel_name));
     snprintf (m_channel_name, sizeof(m_channel_name), "%s/%s", BASE_OFFSET_PATH, channel_name);
     return;
@@ -457,7 +458,7 @@ void filelinkblock:: set_channel(const char* channel_name)
 
 void filelinkblock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& block_id)
 {
-    // Ğ´ÈëÎÄ¼ş
+    // è¯»å–è¿›åº¦
     MySuicideAssert (0 < strlen(m_channel_name));
     FILE* fp = fopen(m_channel_name, "r");
     MySuicideAssert (fp != NULL);
@@ -479,7 +480,7 @@ void filelinkblock:: load_offset(uint32_t &file_no, uint32_t& offset, uint32_t& 
 
 void filelinkblock:: save_offset()
 {
-    // Ğ´ÈëÎÄ¼ş
+    // å†™å…¥æ–‡ä»¶
     MySuicideAssert (0 < strlen(m_channel_name));
     int wfd = open(m_channel_name, O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     MySuicideAssert(wfd > 0);
@@ -500,7 +501,7 @@ int filelinkblock::readn(int fd, char* buf, const uint32_t size)
     int left = size;
     while (left > 0)
     {
-        int len = read(fd, buf+size-left, left);
+        int len = (int)read(fd, buf+size-left, left);
         if (len == -1 || len == 0)
         {
 

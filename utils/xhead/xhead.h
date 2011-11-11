@@ -18,7 +18,10 @@ typedef struct _xhead_t
         uint32_t reserved;     // 保留位
         uint32_t block_id;     // 消息队列进度中的块号
     };
-    uint32_t status;       // 状态位
+    union{
+        uint32_t status;       // 状态位
+        uint32_t all_num;      // 总数
+    };
     uint32_t detail_len;   // xhead_t后面的变长数据
 }xhead_t;
 

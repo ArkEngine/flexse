@@ -4,3 +4,6 @@ all:
 	make -C plugin
 	make -C flexse
 	make -C ciqueue
+
+clean:
+	cd ./flexse/ && make clean

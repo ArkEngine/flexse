@@ -12,12 +12,15 @@ INCS= -I ../mem_indexer/include \
 	  -I ../disk_indexer/include \
 	  -I ../base_indexer/include \
 	  -I ../../diskv/include/\
+	  -I ../../algo/include/\
+	  -I ../../structmask/include/\
 	  -I ../../fileblock/include/\
 	  -I ../../memblocks/include/\
 	  -I ../../postinglist/include/\
 	  -I ../../mylog/include/\
 	  -I ../../myutils/include/\
 	  -I ../../MyException/include/\
+	  -I ../../../opensrc/jsoncpp/include/\
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \

@@ -14,7 +14,7 @@ class idmap
         static const char* const STR_IDMAP_I2O_SUFFIX;
 
         bitmap*  m_po2imap;
-        bitmap*  m_pi2omap;
+//        bitmap*  m_pi2omap;
         uint32_t m_cur_innerid;
         uint32_t m_max_innerid;
         uint32_t m_max_outerid;
@@ -29,7 +29,7 @@ class idmap
 
         /* 以下三个接口，返回0表示失败，返回>0表示成功 */
         uint32_t getInnerID(const uint32_t outerID);
-        uint32_t getOuterID(const uint32_t innerID);
+//        uint32_t getOuterID(const uint32_t innerID);
         uint32_t allocInnerID(const uint32_t outerID);
 };
 #endif

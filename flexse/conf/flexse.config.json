@@ -4,21 +4,21 @@
         // enum {PRINT = 0, DEBUG, ROUTN, ALARM, FATAL,}, default as 2
         // name by "./log/flexse.log.YYYYMMHH"
         // size default 2G
-        "LogLevel" : 2
+        "LogLevel" : 0
     },
     "QUERY_SERVER":
     {
-        "EpollSize"        : 128,     // default as 128
-        "SendTimeOut_MS"   : 1000,    // default as 1000
-        "RecvTimeOut_MS"   : 1000,    // default as 1000
-        "QueryPort"        : 1983,    // default as 1983
-        "ServiceThreadNum" : 10,      // default as 20
-        "ThreadBufferSize" : 10485760 // default as 10M
+        "EpollSize"            : 128,     // default as 128
+        "SendTimeOut_MS"       : 1000,    // default as 1000
+        "RecvTimeOut_MS"       : 1000,    // default as 1000
+        "QueryPort"            : 1983,    // default as 1983
+        "ServiceThreadNum"     : 10,      // default as 20
+        "ThreadBufferSize"     : 1048576  // default as 1M
     },
     "UPDATE_SERVER":
     {
         "UpdatePort"       : 1984,    // default as 1984
         "SocketTimeOut_MS" : 1000,    // default as 1s
-        "ReadBufferSize"   : 10485760 // default as 10M
+        "ReadBufferSize"   : 1048576  // default as 1M
     }
 }

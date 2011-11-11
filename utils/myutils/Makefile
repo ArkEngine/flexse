@@ -8,6 +8,7 @@ LIBOBJ= myutils.o
 INCS= -I ../mylog/include/ \
 	  -I ../MyException/include/ \
 	  -I ../structmask/include/ \
+	  -I ../algo/include/ \
 	  -I ../../opensrc/jsoncpp/include/
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \

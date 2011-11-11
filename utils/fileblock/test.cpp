@@ -63,7 +63,7 @@ int main(int argc, char** argv)
         //        printf("b: %u, c: %u\n", loop*milestone, milestone);
         //        printf("%u == %u\n",
         //        (SIZE%milestone) * sizeof(uint32_t), myfl->get(loop*milestone, milestone, &ulist, sizeof(ulist)));
-        assert ((SIZE%milestone) * sizeof(uint32_t) == myfl->get(loop*milestone, milestone, &ulist, sizeof(ulist)));
+        assert ((int32_t)((SIZE%milestone) * sizeof(uint32_t)) == myfl->get(loop*milestone, milestone, &ulist, sizeof(ulist)));
         for (uint32_t j=0; j<SIZE%milestone; j++)
         {
             assert(ulist[j] == loop*milestone + j);
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
         //        printf("b: %u, c: %u\n", loop*milestone, milestone);
         //        printf("%u == %u\n",
         //        (SIZE%milestone) * sizeof(uint32_t), myfl->get(loop*milestone, milestone, &ulist, sizeof(ulist)));
-        assert ((SIZE%milestone) * sizeof(uint32_t) == myfl->get(loop*milestone, milestone, &ulist, sizeof(ulist)));
+        assert ((int32_t)((SIZE%milestone) * sizeof(uint32_t)) == myfl->get(loop*milestone, milestone, &ulist, sizeof(ulist)));
         for (uint32_t j=0; j<SIZE%milestone; j++)
         {
             assert(ulist[j] == loop*milestone + j);
@@ -133,9 +133,11 @@ int main(int argc, char** argv)
 
     // -0- 异常测试
     printf("sleep 100s.\n");
+    myfl->clear();
     delete myfl;
     sleep(10);
     printf("wake up.\n");
+    ROUTN("this is unittest");
     return 0;
 
 

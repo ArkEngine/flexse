@@ -117,6 +117,9 @@ thread_data_t* ServiceThreadInit(equeue* myequeue, flexse_plugin* pflexse_plugin
         FATAL( "fucking funny, malloc failed [%m]");
         while(0!=raise(SIGKILL)){}
     }
+//    memblocks* queryMemblocks = new memblocks(myConfig->QueryMemblockSizList(),
+//            myConfig->QueryMemblockNumList(), myConfig->QueryMemblockCatNum());
+//    MySuicideAssert(queryMemblocks != NULL);
 
     for (uint32_t i=0; i<myConfig->ServiceThreadNum(); i++)
     {
@@ -127,6 +130,7 @@ thread_data_t* ServiceThreadInit(equeue* myequeue, flexse_plugin* pflexse_plugin
         ptd[i].RecvBuffSize = myConfig->ThreadBufferSize();
         ptd[i].servapp = ServiceApp;
         ptd[i].plugin  = pflexse_plugin;
+//        ptd[i].mempool = queryMemblocks;
         ptd[i].poll = myequeue;
         if (ptd[i].RecvBuff == NULL || ptd[i].SendBuff == NULL)
         {

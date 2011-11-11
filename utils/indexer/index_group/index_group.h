@@ -94,7 +94,7 @@ class index_group
         void update_his_indexer();
 
         int32_t get_posting_list(const char* strTerm, void* buff, const uint32_t length);
-        int32_t set_posting_list(const uint32_t file_no, const uint32_t block_id, const vector<term_info_t>& termlist);
+        int32_t set_posting_list(const uint32_t file_no, const uint32_t block_id, map<string, term_info_t>& term_map);
 
         // 设置dump到day2的时间段，min, max 在0-23之间，且min <= max，只会在这个时间段dump一次
         // 这也是每天例行启动his索引合并的设置时间段

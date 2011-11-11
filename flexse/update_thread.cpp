@@ -186,10 +186,10 @@ void* update_thread(void* args)
 int add(const uint32_t file_no, const uint32_t block_id,
         flexse_plugin* pflexse_plugin, const char* jsonstr)
 {
-    vector<term_info_t>  termlist;
+    map<string, term_info_t> term_map;
     vector<attr_field_t> attrlist;
     uint32_t             doc_id;
-    int retp = pflexse_plugin->add(jsonstr, doc_id, termlist, attrlist);
+    int retp = pflexse_plugin->add(jsonstr, doc_id, term_map, attrlist);
     if (retp != 0)
     {
         return -1;
@@ -201,11 +201,21 @@ int add(const uint32_t file_no, const uint32_t block_id,
     uint32_t* src_attr   = (puint_attr + tmpid*cell_size);
     // 如果termlist的大小不为0，则表示需要分配一个内部ID
     // 否则只需要更新文档属性即可
+    // 如果tmpid==0，表示这个id从没有进入过系统，那就放在bitlist的第0个位置
+    // 如果tmpid!=0，表示tmpid就是inner_id，修改的就是这个inner_id对应的属性
+    // 然后如果innder_id发生变化，则copy这段内存即可
     for(uint32_t i=0; i<attrlist.size(); i++)
     {
         _SET_SOLO_VALUE_(src_attr, attrlist[i].key_mask, attrlist[i].value);
+//        PRINT("tmp_id[%u] doc_id[%u] value[%u] cellsize[%u] "
+//                "uint_offset[%u] item_mask[%08x] move_count[%u] uint32_count[%u]",
+//                tmpid, doc_id, attrlist[i].value, cell_size,
+//                attrlist[i].key_mask.uint_offset,
+//                attrlist[i].key_mask.item_mask,
+//                attrlist[i].key_mask.move_count,
+//                attrlist[i].key_mask.uint32_count);
     }
-    if (0 != termlist.size())
+    if (0 != term_map.size())
     {
         // 为doc_id分配内部id
         // 检查一下以前有没有内部id，如果有的话，则把mod_bitmap置位
@@ -218,21 +228,27 @@ int add(const uint32_t file_no, const uint32_t block_id,
         if (tmpid > 0)
         {
             _SET_BITMAP_1_(*(pflexse_plugin->mysecore->m_mod_bitmap), tmpid);
+//            PRINT("innerid[%u] set into MOD", tmpid);
         }
         void* dst_attr = (puint_attr + innerid*cell_size);
         memmove(dst_attr, src_attr, cell_size*sizeof(uint32_t));
+//        PRINT("innerid[%u] doc_id[%u] value[%u]", innerid, doc_id, _GET_LIST_VALUE_(puint_attr, innerid, attrlist[0].key_mask));
 
         // 把termlist中的id设置为内部的ID
-        for(uint32_t i=0; i<termlist.size(); i++)
+        map<string, term_info_t>::iterator it;
+        for (it=term_map.begin(); it!=term_map.end(); it++)
         {
-            termlist[i].id = innerid;
+            it->second.id = innerid;
         }
         index_group* myIndexGroup = pflexse_plugin->mysecore->m_pindex_group;
-        return myIndexGroup->set_posting_list(file_no, block_id, termlist);
+        // 传入file_no和block_id是为了增量索引时，记住持久化的消息队列偏移量，以决定回放时的偏移
+        return myIndexGroup->set_posting_list(file_no, block_id, term_map);
     }
     return 0;
 }
 
+// 对得到的外部列表进行内部ID查询
+// 然后对内部ID对应的bitset进行置位
 int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
 {
     vector<uint32_t> id_list;
@@ -258,6 +274,8 @@ int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
     return 0;
 }
 
+// 对得到的外部列表进行内部ID查询
+// 然后对内部ID对应的bitset进行反置位
 int undel(flexse_plugin* pflexse_plugin, const char* jsonstr)
 {
     vector<uint32_t> id_list;

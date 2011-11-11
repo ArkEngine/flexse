@@ -9,14 +9,15 @@ MAIN= test
 MAINOBJ= test.o
 
 MAINLIBS= -L ./lib/ -lstructmask \
-		  -L ../../opensrc/jsoncpp/lib/ -ljson \
-		  -L ../MyException/lib/ -lMyException \
-		  -L ../mylog/lib/ -lmylog
+	  -L ../../opensrc/jsoncpp/lib/ -ljson \
+	  -L ../MyException/lib/ -lMyException \
+	  -L ../mylog/lib/ -lmylog
 
 INCS= -I ../mylog/include/ -I ../../opensrc/jsoncpp/include/ -I ../MyException/include/
 CPPFLAGS= $(INCS) -O3 -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
+		  -Wno-sign-conversion \
 		  #			-Weffc++ \-Werror \
 
 all: clean $(LIB) $(MAIN)

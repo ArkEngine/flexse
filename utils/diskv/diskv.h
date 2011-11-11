@@ -12,7 +12,7 @@ class diskv
         static const uint32_t MAX_PATH_LENGTH  = 128;
         static const uint32_t MAX_FILE_NO      = 128;
         static const uint32_t MAX_FILE_SIZE    = 2*1024*1024*1000;
-        static const uint32_t MAX_DATA_SIZE    = 1<<25;
+        static const uint32_t MAX_DATA_SIZE    = 1<<27;
 
         int      m_read_fd[MAX_FILE_NO];
         int      m_append_fd;
@@ -30,8 +30,8 @@ class diskv
     public:
         struct diskv_idx_t
         {
-            uint32_t file_no  :  7;   ///< 1<<7 = 128 files
-            uint32_t data_len : 25;   ///< max doc size is 1<<25 = 32M
+            uint32_t file_no  :  5;   ///< 1<<5 = 32 files
+            uint32_t data_len : 27;   ///< max doc size is 1<<27 = 128M
             uint32_t offset   : 31;   ///< max file size is 2G
             uint32_t reserved :  1;   ///< reserved bit
         };

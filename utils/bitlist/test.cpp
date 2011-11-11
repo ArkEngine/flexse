@@ -12,7 +12,7 @@ int main(int argc, char** argv)
         return 1;
     }
     const uint32_t SIZE = atoi(argv[1]);
-    bitlist mybitlist("./", "mem.test", 1, SIZE);
+    bitlist mybitlist("./", "mem.test", 3, SIZE);
 
     mask_item_t uint_item = {0xFFFFFFFF, 0, 0, 1, 0};
 

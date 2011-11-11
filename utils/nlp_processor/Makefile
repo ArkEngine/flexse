@@ -5,7 +5,7 @@ RANLIB=ranlib
 LIB= libnlp_processor.a
 LIBOBJ= nlp_processor.o
 
-INCS= -I ../myutils/include/ -I ../structmask/include/ -I ../../opensrc/jsoncpp/include/
+INCS= -I ../myutils/include/ -I ../algo/include -I ../structmask/include/ -I ../../opensrc/jsoncpp/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \

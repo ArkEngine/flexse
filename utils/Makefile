@@ -2,9 +2,9 @@ all:
 	make -C unittest/
 	make -C MyException/
 	make -C mylog/
-	make -C myutils/
 	make -C structmask/
 	make -C algo/
+	make -C myutils/
 	make -C creat_sign/
 	make -C fileblock/
 	make -C diskv/
@@ -17,6 +17,7 @@ all:
 	make -C bitlist/
 	make -C idmap/
 	make -C nlp_processor/
+	make -C connectmanager/
 	make -C secore/
 	make -C xhead/
 	make -C equeue/

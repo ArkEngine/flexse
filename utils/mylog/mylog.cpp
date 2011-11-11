@@ -36,7 +36,7 @@ void mylog :: setlog(const uint32_t level, const char* logname)
 {
     m_level = (level > (uint32_t)FATAL) ? (uint32_t)ROUTN : level;
     const char* mylogname = (logname != NULL && logname[0] != 0 ) ? logname : strLogName;
-    MyThrowAssert(NULL == strchr(mylogname, '/'));
+    MySuicideAssert(NULL == strchr(mylogname, '/'));
 
     char  defaultlogname[LogNameMaxLen];
     snprintf(defaultlogname, sizeof(defaultlogname), "./log/%s.log", strLogName);

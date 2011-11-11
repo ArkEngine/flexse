@@ -11,7 +11,6 @@ class bitlist
     private:
         static const uint32_t MAX_FILENAME_LENGTH = 128;
         int m_fd;
-        int m_filesize;
         bitlist();
         bitlist(const bitlist&);
 
@@ -23,7 +22,7 @@ class bitlist
 
     public:
         bitlist(const char* dir, const char* file,
-				const uint32_t cellsize, const uint32_t filesize);
+				const uint32_t cellsize, const uint32_t cellcount);
         ~bitlist();
 };
 

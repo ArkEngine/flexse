@@ -12,6 +12,7 @@ INCS= -I ../mylog/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
+		  -fprofile-arcs -ftest-coverage \
 		  #			-Weffc++ \-Werror \
 
 all: clean $(LIB)

@@ -1,5 +1,5 @@
 #ifndef  _MEMBLOCKS_H_
-#define  _MEM_H_
+#define  _MEMBLOCKS_H_
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>

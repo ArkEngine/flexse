@@ -23,13 +23,13 @@ postinglist :: postinglist(
     m_bucket_mask = m_bucket_size - 1;
     m_bucket = (uint32_t*)malloc(m_bucket_size*sizeof(uint32_t));
     // 初始化headlist
-    m_headlist_size = headlist_size < 1000000 ? 0x1000000 : headlist_size; // TODO
+    m_headlist_size = headlist_size < 1000000 ? 2000000 : headlist_size;
     m_headlist = (term_head_t*)malloc(m_headlist_size*sizeof(term_head_t));
     m_headlist_used = 0;
     m_headlist_sort = NULL;
 
     // 要求最小能放下 4 个cell
-    uint32_t mem_base_min = m_postinglist_cell_size * 4 + sizeof(mem_link_t);
+    uint32_t mem_base_min = (uint32_t)(m_postinglist_cell_size * 4 + sizeof(mem_link_t));
     for (uint32_t i=0; i<32; i++)
     {
         if (uint32_t(1 << i) >= mem_base_min)
@@ -83,7 +83,7 @@ postinglist :: ~postinglist()
 void postinglist :: memlinkcopy(mem_link_t* mem_link, const void* buff, const uint32_t length)
 {
     // 倒着使用内存，从尾部向头部写
-    int32_t woffset = mem_link->self_size - mem_link->used_size - (length+sizeof(mem_link_t));
+    int32_t woffset = (int32_t)(mem_link->self_size - mem_link->used_size - (length+sizeof(mem_link_t)));
     assert(woffset >= 0);
     char* tmp = ((char*)&mem_link[1]);
     char* dst = &tmp[woffset];
@@ -122,7 +122,7 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
                     break;
                 }
                 uint32_t coffset = mem_link->self_size - mem_link->used_size;
-                coffset -= sizeof(mem_link_t);
+                coffset -= (uint32_t)sizeof(mem_link_t);
                 char* src = &(((char*)&mem_link[1])[coffset]);
                 uint32_t copy_length =
                     (left_size > mem_link->used_size) ? mem_link->used_size: left_size;
@@ -161,7 +161,7 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
             // 看看当前的memblock是否能够放下
             uint32_t left_size = phead->mem_link->self_size - phead->mem_link->used_size;
             // 继续去掉mem_link_t头部占用的大小
-            left_size -= sizeof(mem_link_t);
+            left_size -= (uint32_t)sizeof(mem_link_t);
 
             if (left_size >= m_postinglist_cell_size)
             {
@@ -176,18 +176,18 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                         && (phead->mem_link->self_size == phead->mem_link->next->self_size))
                 {
                     mem_link_t* merge_memlink = memlinknew(phead->mem_link->self_size*2, phead->mem_link->next->next);
-                    DEBUG("merge the memblocks seg1[%u] seg2[%u]\n",
+                    DEBUG("merge the memblocks seg1[%u] seg2[%u]",
                             phead->mem_link->used_size, phead->mem_link->next->used_size);
 
                     uint32_t coffset = 0;
                     char*    src = NULL;
                     coffset = phead->mem_link->next->self_size - phead->mem_link->next->used_size;
-                    coffset -= sizeof(mem_link_t);
+                    coffset -= (uint32_t)sizeof(mem_link_t);
                     src = &(((char*)&phead->mem_link->next[1])[coffset]);
                     memlinkcopy(merge_memlink, src, phead->mem_link->next->used_size);
 
                     coffset = phead->mem_link->self_size - phead->mem_link->used_size;
-                    coffset -= sizeof(mem_link_t);
+                    coffset -= (uint32_t)sizeof(mem_link_t);
                     src = &(((char*)&phead->mem_link[1])[coffset]);
                     memlinkcopy(merge_memlink, src, phead->mem_link->used_size);
 

@@ -120,7 +120,7 @@ namespace flexse
             ALARM( "open file[%s] failed. %m", file);
             return -1;
         }
-        int32_t offset = lseek(fd, 0, SEEK_END);
+        int32_t offset = (int32_t)lseek(fd, 0, SEEK_END);
         if (offset == -1) {
             ALARM( "lssek file[%s] failed. %m", file);
             return -1;
@@ -132,7 +132,7 @@ namespace flexse
         lseek(fd, 0, SEEK_SET);
         int left = offset;
         while (left > 0) {
-            int len = read(fd, buff+offset-left, left);
+            int len = (int)read(fd, buff+offset-left, left);
             if (len == -1 || len == 0) {
                 ALARM( "readfile failed. ERROR[%m]");
                 return -1;

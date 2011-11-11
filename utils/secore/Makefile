@@ -18,11 +18,13 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/bitlist/include/ \
 	  -I ../../utils/myutils/include/ \
 	  -I ../../utils/structmask/include/ \
+	  -I ../../utils/algo/include/ \
 	  -I ../../utils/indexer/mem_indexer/include/ \
 	  -I ../../utils/indexer/disk_indexer/include/ \
 	  -I ../../utils/indexer/base_indexer/include/ \
 	  -I ../../utils/indexer/index_group/include/ \
 	  -I ../../opensrc/jsoncpp/include/ \
+	  -I ../../../code/nlp/wordseg2/trunk/release/ \
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \

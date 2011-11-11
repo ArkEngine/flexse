@@ -22,6 +22,7 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../utils/bitlist/include/ \
 	  -I ../utils/structmask/include/ \
 	  -I ../utils/idmap/include/ \
+	  -I ../utils/algo/include/ \
 	  -I ../utils/detaildb/include/ \
 	  -I ../utils/secore/include/ \
 	  -I ../utils/indexer/index_group/include/ \
@@ -31,6 +32,7 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../ciqueue/sender/ \
 	  -I ../opensrc/jsoncpp/include/ \
 	  -I ../plugin/flexse/include/ \
+	  -I ../../code/nlp/wordseg2/trunk/release/ \
 
 LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../utils/indexer/index_group/lib/  -lindex_group \
@@ -51,13 +53,18 @@ LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../utils/idmap/lib/                -lidmap \
 		 -L ../utils/bitmap/lib/               -lbitmap \
 		 -L ../utils/xhead/lib/                -lxhead \
+		 -L ../utils/algo/lib/                 -lalgo \
 		 -L ../utils/myutils/lib/              -lmyutils \
 		 -L ../utils/structmask/lib/           -lstructmask \
+		 -L ../../code/nlp/wordseg2/trunk/release/ -lwordseg \
+		 -L ../../code/nlp/wordseg2/trunk/public/clib/lib/ -lclib \
 		 -L ../utils/mylog/lib/                -lmylog \
 		 -L ../utils/MyException/lib/          -lMyException \
+		 -L /usr/lib/gcc/x86_64-redhat-linux/4.4.4/          -lgcov \
 
 CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall -Wshadow -Wreturn-type \
-		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror
+		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror \
+ 	          -fprofile-arcs -ftest-coverage
 
 all: client $(MAIN) 
 	rm *.o -rf
