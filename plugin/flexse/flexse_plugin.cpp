@@ -12,6 +12,13 @@ const char* const flexse_plugin:: FLEXINDEX_KEY_OP              = "op";
 const char* const flexse_plugin:: FLEXINDEX_KEY_TYPE            = "type";
 const char* const flexse_plugin:: FLEXINDEX_KEY_TOKEN           = "token";
 const char* const flexse_plugin:: FLEXINDEX_KEY_FIELD           = "field";
+const char* const flexse_plugin:: FLEXINDEX_KEY_WEIGHT          = "weight";
+const char* const flexse_plugin:: FLEXINDEX_KEY_OFFSET_COUNT    = "offset_count";
+const char* const flexse_plugin:: FLEXINDEX_KEY_OFFSET1         = "offset1";
+const char* const flexse_plugin:: FLEXINDEX_KEY_OFFSET2         = "offset2";
+const char* const flexse_plugin:: FLEXINDEX_KEY_POSITION        = "position";
+const char* const flexse_plugin:: FLEXINDEX_KEY_HIT_FIELD       = "hit_field";
+const char* const flexse_plugin:: FLEXINDEX_KEY_HIT_WEIGHT      = "hit_weight";
 const char* const flexse_plugin:: FLEXINDEX_VALUE_OP_NLP        = "NLP";
 const char* const flexse_plugin:: FLEXINDEX_VALUE_OP_DOC_ID     = "DOC_ID";
 const char* const flexse_plugin:: FLEXINDEX_VALUE_OP_PREFIX     = "PREFIX";
@@ -39,6 +46,9 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
     iter = flexindex.begin();
 
     // 读取倒排索引的字段处置对应表
+    // DOC_ID 是必须有的
+    bool found_doc_id = false;
+    bool found_position = false;
     for (uint32_t i=0; i<flexindex.size(); i++)
     {
         key_op_t mkey_op;
@@ -61,12 +71,41 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
             mkey_op.type = T_INT;
             MyThrowAssert(value[FLEXINDEX_KEY_FIELD].isString());
             MyThrowAssert(0 == m_post_maskmap->get_mask_item(value[FLEXINDEX_KEY_FIELD].asCString(), &mkey_op.key_mask));
+            found_doc_id = true;
         }
         else if (0 == strcmp(value[FLEXINDEX_KEY_OP].asCString(), FLEXINDEX_VALUE_OP_NLP))
         {
             // 该字段要做分词处理
             mkey_op.op   = OP_NLP;
             mkey_op.type = T_STR;
+            // 是否是必须字段 默认是必须的(为0)
+            if (value[FLEXINDEX_KEY_OPTIONAL].isInt())
+            {
+                mkey_op.optional = (0 == value[FLEXINDEX_KEY_OPTIONAL].isInt()) ? 0 : 1;
+            }
+            // 是否需要记录位置
+            if (value[FLEXINDEX_KEY_POSITION].isInt())
+            {
+                mkey_op.position = (0 == value[FLEXINDEX_KEY_POSITION].isInt()) ? 0 : 1;
+                // 只能有一个field能保存offset
+                if (found_position)
+                {
+                    MySuicideAssert(mkey_op.position == 0);
+                }
+                else
+                {
+                    found_position = (mkey_op.position != 0);
+                }
+            }
+            // 是否对这个字段使用field_hit算法
+            // 如果使用的话，配置中一定要给出hit_weight，这样便于更新时设置
+            if (value[FLEXINDEX_KEY_HIT_FIELD].isString())
+            {
+                snprintf(mkey_op.hit_field, sizeof(mkey_op.hit_field), "%s", value[FLEXINDEX_KEY_HIT_FIELD].asCString());
+                MySuicideAssert(value[FLEXINDEX_KEY_HIT_WEIGHT].isInt() && (0 < value[FLEXINDEX_KEY_HIT_WEIGHT].asInt()));
+                mkey_op.hit_weight = value[FLEXINDEX_KEY_HIT_WEIGHT].asInt();
+                MyThrowAssert(0 == m_post_maskmap->get_mask_item(mkey_op.hit_field, &mkey_op.key_mask));
+            }
         }
         else if (0 == strcmp(value[FLEXINDEX_KEY_OP].asCString(), FLEXINDEX_VALUE_OP_PREFIX))
         {
@@ -104,7 +143,26 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
         }
 
         m_key_op_map[strkey] = mkey_op;
+        printf("key[%12s] op[%u] date-type[%u] position[%u] optional[%u]"
+                " hit_field[%12s] hit_weight[%3u] token[%s]\n",
+                strkey.c_str(), mkey_op.op, mkey_op.type, mkey_op.position, mkey_op.optional,
+                mkey_op.hit_field, mkey_op.hit_weight, mkey_op.token);
     }
+
+    if (false == found_doc_id)
+    {
+        FATAL("DOC_ID NOT FOUND");
+        MySuicideAssert(0);
+    }
+    mask_item_t tmp_mask;
+    if (found_position)
+    {
+        // 如果定义了position，那么postintlist中一定需要给出offset_count/offset1/offset2的描述
+        MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET_COUNT, &tmp_mask));
+        MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET1, &tmp_mask));
+        MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET2, &tmp_mask));
+    }
+    MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_WEIGHT, &tmp_mask));
 }
 
 flexse_plugin:: ~flexse_plugin()
@@ -134,8 +192,9 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
     for (it=m_key_op_map.begin(); it!=m_key_op_map.end(); it++)
     {
         const char* strkey = it->first.c_str();
-        if (root[strkey].isNull())
+        if (root[strkey].isNull() && !it->second.optional)
         {
+            // 这些字段是必须的
             ALARM("jsonstr NOT contain '%s'.", strkey);
             return -1;
         }
@@ -229,16 +288,17 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                 else
                 {
                     // 在分词的算法中，设置各个term_info_t的描述，比如tf/idf/weight/offset
-                    //                    mysecore->m_pnlp_processor->split((char*)root[strkey].asCString(), termlist);
-                    //                    PRINT("txt:[%s] siz[%u]", root[strkey].asCString(), root[strkey].size());
+                    // mysecore->m_pnlp_processor->split((char*)root[strkey].asCString(), termlist);
+                    // PRINT("txt:[%s] siz[%u]", root[strkey].asCString(), root[strkey].size());
 
-                    TokenListPtr tokens = mysecore->segmenter->Segment(root[strkey].asCString(), (int)strlen(root[strkey].asCString()),
+                    TokenListPtr tokens = mysecore->segmenter->Segment(
+                            root[strkey].asCString(),
+                            (int)strlen(root[strkey].asCString()),
                             SEMANTIC_TOKEN|RETRIEVAL_TOKEN, "utf8");
                     TokenPtr token = tokens->first();
 
                     while (token != NULL) {
-
-//                        printf("[%s] -> [%s]\n", root[strkey].asCString(), token->as_string().c_str());
+                        //  printf("[%s] -> [%s]\n", root[strkey].asCString(), token->as_string().c_str());
                         if (token->as_string().length() && term_map.find(token->as_string()) == term_map.end())
                         {
                             term_info_t term_info = {token->as_string(), 0, {0,0,0,0}};
@@ -247,8 +307,8 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                             while (son != NULL) {
                                 if (son->as_string().length() && term_map.end() == term_map.find(son->as_string()))
                                 {                   
-//                                    printf("[%s] -> [%s] -> [%s]\n",
-//                                            root[strkey].asCString(), token->as_string().c_str(), son->as_string().c_str());
+                                    // printf("[%s] -> [%s] -> [%s]\n",
+                                    // root[strkey].asCString(), token->as_string().c_str(), son->as_string().c_str());
                                     term_info_t sub_term_info = {son->as_string(), 0, {0,0,0,0}};
                                     term_map[son->as_string()] = term_info;
                                 }                                           
@@ -265,7 +325,7 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                         else
                         {
                             // ranking同学请注意 TODO
-                            // 如果重复了，这里需要另外的处理，比如设置field_hit，或者offset信息
+                            // 如果重复了，这里需要另外的处理，比如设置hit_count，或者offset信息
                         }
                         token = token->next_;
                     }
@@ -277,13 +337,13 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
         }
     }
     // 看看都分啥了
-//    map<string, term_info_t>::iterator iit;
-//    for (iit=term_map.begin(); iit!=term_map.end(); iit++)
-//    {
-//        printf("<%s> ", iit->first.c_str());
-//    }
-//    printf("\n");
-//    printf("[%s]\n", jsonstr);
+    //    map<string, term_info_t>::iterator iit;
+    //    for (iit=term_map.begin(); iit!=term_map.end(); iit++)
+    //    {
+    //        printf("<%s> ", iit->first.c_str());
+    //    }
+    //    printf("\n");
+    //    printf("[%s]\n", jsonstr);
 
     // 迭代 m_attr_maskmap , 保存文档属性的数据
     char key[128];
@@ -416,11 +476,11 @@ int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint
         if ( 0 == mysecore->m_attr_maskmap->get_mask_item(query_param->orderby.c_str(), &sort_key_mask))
         {
             field_partial_sort(retBuff, query_param->all_num, sort_key_mask, query_param->all_num);
-//            for (uint32_t i=0; i<query_param->all_num; i++)
-//            {
-//                uint32_t _value = _GET_LIST_VALUE_(retBuff, i, sort_key_mask);
-//                PRINT("orderby : %s value[%3u]", query_param->orderby.c_str(), _value);
-//            }
+            //            for (uint32_t i=0; i<query_param->all_num; i++)
+            //            {
+            //                uint32_t _value = _GET_LIST_VALUE_(retBuff, i, sort_key_mask);
+            //                PRINT("orderby : %s value[%3u]", query_param->orderby.c_str(), _value);
+            //            }
         }
         else
         {

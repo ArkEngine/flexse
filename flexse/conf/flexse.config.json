@@ -11,13 +11,13 @@
         "EpollSize"            : 128,     // default as 128
         "SendTimeOut_MS"       : 1000,    // default as 1000
         "RecvTimeOut_MS"       : 1000,    // default as 1000
-        "QueryPort"            : 1983,    // default as 1983
+        "QueryPort"            : 2013,    // default as 1983
         "ServiceThreadNum"     : 10,      // default as 20
         "ThreadBufferSize"     : 1048576  // default as 1M
     },
     "UPDATE_SERVER":
     {
-        "UpdatePort"       : 1984,    // default as 1984
+        "UpdatePort"       : 2014,    // default as 1984
         "SocketTimeOut_MS" : 1000,    // default as 1s
         "ReadBufferSize"   : 1048576  // default as 1M
     }

@@ -14,6 +14,14 @@ class flexse_plugin
         static const char* const FLEXINDEX_KEY_TYPE;
         static const char* const FLEXINDEX_KEY_TOKEN;
         static const char* const FLEXINDEX_KEY_FIELD;
+        static const char* const FLEXINDEX_KEY_WEIGHT;
+        static const char* const FLEXINDEX_KEY_OFFSET_COUNT;
+        static const char* const FLEXINDEX_KEY_OFFSET1;
+        static const char* const FLEXINDEX_KEY_OFFSET2;
+        static const char* const FLEXINDEX_KEY_OPTIONAL;
+        static const char* const FLEXINDEX_KEY_POSITION;
+        static const char* const FLEXINDEX_KEY_HIT_FIELD;
+        static const char* const FLEXINDEX_KEY_HIT_WEIGHT;
         static const char* const FLEXINDEX_VALUE_OP_NLP;
         static const char* const FLEXINDEX_VALUE_OP_DOC_ID;
         static const char* const FLEXINDEX_VALUE_OP_PREFIX;
@@ -41,10 +49,14 @@ class flexse_plugin
         };
         struct key_op_t
         {
-            uint32_t    op;
-            uint32_t    type;
-            char        token[32];
-            mask_item_t key_mask;
+            uint32_t    op;                ///< 处置类型
+            uint32_t    type;              ///< 数据类型
+            uint32_t    optional;          ///< 是否可选
+            uint32_t    position;          ///< 是否需要记录position
+            char        hit_field[32];     ///< 是否需要记录field_hit
+            uint32_t    hit_weight;        ///< field_hit的权重是多少
+            char        token[32];         ///< 字段名称
+            mask_item_t key_mask;          ///< 在postinglist中的structmask描述
         };
         map <string, key_op_t> m_key_op_map;
 
