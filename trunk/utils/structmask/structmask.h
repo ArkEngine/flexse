@@ -5,7 +5,7 @@
                 (((((uint32_t*)puint)[mask_item.uint_offset]) & (mask_item.item_mask)) >> (mask_item.move_count))
 
 #define _GET_LIST_VALUE_(puint,index,mask_item) \
-                (((((uint32_t*)puint)[index*mask_item.uint32_count+mask_item.uint_offset]) &\
+                (((((uint32_t*)puint)[(index)*mask_item.uint32_count+mask_item.uint_offset]) &\
                 (mask_item.item_mask)) >> (mask_item.move_count))
 
 #define _SET_SOLO_VALUE_(puint,mask_item,ivalue) \
@@ -14,9 +14,9 @@
                 (~mask_item.item_mask)) | ((ivalue)<<(mask_item.move_count)))
 
 #define _SET_LIST_VALUE_(puint,index,mask_item,ivalue) \
-                ((uint32_t*)puint)[index*mask_item.uint32_count+mask_item.uint_offset] = \
-                (((uint32_t*)puint)[index*mask_item.uint32_count+mask_item.uint_offset] &\
-                (~mask_item.item_mask)) | (ivalue << mask_item.move_count)
+                ((uint32_t*)puint)[(index)*mask_item.uint32_count+mask_item.uint_offset] = \
+                (((uint32_t*)puint)[(index)*mask_item.uint32_count+mask_item.uint_offset] &\
+                (~mask_item.item_mask)) | ((ivalue) << mask_item.move_count)
 
 #include <map>
 #include <string>

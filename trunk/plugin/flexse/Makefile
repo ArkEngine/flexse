@@ -13,12 +13,14 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/fileblock/include/ \
 	  -I ../../utils/diskv/include/ \
 	  -I ../../utils/nlp_processor/include/ \
+	  -I ../../../code/nlp/wordseg2/trunk/release/ \
 	  -I ../../utils/idmap/include/ \
 	  -I ../../utils/bitmap/include/ \
 	  -I ../../utils/bitlist/include/ \
 	  -I ../../utils/detaildb/include/ \
 	  -I ../../utils/secore/include/ \
 	  -I ../../utils/myutils/include/ \
+	  -I ../../utils/algo/include/ \
 	  -I ../../utils/indexer/mem_indexer/include/ \
 	  -I ../../utils/indexer/disk_indexer/include/ \
 	  -I ../../utils/indexer/base_indexer/include/ \

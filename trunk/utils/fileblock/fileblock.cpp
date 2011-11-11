@@ -116,7 +116,7 @@ int32_t fileblock :: get(const uint32_t offset, void* buff, const uint32_t lengt
     }
 
     MyThrowAssert(m_fd[file_no] != -1);
-    return pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
+    return (int32_t)pread(m_fd[file_no], buff, m_cell_size, inoffset * m_cell_size);
 }
 
 int32_t fileblock :: get(const uint32_t offset, const uint32_t count, void* buff, const uint32_t length)
@@ -172,7 +172,7 @@ int32_t fileblock :: get(const uint32_t offset, const uint32_t count, void* buff
             m_fd[file_no] = open(tmpstr, amode, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         }
         MyThrowAssert(m_fd[file_no] != -1);
-        return pread(m_fd[file_no], buff, m_cell_size*count, inoffset * m_cell_size);
+        return (int32_t)pread(m_fd[file_no], buff, m_cell_size*count, inoffset * m_cell_size);
     }
 }
 
@@ -236,7 +236,7 @@ int32_t fileblock::detect_file()
         MySuicideAssert(0);
     }
 
-    int len = strlen(prefix);
+    int len = (int)strlen(prefix);
     int max = -1;
 
     while((dirp = readdir(dp)) != NULL)
@@ -273,6 +273,6 @@ uint32_t fileblock :: getfilesize( const char* name )
 {
     struct stat fs;
     MyThrowAssert( 0 == stat( name, &fs ) );
-    return fs.st_size;
+    return (uint32_t)fs.st_size;
 }
 

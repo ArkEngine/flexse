@@ -44,7 +44,7 @@ int main()
     {
         ikey_t ikey;
         ikey.sign64 = i;
-        di.set_posting_list(i, ikey, read_buff, i*sizeof(uint32_t));
+        di.set_posting_list(i, ikey, read_buff, (uint32_t)(i*sizeof(uint32_t)));
     }
     di.set_finish();
     memset(read_buff, 0, SIZE * sizeof(uint32_t));

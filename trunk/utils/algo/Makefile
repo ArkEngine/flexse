@@ -19,7 +19,7 @@ LDBS= -L ../structmask -lstructmask \
       -L ./lib/ -lalgo\
 	  -L ../mylog/lib/ -lmylog\
 
-CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
+CPPFLAGS= $(INCS) -O3 -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \

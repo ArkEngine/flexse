@@ -1,8 +1,8 @@
 {
     "GENERAL":
     {
-        "MaxOuterID"   :100000000,
-        "MaxInnerID"   :100000000,
+        "MaxOuterID"   :1000000,
+        "MaxInnerID"   :1000000,
         "IdmapDataDir" :"./data/idmap/"
     },
     "ATTR":
@@ -15,37 +15,38 @@
     },
     "INDEXCONFIG":
     {
-        "PostingListCellSize"    : 4,        // uint32_t
         "PostingBucketSize"      : 20,       // N begin 20 and 24, bucket_size = 1<<N
-        "PostingHeadListSize"    : 2000000,  // default as 16777216,
-        "PostingMemBlockNumList" : [4000000, 2000000]
+        "PostingHeadListSize"    : 20000,  // default as 2000000,
+        "PostingMemBlockNumList" : [40000, 20000]
     },
     "FLEXINDEX":
     [
-        {"id"      : {"op":"DOC_ID", "field":"id"}},
-        {"uid"     : {"op":"PREFIX", "type":"INT", "token":"UID^"}},
-        {"title"   : {"op":"NLP",    "field":"intitle"}},
-        {"content" : {"op":"NLP"}},
-        {"type"    : {"op":"PREFIX", "type":"INT", "token":"TYPE^"}},
-        {"tags"    : {"op":"PREFIX", "type":"LIST_STR", "token":"TAG^"}}
+        {"vid"       : {"op":"DOC_ID", "field":"id"}},
+        {"title"     : {"op":"NLP"}}
     ],
     "STRUCTMASK":
     {
+        // 以下配置一旦改变就需要重做数据 
+        // 倒排索引部分的数据考虑固定化
         "posting_list_cell":
         [
             {"id"            : 32},
-            {"intitle"       :  1},
-            {"title_count"   :  2},
-            {"content_count" :  4},
-            {"title_offset"  :  4},
-            {"reserved"      : 21}
+            {"title_hit"     :  1}, // 当在title的field中出现时，设置为1
+            {"tag_hit"       :  1}, // 当在tag的field中出现时，设置为1
+            {"count"         :  2}, // 在文档中出现次数
+            {"tf"            :  4},
+            {"idf"           :  4},
+            {"weight"        : 16}, // 文本的基础权重
+            {"offset_count"  :  4}  // offset位置的记录总数
         ],
         "document_attribute":
         [
-            {"update_time"   : 32},
-            {"type"          :  4},
-            {"selected"      :  1},
-            {"reserved"      : 27}
-        ]
+            {"vid"           : 32}, // 视频的vid
+            {"wth_num"       : 32}, // 播放数
+            {"cmt_num"       : 32}, // 评论数
+            {"duration"      : 32}, // 时间长度
+            {"vsign1"        : 32}, // 视频签名1
+            {"vsign2"        : 32}  // 视频签名2
+        ] 
     }
 }

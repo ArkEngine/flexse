@@ -120,11 +120,6 @@ void* send_message(void* arg)
         {
 			continue;
         }
-        if (sendbody[bodysize - 1] == '\n')
-        {
-            bodysize--;
-            sendbody[bodysize] = '\0';
-        }
 
         sxhead->log_id = log_id;
         sxhead->version = file_no;

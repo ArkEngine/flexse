@@ -19,6 +19,8 @@ INCS= -I ../mylog/include/ \
 	  -I ../../opensrc/jsoncpp/include/ \
 	  -I ../creat_sign/include/ \
 	  -I ../myutils/include/ \
+	  -I ../algo/include/ \
+	  -I ../structmask/include/ \
 	  -I ../MyException/include/ \
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \

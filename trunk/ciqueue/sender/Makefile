@@ -19,9 +19,11 @@ LDFLAGS= -L ../../opensrc/jsoncpp/lib/     -ljson \
 		 -L ../../utils/xhead/lib/         -lxhead \
 		 -L ../../utils/mylog/lib/         -lmylog \
 		 -L ../../utils/MyException/lib/   -lMyException \
+		 -L /usr/lib/gcc/x86_64-redhat-linux/4.4.4/          -lgcov \
 
 CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall -Wshadow -Wreturn-type \
-		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror
+		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror \
+		  -fprofile-arcs -ftest-coverage
 
 all: $(MAIN) 
 	rm *.o -rf
@@ -31,7 +33,6 @@ $(MAIN): $(OBJ)
 	rm -rf bin/ log/
 	mkdir log bin
 	cp $(MAIN) ../ciqueue/bin/ -f
-	cp $(MAIN) ./bin/ -f
 
 %.o: %.cpp %.h
 	$(CC) $(CPPFLAGS) $< -c -o $@

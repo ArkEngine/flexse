@@ -22,6 +22,8 @@ const char* const Config::m_StrQueryPort   = "QueryPort";
 const char* const Config::m_StrServiceThreadNum = "ServiceThreadNum";
 const char* const Config::m_StrThreadBufferSize = "ThreadBufferSize";
 const char* const Config::m_StrEpollSize = "EpollSize";
+//const char* const Config::m_StrQueryMemBlockNumList = "QueryMemBlockNumList";
+//const char* const Config::m_StrQueryMemBlockSizList = "QueryMemBlockSizList";
 
 const char* const Config::m_StrUpdatePort = "UpdatePort";
 const char* const Config::m_StrUpdateReadBufferSize = "ReadBufferSize";
@@ -32,15 +34,24 @@ Config::Config(const char* configpath)
     // DEFAULT CONFIG
     m_log_level = mylog :: ROUTN;
 
-    m_pollsize           = 128;
-    m_wtimeout_ms        = 1000;
-    m_rtimeout_ms        = 1000;
-    m_query_port         = 1983;
-    m_service_thread_num = 20;
-    m_thread_buffer_size = 10*1024*1024;
+    m_pollsize            = 128;
+    m_wtimeout_ms         = 1000;
+    m_rtimeout_ms         = 1000;
+    m_query_port          = 1983;
+    m_service_thread_num  = 20;
+    m_thread_buffer_size  = 1*1024*1024;
+//    m_querymemblockcatnum = 4;
+//    m_querymemblocknumlist[0] = 5;
+//    m_querymemblocksizlist[0] = 10*1024*1024;
+//    m_querymemblocknumlist[1] = 10;
+//    m_querymemblocksizlist[1] = 1*1024*1024;
+//    m_querymemblocknumlist[2] = 20;
+//    m_querymemblocksizlist[2] = 512*1024;
+//    m_querymemblocknumlist[3] = 40;
+//    m_querymemblocksizlist[3] = 128*1024;
 
     m_update_port = 1984;
-    m_update_read_buffer_size  = 10*1024*1024;
+    m_update_read_buffer_size  = 1*1024*1024;
     m_update_socket_timeout_ms = 1000;
 
     snprintf(m_plugin_config_path, sizeof(m_plugin_config_path),
@@ -73,6 +84,24 @@ Config::Config(const char* configpath)
             m_service_thread_num : qSrvConfig[m_StrServiceThreadNum].asInt();
         m_thread_buffer_size = qSrvConfig[m_StrThreadBufferSize].isNull() ?
             m_thread_buffer_size : qSrvConfig[m_StrThreadBufferSize].asInt();
+//        Json::Value mblocknumlist = qSrvConfig[m_StrQueryMemBlockNumList];
+//        Json::Value mblocksizlist = qSrvConfig[m_StrQueryMemBlockSizList];
+//        uint32_t tmpcatnum = 0;
+//        if (!mblocknumlist.isNull() && mblocknumlist.isArray())
+//        {
+//            tmpcatnum = mblocknumlist.size();
+//            for (uint32_t i=0; i<mblocknumlist.size(); i++)
+//            {
+//                m_querymemblocknumlist[i] = mblocknumlist[i].asInt();
+//            }
+//            MySuicideAssert(!mblocksizlist.isNull() && mblocksizlist.isArray());
+//            MySuicideAssert(tmpcatnum == mblocksizlist.size());
+//            for (uint32_t i=0; i<mblocksizlist.size(); i++)
+//            {
+//                m_querymemblocksizlist[i] = mblocksizlist[i].asInt();
+//            }
+//            m_querymemblockcatnum = tmpcatnum;
+//        }
     }
 
     Json::Value uSrvConfig = root["UPDATE_SERVER"];

@@ -11,6 +11,9 @@
 #include "structmask.h"
 #include <json/json.h>
 #include <string>
+#include "wordseg.h"
+
+using namespace snda;
 
 struct attr_field_t
 {
@@ -41,7 +44,6 @@ class secore
 
         static const char* const m_StrDetailDataDir;
 
-        static const char* const m_StrCellSize;
         static const char* const m_StrBucketSize;
         static const char* const m_StrHeadListSize;
         static const char* const m_StrMemBlockNumList;
@@ -66,6 +68,7 @@ class secore
 
         static const char* const m_StrInsideKey_DocIDList;
         static const char* const m_StrInsideKey_DocID;
+        static boost::shared_ptr<WordSeg> segmenter;
 
         index_group*   m_pindex_group;
         nlp_processor* m_pnlp_processor;
@@ -73,7 +76,7 @@ class secore
         bitmap*        m_del_bitmap;
         idmap*         m_idmap;
         bitlist*       m_docattr_bitlist;
-        detaildb*      m_detaildb;
+//        detaildb*      m_detaildb;
         structmask*    m_post_maskmap;
         structmask*    m_attr_maskmap;
 

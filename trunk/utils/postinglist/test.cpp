@@ -63,7 +63,7 @@ int main(const int argc, char** argv)
     gettimeofday(&btv, NULL);
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey++)
     {
-        int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
+        int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, (uint32_t)(VLUSIZE * 2 * sizeof(uint32_t)));
         assert ((uint32_t)rnum == VLUSIZE);
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
@@ -80,7 +80,7 @@ int main(const int argc, char** argv)
     while(!mypostinglist.is_end())
     {
         uint64_t ukey;
-        int32_t rnum = mypostinglist.itget(ukey, (char*)ubuff, VLUSIZE * 2 * sizeof(uint32_t));
+        int32_t rnum = mypostinglist.itget(ukey, (char*)ubuff, (uint32_t)(VLUSIZE * 2 * sizeof(uint32_t)));
         mypostinglist.next();
         assert(ukey == count);
         count ++;

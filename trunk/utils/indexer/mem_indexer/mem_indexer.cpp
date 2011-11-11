@@ -15,7 +15,7 @@ mem_indexer :: ~mem_indexer()
 
 int32_t mem_indexer :: get_posting_list(const char* strTerm, void* buff, const uint32_t length)
 {
-    int len = strlen(strTerm);
+    int len = (int)strlen(strTerm);
     if (0 == len || NULL == buff || length == 0)
     {
         ALARM("strTerm[%s] buff[%p] length[%u]", strTerm, buff, length);
@@ -28,7 +28,7 @@ int32_t mem_indexer :: get_posting_list(const char* strTerm, void* buff, const u
 
 int32_t mem_indexer :: set_posting_list(const char* strTerm, const void* buff)
 {
-    int len = strlen(strTerm);
+    int len = (int)strlen(strTerm);
     if (0 == len || NULL == buff)
     {
         ALARM("strTerm[%s] buff[%p]", strTerm, buff);

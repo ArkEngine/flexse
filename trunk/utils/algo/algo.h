@@ -2,6 +2,7 @@
 #define _ALGO_H_
 #include "structmask.h"
 #include <set>
+#include <vector>
 
 enum TYPE{
     EQUAL   = 0,
@@ -64,7 +65,6 @@ struct result_pair_t
  * @param nmemb           : the posting number of this posting-list.
  * @param pattrlist       : document-attribute buffer.
  * @param logic_list      : logic list
- * @param logic_num       : number of logic list
  *
  * @return the result posting number stored in posting-list if OK, else -1.
  */
@@ -73,8 +73,23 @@ int32_t filter(
         const uint32_t nmemb,
         const mask_item_t& doc_id_mask,
         const void* pattrlist,
-        const filter_logic_t* logic_list,
-        const uint32_t logic_num
+        const vector<filter_logic_t>& logic_list
+        );
+
+/**
+ * @brief : filter posting-list by mutil-logic
+ *
+ * @param pair_list  : posting-list stored here and filtered one also stored here.
+ * @param pattrlist  : document-attribute buffer.
+ * @param logic_list : logic list
+ *
+ * @return the result posting number stored in posting-list if OK, else -1.
+ */
+
+void filter(
+        vector<result_pair_t>& pair_list,
+        const void* pattrlist,
+        const vector<filter_logic_t>& logic_list
         );
 
 /**
@@ -86,7 +101,6 @@ int32_t filter(
  * @param nmemb           : the posting number of this posting-list.
  * @param pattrlist       : document-attribute buffer.
  * @param logic_list      : logic list
- * @param logic_num       : number of logic list
  *
  * @return the result posting number stored in posting-list if OK, else -1.
  */
@@ -96,8 +110,23 @@ int32_t ranking(
         const mask_item_t& doc_id_mask,
         const mask_item_t& weight_mask,
         const void* pattrlist,
-        const ranking_logic_t* logic_list,
-        const uint32_t logic_num
+        const vector<ranking_logic_t>& logic_list
+        );
+
+
+/**
+ * @brief : ranking posting-list by mutil-logic
+ *
+ * @param pair_list   : posting-list stored here and filtered one also stored here.
+ * @param pattrlist   : document-attribute buffer.
+ * @param logic_list  : logic list
+ *
+ * @return the result posting number stored in posting-list if OK, else -1.
+ */
+int32_t ranking(
+        vector<result_pair_t>& pair_list,
+        const void* pattrlist,
+        const vector<ranking_logic_t>& logic_list
         );
 
 /**
@@ -113,12 +142,29 @@ int32_t ranking(
  * @return the result posting number stored in posting-list if OK, else -1.
  */
 
-int32_t weight_merge(
-        const list_info_t* terminfo_list,
-        const uint32_t list_size,
+void weight_merge(
+        const vector<list_info_t>& terminfo_list,
         const mask_item_t id_mask,
         const mask_item_t wt_mask,
-        result_pair_t* result_list,
+        vector<result_pair_t>& result_pair_list,
         const uint32_t result_list_size
         );
+
+/**
+ * @brief : sort by field. return the top N sorted result.
+ *
+ * @param base     : list to sort
+ * @param size     : number of list
+ * @param key_mask : the 'field' mask
+ *                                      
+ * @return void
+ */
+
+void field_partial_sort(
+        void* base,
+        const uint32_t size,
+        const mask_item_t key_mask,
+        const uint32_t partial_size
+        );
+
 #endif

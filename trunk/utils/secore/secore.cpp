@@ -25,13 +25,15 @@ const char* const secore::m_StrAttrDataDir  = "AttrDataDir";
 
 const char* const secore::m_StrDetailDataDir  = "DetailDataDir";
 
-const char* const secore::m_StrCellSize = "PostingListCellSize";
 const char* const secore::m_StrBucketSize = "PostingBucketSize";
 const char* const secore::m_StrHeadListSize = "PostingHeadListSize";
 const char* const secore::m_StrMemBlockNumList = "PostingMemBlockNumList";
 
+boost::shared_ptr<WordSeg> secore::segmenter(CreateWordSeg());
+
 secore:: secore(const char* plugin_config_path)
 {
+    segmenter->Init("./conf/wordseg.json");
     // PLUGIN CONFIG
     Json::Value root;
     Json::Reader reader;
@@ -71,8 +73,11 @@ secore:: secore(const char* plugin_config_path)
     Json::Value indexDescConfig = root[CONFIGCATEGORY_INDEXCONFIG];
     MySuicideAssert (! indexDescConfig.isNull());
 
-    MySuicideAssert (! indexDescConfig[m_StrCellSize].isNull());
-    m_cell_size = indexDescConfig[m_StrCellSize].asInt();
+    m_attr_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_ATTR]);
+    m_post_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_POST]);
+    m_docattr_bitlist = new bitlist(m_attr_data_dir, "attr_bitlist", m_attr_maskmap->get_section_size(), m_max_inner_id);
+
+    m_cell_size = (uint32_t)(m_post_maskmap->get_section_size()*sizeof(uint32_t));
     MySuicideAssert (! indexDescConfig[m_StrBucketSize].isNull());
     m_bucket_size = indexDescConfig[m_StrBucketSize].asInt();
     MySuicideAssert (! indexDescConfig[m_StrHeadListSize].isNull());
@@ -93,16 +98,7 @@ secore:: secore(const char* plugin_config_path)
     m_del_bitmap = new bitmap(m_attr_data_dir, "del_bitmap", m_max_inner_id/8); // 一个字节 = 8 个bit
     m_mod_bitmap = new bitmap(m_attr_data_dir, "mod_bitmap", m_max_inner_id/8);
     m_idmap      = new idmap(m_idmap_data_dir, m_max_outer_id, m_max_inner_id);
-    m_detaildb   = new detaildb(m_detail_data_dir, "detail");
-
-    // 读取插件的配置
-//    Json::Value rootPlugin;
-//    Json::Reader readerPlugin;
-//    ifstream inPlugin(plugin_config_path);
-//    MySuicideAssert (readerPlugin.parse(in, root));
-    m_attr_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_ATTR]);
-    m_post_maskmap = new structmask(root[CONFIGCATEGORY_STRUCTMASK][STRUCTMASK_POST]);
-    m_docattr_bitlist = new bitlist(m_attr_data_dir, "attr_bitlist", m_attr_maskmap->get_section_size(), m_max_inner_id);
+//    m_detaildb   = new detaildb(m_detail_data_dir, "detail");
 }
 
 secore:: ~secore()
@@ -113,7 +109,7 @@ secore:: ~secore()
     delete m_idmap;
     delete m_pnlp_processor;
     delete m_docattr_bitlist;
-    delete m_detaildb;
+//    delete m_detaildb;
     delete m_post_maskmap;
     delete m_attr_maskmap;
 }

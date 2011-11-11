@@ -18,7 +18,7 @@ ConnectMap::ConnectMap()
     m_check_interval = DFT_CHECK_INTERVAL;
     struct timeval now;
     gettimeofday(&now, NULL);
-    m_last_check = now.tv_sec;
+    m_last_check = (uint32_t)(now.tv_sec);
     m_server_deadline = DFT_SERVER_DEADLINE;
     m_err_server_conn = 0;
     m_err_server_full = 0;
@@ -524,7 +524,7 @@ void ConnectMap::__CheckDeadServer()
     {
         return;
     }
-    m_last_check = now.tv_sec;
+    m_last_check = (uint32_t)(now.tv_sec);
     for (m_icm = m_connectmap.begin(); m_icm != m_connectmap.end(); m_icm++)
     {
         if ((now.tv_sec - m_icm->second.timestamp) > (int)m_server_deadline)

@@ -312,7 +312,7 @@ void index_group :: update_day_indexer()
     {
         // 指向新的DAY 0/1 INDEX
         m_index_list[DAY] = pdst_indexer;
-        m_last_day_merge_timecost = etv.tv_sec - btv.tv_sec;
+        m_last_day_merge_timecost = (uint32_t)(etv.tv_sec - btv.tv_sec);
     }
     // 通知等待swap的update线程
     if (ret != ETIMEDOUT)
@@ -397,30 +397,33 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
 }
 
 int32_t index_group :: set_posting_list(const uint32_t file_no, const uint32_t block_id,
-        const vector<term_info_t>& termlist)
+        map<string, term_info_t>& term_map)
 {
-    if (0 == termlist.size())
+    if (0 == term_map.size())
     {
         return 0;
     }
-    const uint32_t id = termlist[0].id; 
+    map<string, term_info_t>::iterator it;
+    it = term_map.begin();
+    const uint32_t id = it->second.id; 
     pthread_mutex_lock(&m_mutex);
 
     mem_indexer* pindexer = get_cur_mem_indexer();
 
     bool have_swap = false;
     bool nearly_full = false;
-    for (uint32_t i=0; i<termlist.size(); i++)
+    for (it=term_map.begin(); it!=term_map.end(); it++)
     {
-        // &(termlist[i].id) 表示从id的地址开始，拷贝postlist_cell_size个大小的内存
+        // &(term_map[i].id) 表示从id的地址开始，拷贝postlist_cell_size个大小的内存
         // 不是仅仅拷贝id
-        int setret = pindexer->set_posting_list(termlist[i].strTerm.c_str(), &(termlist[i].id));
+        int setret = pindexer->set_posting_list(it->first.c_str(), &(it->second.id));
+//        PRINT("term[%s] innerid[%u]", it->first.c_str(), it->second.id);
         if (postinglist::FULL == setret)
         {
-            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", id);
+            ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", it->second.id);
             pindexer = swap_mem_indexer();
-            ROUTN( "THANKS GOD, SWITCH OK. ID[%u]", termlist[i].id);
-            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(termlist[i].strTerm.c_str(), &(termlist[i].id)));
+            ROUTN( "THANKS GOD, SWITCH OK. ID[%u]", it->second.id);
+            MySuicideAssert(postinglist::OK == pindexer->set_posting_list(it->first.c_str(), &(it->second.id)));
             have_swap = true;
         }
         // 为什么需要一个 NEARLY_FULL 的状态呢

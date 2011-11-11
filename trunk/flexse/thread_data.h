@@ -5,6 +5,7 @@
 #include "flexse_plugin.h"
 #include "xhead.h"
 #include "equeue.h"
+//#include "memblocks.h"
 #include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -22,6 +23,7 @@ struct thread_data_t
     equeue*        poll;
 	servfunc       servapp;
 	flexse_plugin* plugin;
+//    memblocks*     mempool;
 	union{
 		char*      RecvBuff;
 		xhead_t*   RecvHead;

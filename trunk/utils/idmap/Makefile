@@ -17,7 +17,10 @@ MAINLIBS= -L ./lib/ -lidmap \
 INCS= -I ../mylog/include/\
 	  -I ../MyException/include/\
 	  -I ../bitmap/include\
+	  -I ../algo/include\
+	  -I ../structmask/include\
 	  -I ../myutils/include\
+	  -I ../../opensrc/jsoncpp/include\
 	  -I ./include/ \
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \

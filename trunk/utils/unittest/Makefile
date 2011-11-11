@@ -5,3 +5,5 @@ all:
 	rm -f gcover.o
 	mkdir lib
 	mv libgcover.so lib
+clean:
+	rm -rf lib

@@ -24,11 +24,11 @@ idmap::idmap(const char* dir, const uint32_t maxOuterID, const uint32_t maxInner
     char filename[MAX_FILE_LENGTH];
     snprintf(filename, sizeof(filename), "%s.%s",
             STR_IDMAP_FILE_PREFIX, STR_IDMAP_O2I_SUFFIX);
-    m_po2imap = new bitmap(dir, filename, maxOuterID*sizeof(uint32_t));
+    m_po2imap = new bitmap(dir, filename, (uint32_t)(maxOuterID*sizeof(uint32_t)));
 
-    snprintf(filename, sizeof(filename), "%s.%s",
-            STR_IDMAP_FILE_PREFIX, STR_IDMAP_I2O_SUFFIX);
-    m_pi2omap = new bitmap(dir, filename, maxInnerID*sizeof(uint32_t));
+//    snprintf(filename, sizeof(filename), "%s.%s",
+//            STR_IDMAP_FILE_PREFIX, STR_IDMAP_I2O_SUFFIX);
+//    m_pi2omap = new bitmap(dir, filename, (uint32_t)(maxInnerID*sizeof(uint32_t)));
 
     // load the cur innerid
     // 这个文件中存放的是已经分配出去的最大内部ID
@@ -55,7 +55,7 @@ idmap::~idmap()
     {
         close(m_innerid_fd);
     }
-    delete m_pi2omap;
+//    delete m_pi2omap;
     delete m_po2imap;
 }
 
@@ -64,10 +64,10 @@ uint32_t idmap::getInnerID(const uint32_t outerID)
     return (outerID >= m_max_outerid) ? 0 : m_po2imap->puint[outerID];
 }
 
-uint32_t idmap::getOuterID(const uint32_t innerID)
-{
-    return ((innerID + 1) >= m_max_innerid) ? 0 : m_pi2omap->puint[innerID];
-}
+//uint32_t idmap::getOuterID(const uint32_t innerID)
+//{
+//    return ((innerID + 1) >= m_max_innerid) ? 0 : m_pi2omap->puint[innerID];
+//}
 
 uint32_t idmap::allocInnerID(const uint32_t outerID)
 {
@@ -94,7 +94,7 @@ uint32_t idmap::allocInnerID(const uint32_t outerID)
     MySuicideAssert(wlen == write(m_innerid_fd, save_content, wlen));
     MySuicideAssert( 0 == ftruncate(m_innerid_fd, wlen));
 
-    m_pi2omap->puint[m_cur_innerid] = outerID;
+//    m_pi2omap->puint[m_cur_innerid] = outerID;
     m_po2imap->puint[outerID] = m_cur_innerid;
 //    PRINT("outerid[%u] <> innerid[%u]", outerID, m_cur_innerid);
 

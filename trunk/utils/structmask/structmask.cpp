@@ -104,7 +104,7 @@ uint32_t structmask::get_section_size() const
 }
 uint32_t structmask::get_segment_size() const
 {
-    return m_mask_map.size();
+    return (uint32_t)m_mask_map.size();
 }
 
 void structmask :: begin()

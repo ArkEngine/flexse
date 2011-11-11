@@ -21,8 +21,8 @@ struct posting
 
 struct attribute
 {
-    uint32_t doc_id      : 28;
-    uint32_t qingxidu    :  3;
+    uint32_t doc_id      : 27;
+    uint32_t qingxidu    :  4;
     uint32_t delete_flag :  1;
     uint32_t publish_time;
     uint32_t update_time;
@@ -72,6 +72,50 @@ int main(int argc, char** argv)
     bool test_flag = false;
     uint32_t all_time_count = 0;
 
+    // SORT
+    {
+        const uint32_t SS = 1000000;
+        memset (attr_list_org, 0, SS * attr_uint_count * sizeof(uint32_t));
+        uint32_t* attr_list = attr_list_org;
+        const char* strKey = "qingxidu";
+        const char* tstKey = "doc_id";
+
+        mask_item_t key_mask;
+        mask_item_t tst_mask;
+        assert (0 == attr_mask_map.get_mask_item(strKey, &key_mask));
+        assert (0 == attr_mask_map.get_mask_item(tstKey, &tst_mask));
+        assert(attr_uint_count == key_mask.uint32_count);
+        uint32_t mask = 0x07;
+        // set the lists
+        for (uint32_t i=0; i<SS; i+=2)
+        {
+            _SET_LIST_VALUE_(attr_list, i, key_mask, i&mask);
+            _SET_LIST_VALUE_(attr_list, i, tst_mask, i);
+        }
+        for (uint32_t i=1; i<SS; i+=2)
+        {
+            _SET_LIST_VALUE_(attr_list, i, key_mask, (SS-i)&mask);
+            _SET_LIST_VALUE_(attr_list, i, tst_mask, (SS-i));
+        }
+
+        gettimeofday(&bbtv, NULL); 
+        field_partial_sort(attr_list_org, SS, tst_mask, 2000);
+        gettimeofday(&eetv, NULL); 
+        printf ("list-size: %u sort-time-consumed: %lu us\n", SS,
+                (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
+        attr_list = attr_list_org;
+        uint32_t c = 0xFFFFFFFF;
+        for (uint32_t i=0; i<SS; i++)
+        {
+            uint32_t x = _GET_LIST_VALUE_(attr_list, i, key_mask);
+            //            printf("x[%u]\n", x);
+            //            printf("c[%u] x[%u]\n", c, x);
+//            printf("x[%u] y[%u]\n", x, _GET_LIST_VALUE_(attr_list, i, tst_mask));
+//            assert(c >= x);
+            c = x;
+        }
+    }
+
     // BIGGER
     if (0 == strcmp(argv[1], "BIGGER")||0 == strcmp(argv[1], "ALL"))
     {
@@ -98,12 +142,14 @@ int main(int argc, char** argv)
             post_list += post_uint_count;
             attr_list += attr_uint_count;
         }
+        vector<filter_logic_t> vlogic;
+        vlogic.push_back(mlogic);
 
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, SIZE, doc_id_mask,
-                attr_list_org, &mlogic, 1 );
+                attr_list_org, vlogic );
         gettimeofday(&eetv, NULL); 
-        all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
+        all_time_count += (uint32_t)((eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
         //        printf("rst_num: %d\n", rst_num);
         post_list = post_list_org;
         for (int32_t i=0; i<rst_num; i++)
@@ -143,11 +189,14 @@ int main(int argc, char** argv)
             attr_list += attr_uint_count;
         }
 
+        vector<filter_logic_t> vlogic;
+        vlogic.push_back(mlogic);
+
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, SIZE, doc_id_mask,
-                attr_list_org, &mlogic, 1 );
+                attr_list_org, vlogic);
         gettimeofday(&eetv, NULL); 
-        all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
+        all_time_count += (uint32_t)((eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
         //        printf("rst_num: %d\n", rst_num);
         post_list = post_list_org;
         for (int32_t i=0; i<rst_num; i++)
@@ -189,11 +238,14 @@ int main(int argc, char** argv)
             attr_list += attr_uint_count;
         }
 
+        vector<filter_logic_t> vlogic;
+        vlogic.push_back(mlogic);
+
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, SIZE, doc_id_mask,
-                attr_list_org, &mlogic, 1 );
+                attr_list_org, vlogic );
         gettimeofday(&eetv, NULL); 
-        all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
+        all_time_count += (uint32_t)((eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
         //        printf("rst_num: %d\n", rst_num);
         post_list = post_list_org;
         for (int32_t i=0; i<rst_num; i++)
@@ -234,11 +286,14 @@ int main(int argc, char** argv)
             attr_list += attr_uint_count;
         }
 
+        vector<filter_logic_t> vlogic;
+        vlogic.push_back(mlogic);
+
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, SIZE, doc_id_mask,
-                attr_list_org, &mlogic, 1 );
+                attr_list_org, vlogic );
         gettimeofday(&eetv, NULL); 
-        all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
+        all_time_count += (uint32_t)((eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
         //        printf("rst_num: %d\n", rst_num);
         post_list = post_list_org;
         for (int32_t i=0; i<rst_num; i++)
@@ -281,11 +336,14 @@ int main(int argc, char** argv)
             attr_list += attr_uint_count;
         }
 
+        vector<filter_logic_t> vlogic;
+        vlogic.push_back(mlogic);
+
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, SIZE, doc_id_mask,
-                attr_list_org, &mlogic, 1 );
+                attr_list_org, vlogic );
         gettimeofday(&eetv, NULL); 
-        all_time_count += (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec);
+        all_time_count += (uint32_t)((eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
         //        printf("rst_num: %d\n", rst_num);
         post_list = post_list_org;
         for (int32_t i=0; i<rst_num; i++)
@@ -313,46 +371,52 @@ int main(int argc, char** argv)
         const char* strEqualKey_3   = "delete_flag";
         const char* strSetKey_4     = "movie_sub";
 
-        filter_logic_t logic_list[5];
+        vector<filter_logic_t> vlogic;
+        filter_logic_t mmlogic;
         // SET BIGGER
         uint32_t big_ivalue = 3;
         uint32_t big_mask = 0x03;
-        logic_list[0].type   = BIGGER;
-        logic_list[0].value  = big_ivalue;
-        assert (0 == attr_mask_map.get_mask_item(strBiggerKey_0, &(logic_list[0].key_mask)));
+        mmlogic.type   = BIGGER;
+        mmlogic.value  = big_ivalue;
+        assert (0 == attr_mask_map.get_mask_item(strBiggerKey_0, &(mmlogic.key_mask)));
+        vlogic.push_back(mmlogic);
 
         // SET SMALLER
         uint32_t small_ivalue = 3;
         uint32_t small_mask = 0x03;
-        logic_list[1].type   = SMALLER;
-        logic_list[1].value  = small_ivalue;
-        assert (0 == attr_mask_map.get_mask_item(strSmallerKey_1, &(logic_list[1].key_mask)));
+        mmlogic.type   = SMALLER;
+        mmlogic.value  = small_ivalue;
+        assert (0 == attr_mask_map.get_mask_item(strSmallerKey_1, &(mmlogic.key_mask)));
+        vlogic.push_back(mmlogic);
 
         // SET ZONE
         uint32_t min_value = 3;
         uint32_t max_value = 6;
         uint32_t zone_mask = 0x07;
-        logic_list[2].type   = ZONE;
-        logic_list[2].min_value  = min_value;
-        logic_list[2].max_value  = max_value;
-        assert (0 == attr_mask_map.get_mask_item(strZoneKey_2, &(logic_list[2].key_mask)));
+        mmlogic.type   = ZONE;
+        mmlogic.min_value  = min_value;
+        mmlogic.max_value  = max_value;
+        assert (0 == attr_mask_map.get_mask_item(strZoneKey_2, &(mmlogic.key_mask)));
+        vlogic.push_back(mmlogic);
 
         // SET EQUAL
         uint32_t equal_ivalue = 1;
         uint32_t equal_mask   = 0x01;
-        logic_list[3].type    = EQUAL;
-        logic_list[3].value   = equal_ivalue;
-        assert (0 == attr_mask_map.get_mask_item(strEqualKey_3, &(logic_list[3].key_mask)));
+        mmlogic.type    = EQUAL;
+        mmlogic.value   = equal_ivalue;
+        assert (0 == attr_mask_map.get_mask_item(strEqualKey_3, &(mmlogic.key_mask)));
+        vlogic.push_back(mmlogic);
 
         // SET SET
-        logic_list[4].type = SET;
+        mmlogic.type = SET;
         uint32_t set_count = 4;
         uint32_t set_mask  = 0x07;
         for (uint32_t i=0; i<set_count; i++)
         {
-            logic_list[4].vset.insert(i);
+            mmlogic.vset.insert(i);
         }
-        assert (0 == attr_mask_map.get_mask_item(strSetKey_4, &(logic_list[4].key_mask)));
+        assert (0 == attr_mask_map.get_mask_item(strSetKey_4, &(mmlogic.key_mask)));
+        vlogic.push_back(mmlogic);
 
         attribute* pattr = (attribute*)attr_list_org;
         // set the lists
@@ -360,11 +424,11 @@ int main(int argc, char** argv)
         {
             _SET_SOLO_VALUE_(post_list, doc_id_mask, i);
 
-            _SET_SOLO_VALUE_(attr_list, logic_list[0].key_mask, i & big_mask);
-            _SET_SOLO_VALUE_(attr_list, logic_list[1].key_mask, i & small_mask);
-            _SET_SOLO_VALUE_(attr_list, logic_list[2].key_mask, i & zone_mask);
-            _SET_SOLO_VALUE_(attr_list, logic_list[3].key_mask, i & equal_mask);
-            _SET_SOLO_VALUE_(attr_list, logic_list[4].key_mask, i & set_mask);
+            _SET_SOLO_VALUE_(attr_list, vlogic[0].key_mask, i & big_mask);
+            _SET_SOLO_VALUE_(attr_list, vlogic[1].key_mask, i & small_mask);
+            _SET_SOLO_VALUE_(attr_list, vlogic[2].key_mask, i & zone_mask);
+            _SET_SOLO_VALUE_(attr_list, vlogic[3].key_mask, i & equal_mask);
+            _SET_SOLO_VALUE_(attr_list, vlogic[4].key_mask, i & set_mask);
             //            printf("[%u : %u] [%u : %u] [%u : %u] [%u : %u] [%u : %u]\n",
             //                    pattr[i].qingxidu,    i & big_mask,
             //                    pattr[i].is_movie,    i & small_mask,
@@ -394,7 +458,7 @@ int main(int argc, char** argv)
             {
                 continue;
             }
-            if (logic_list[4].vset.end() == logic_list[4].vset.find(pattr[i].movie_sub))
+            if (vlogic[4].vset.end() == vlogic[4].vset.find(pattr[i].movie_sub))
             {
                 continue;
             }
@@ -405,7 +469,7 @@ int main(int argc, char** argv)
 
         gettimeofday(&bbtv, NULL); 
         rst_num = filter( post_list_org, SIZE, doc_id_mask,
-                attr_list_org, logic_list, 5 );
+                attr_list_org, vlogic);
         gettimeofday(&eetv, NULL); 
         //        printf("rst_num: %d\n", rst_num);
 
@@ -425,7 +489,7 @@ int main(int argc, char** argv)
             assert (!(pattr[id].is_movie > small_ivalue));
             assert (!(pattr[id].duration < min_value || pattr[id].duration > max_value));
             assert (!(pattr[id].delete_flag != equal_ivalue ));
-            assert (!(logic_list[4].vset.end() == logic_list[4].vset.find(pattr[id].movie_sub)));
+            assert (!(vlogic[4].vset.end() == vlogic[4].vset.find(pattr[id].movie_sub)));
         }
     }
 
@@ -446,7 +510,6 @@ int main(int argc, char** argv)
 
     uint32_t* post_list_org_0 = (uint32_t*)malloc(SIZE * post_uint_count_new * sizeof(uint32_t));
     uint32_t* post_list_org_1 = (uint32_t*)malloc(SIZE * post_uint_count_new * sizeof(uint32_t));
-    result_pair_t* result_pair_lst = (result_pair_t*)malloc(SIZE * sizeof(result_pair_t));
     uint32_t* post_list_0 = post_list_org_0;
     uint32_t* post_list_1 = post_list_org_1;
     mask_item_t weight_mask;
@@ -468,16 +531,23 @@ int main(int argc, char** argv)
         post_list_1 += post_uint_count_new;
     }
 
-    list_info_t termlist[2];
-    termlist[0].posting_list = post_list_org_0;
-    termlist[1].posting_list = post_list_org_1;
-    termlist[0].list_size = SIZE/2;
-    termlist[1].list_size = SIZE/3;
-    termlist[0].weight = 1;
-    termlist[1].weight = 1;
+    vector<list_info_t> termlist;
+    list_info_t list_info;
+    list_info.posting_list = post_list_org_0;
+    list_info.list_size = SIZE/2;
+    list_info.weight = 1;
+    termlist.push_back(list_info);
 
-    int32_t merge_rst_num = weight_merge(termlist, 2, doc_id_mask, weight_mask,
+    list_info.posting_list = post_list_org_1;
+    list_info.list_size = SIZE/3;
+    list_info.weight = 1;
+    termlist.push_back(list_info);
+
+    vector<result_pair_t> result_pair_lst;
+
+    weight_merge(termlist, doc_id_mask, weight_mask,
             result_pair_lst, SIZE);
+    int32_t merge_rst_num = (int32_t)result_pair_lst.size();
     printf("merge_rst_num: %d\n", merge_rst_num);
     //    for (uint32_t i=0; i<merge_rst_num; i++)
     //    {
@@ -487,7 +557,6 @@ int main(int argc, char** argv)
     // MERGE TEST
     free(post_list_org_0);
     free(post_list_org_1);
-    free(result_pair_lst);
 
     return 0;
 }

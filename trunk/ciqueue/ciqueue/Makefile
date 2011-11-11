@@ -11,6 +11,8 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/filelinkblock/include/ \
 	  -I ../../utils/MyException/include/ \
 	  -I ../../utils/xhead/include/ \
+	  -I ../../utils/algo/include/ \
+	  -I ../../utils/structmask/include/ \
 	  -I ../../utils/myutils/include/ \
 	  -I ../../utils/equeue/include/ \
 	  -I ../../opensrc/jsoncpp/include/ \
@@ -24,9 +26,11 @@ LDFLAGS= -L ../../opensrc/jsoncpp/lib/     -ljson \
 		 -L ../../utils/myutils/lib/       -lmyutils \
 		 -L ../../utils/mylog/lib/         -lmylog \
 		 -L ../../utils/MyException/lib/   -lMyException \
+		 -L /usr/lib/gcc/x86_64-redhat-linux/4.4.4/          -lgcov \
 
 CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall -Wshadow -Wreturn-type \
-		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror
+		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror \
+		  -fprofile-arcs -ftest-coverage
 
 all: $(MAIN) 
 	rm *.o -rf

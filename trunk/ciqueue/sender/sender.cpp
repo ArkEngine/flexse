@@ -33,7 +33,6 @@ void PrintVersion(void)
 
 int main(int argc, char** argv)
 {
-    // 应该做一个排他性检测，通过文件锁的方式应该比较酷
     signal(SIGPIPE, SIG_IGN);
     const char * strConfigPath = "./conf/"PROJNAME".config.json";
     char configPath[128];

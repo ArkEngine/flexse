@@ -52,7 +52,7 @@ uint32_t diskv :: getfilesize( const char* name )
 {
     struct stat fs;
     MyThrowAssert( 0 == stat( name, &fs ) );
-    return fs.st_size;
+    return (uint32_t)(fs.st_size);
 }
 
 int diskv :: detect_file( )
@@ -69,7 +69,7 @@ int diskv :: detect_file( )
         MySuicideAssert(0);
     }
 
-    int len = strlen(prefix);
+    int len = (int)strlen(prefix);
     int max = -1;
 
     while((dirp = readdir(dp)) != NULL)
@@ -146,7 +146,7 @@ int diskv :: get(const diskv_idx_t& idx, void* buff, const uint32_t length)
             || idx.offset > MAX_FILE_SIZE
             || idx.data_len > length
             || NULL == buff
-            || ((idx.file_no == m_max_file_no - 1) && (idx.offset + idx.data_len > m_last_file_offset))
+            || ((idx.file_no == m_max_file_no - 1) && ((uint32_t)(idx.offset + idx.data_len) > m_last_file_offset))
        )
     {
         ALARM ("params error. idx.file_no[%u] idx.offset[%u] idx.data_len[%u] "
@@ -163,7 +163,7 @@ int diskv :: get(const diskv_idx_t& idx, void* buff, const uint32_t length)
         m_read_fd[idx.file_no] = open(full_name, O_RDONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     }
     MyThrowAssert(m_read_fd[idx.file_no] != -1);
-    return pread(m_read_fd[idx.file_no], buff, idx.data_len, idx.offset);
+    return (int)pread(m_read_fd[idx.file_no], buff, idx.data_len, idx.offset);
 }
 
 void diskv :: clear()
