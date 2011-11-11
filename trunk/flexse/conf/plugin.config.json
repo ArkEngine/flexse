@@ -22,7 +22,10 @@
     "FLEXINDEX":
     [
         {"vid"       : {"op":"DOC_ID", "field":"id"}},
-        {"title"     : {"op":"NLP"}}
+        {"title"     : {"op":"NLP", "hit_field":"title_hit",  "hit_weight":5, "position":1}},
+        {"anchor"    : {"op":"NLP", "hit_field":"anchor_hit", "hit_weight":5}},
+        {"tag"       : {"op":"PREFIX", "type":"LIST_STR", "token":"TAG^"}},
+        {"cat_type"  : {"op":"PREFIX", "type":"LIST_INT", "token":"CAT^"}}
     ],
     "STRUCTMASK":
     {
@@ -30,14 +33,17 @@
         // 倒排索引部分的数据考虑固定化
         "posting_list_cell":
         [
-            {"id"            : 32},
+            {"id"            : 30},
             {"title_hit"     :  1}, // 当在title的field中出现时，设置为1
             {"tag_hit"       :  1}, // 当在tag的field中出现时，设置为1
-            {"count"         :  2}, // 在文档中出现次数
-            {"tf"            :  4},
-            {"idf"           :  4},
-            {"weight"        : 16}, // 文本的基础权重
-            {"offset_count"  :  4}  // offset位置的记录总数
+            {"anchor_hit"    :  1}, // 当在anchor的field中出现时，设置为1
+            {"count"         :  3}, // 在文档中出现次数
+            {"tf"            :  3},
+            {"idf"           :  3},
+            {"weight"        : 10}, // 文本的基础权重
+            {"offset_count"  :  2}, // offset位置的记录总数
+            {"offset1"       :  5}, // term出现的第一个位置
+            {"offset2"       :  5}  // term出现的第二个位置 = term出现的第一个位置 + offset2
         ],
         "document_attribute":
         [
