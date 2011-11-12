@@ -648,3 +648,27 @@ void field_partial_sort(void* base, const uint32_t size, const mask_item_t key_m
     }
 }
 
+void group_count(
+        const void* base,
+        const uint32_t nmemb,
+        const mask_item_t key_mask,
+        map<uint32_t, uint32_t>& group_count_map
+        )
+{
+    group_count_map.clear();
+    const uint32_t* puint = (uint32_t*)base;
+	for (uint32_t i=0; i<nmemb; i++)
+    {
+        uint32_t group_id = _GET_SOLO_VALUE_(puint, key_mask);
+        if (group_count_map.find(group_id) == group_count_map.end())
+        {
+            group_count_map[group_id] = 1;
+        }
+        else
+        {
+            group_count_map[group_id] += 1;
+        }
+        puint += key_mask.uint32_count;
+    }
+}
+
