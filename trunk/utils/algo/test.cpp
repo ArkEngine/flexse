@@ -116,6 +116,34 @@ int main(int argc, char** argv)
         }
     }
 
+    // GROUP_COUNT
+    { 
+        const uint32_t SS = 800000;
+        memset (attr_list_org, 0, SS * attr_uint_count * sizeof(uint32_t));
+        uint32_t* attr_list = attr_list_org;
+        const char* strKey = "type";
+        mask_item_t key_mask;
+        assert (0 == attr_mask_map.get_mask_item(strKey, &key_mask));
+        assert(attr_uint_count == key_mask.uint32_count);
+        uint32_t mask = 0x0F;
+        // set the lists
+        for (uint32_t i=0; i<SS; i++)
+        {
+            _SET_LIST_VALUE_(attr_list, i, key_mask, i&mask);
+        }
+        map<uint32_t, uint32_t> group_count_map;
+        map<uint32_t, uint32_t>::iterator it;
+        gettimeofday(&bbtv, NULL); 
+        group_count(attr_list_org, SS, key_mask, group_count_map);
+        gettimeofday(&eetv, NULL); 
+        printf ("list-size: %u group-time-consumed: %lu us\n", SS,
+                (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
+        for (it = group_count_map.begin(); it != group_count_map.end(); it++)
+        {
+            assert(it->second == SS/(mask+1));
+        }
+    }
+
     // BIGGER
     if (0 == strcmp(argv[1], "BIGGER")||0 == strcmp(argv[1], "ALL"))
     {

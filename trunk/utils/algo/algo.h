@@ -153,9 +153,10 @@ void weight_merge(
 /**
  * @brief : sort by field. return the top N sorted result.
  *
- * @param base     : list to sort
- * @param size     : number of list
- * @param key_mask : the 'field' mask
+ * @param base         : list to sort
+ * @param size         : number of list
+ * @param key_mask     : the 'field' mask
+ * @param partial_size : return the top partial_size sorted elements
  *                                      
  * @return void
  */
@@ -166,5 +167,24 @@ void field_partial_sort(
         const mask_item_t key_mask,
         const uint32_t partial_size
         );
+
+/**
+ * @brief : group count by field.
+ *
+ * @param base            : list to count
+ * @param size            : number of list
+ * @param key_mask        : the 'field' mask
+ * @param group_count_map : the result map
+ *                                      
+ * @return void
+ */
+
+void group_count(
+        const void* base,
+        const uint32_t size,
+        const mask_item_t key_mask,
+        map<uint32_t, uint32_t>& group_count_map
+        );
+
 
 #endif
