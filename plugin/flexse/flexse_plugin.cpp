@@ -13,7 +13,8 @@ const char* const flexse_plugin:: FLEXINDEX_KEY_TYPE            = "type";
 const char* const flexse_plugin:: FLEXINDEX_KEY_TOKEN           = "token";
 const char* const flexse_plugin:: FLEXINDEX_KEY_FIELD           = "field";
 const char* const flexse_plugin:: FLEXINDEX_KEY_WEIGHT          = "weight";
-const char* const flexse_plugin:: FLEXINDEX_KEY_OFFSET_COUNT    = "offset_count";
+const char* const flexse_plugin:: FLEXINDEX_KEY_OPTIONAL        = "optional";
+const char* const flexse_plugin:: FLEXINDEX_KEY_HIT_COUNT       = "hit_count";
 const char* const flexse_plugin:: FLEXINDEX_KEY_OFFSET1         = "offset1";
 const char* const flexse_plugin:: FLEXINDEX_KEY_OFFSET2         = "offset2";
 const char* const flexse_plugin:: FLEXINDEX_KEY_POSITION        = "position";
@@ -81,12 +82,12 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
             // 是否是必须字段 默认是必须的(为0)
             if (value[FLEXINDEX_KEY_OPTIONAL].isInt())
             {
-                mkey_op.optional = (0 == value[FLEXINDEX_KEY_OPTIONAL].isInt()) ? 0 : 1;
+                mkey_op.optional = (0 == value[FLEXINDEX_KEY_OPTIONAL].asInt()) ? 0 : 1;
             }
             // 是否需要记录位置
             if (value[FLEXINDEX_KEY_POSITION].isInt())
             {
-                mkey_op.position = (0 == value[FLEXINDEX_KEY_POSITION].isInt()) ? 0 : 1;
+                mkey_op.position = (0 == value[FLEXINDEX_KEY_POSITION].asInt()) ? 0 : 1;
                 // 只能有一个field能保存offset
                 if (found_position)
                 {
@@ -104,6 +105,7 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
                 snprintf(mkey_op.hit_field, sizeof(mkey_op.hit_field), "%s", value[FLEXINDEX_KEY_HIT_FIELD].asCString());
                 MySuicideAssert(value[FLEXINDEX_KEY_HIT_WEIGHT].isInt() && (0 < value[FLEXINDEX_KEY_HIT_WEIGHT].asInt()));
                 mkey_op.hit_weight = value[FLEXINDEX_KEY_HIT_WEIGHT].asInt();
+                MySuicideAssert(mkey_op.hit_weight > 0);
                 MyThrowAssert(0 == m_post_maskmap->get_mask_item(mkey_op.hit_field, &mkey_op.key_mask));
             }
         }
@@ -112,6 +114,11 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
             // 该字段要做前缀
             mkey_op.op   = OP_PREFIX;
             MyThrowAssert(value[FLEXINDEX_KEY_TYPE].isString());
+            // 是否是必须字段 默认是必须的(为0)
+            if (value[FLEXINDEX_KEY_OPTIONAL].isInt())
+            {
+                mkey_op.optional = (0 == value[FLEXINDEX_KEY_OPTIONAL].asInt()) ? 0 : 1;
+            }
             if (0 == strcmp(value[FLEXINDEX_KEY_TYPE].asCString(), FLEXINDEX_VALUE_TYPE_INT))
             {
                 mkey_op.type = T_INT;
@@ -157,8 +164,7 @@ flexse_plugin:: flexse_plugin(const char* config_path, secore* insecore)
     mask_item_t tmp_mask;
     if (found_position)
     {
-        // 如果定义了position，那么postintlist中一定需要给出offset_count/offset1/offset2的描述
-        MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET_COUNT, &tmp_mask));
+        // 如果定义了position，那么postintlist中一定需要给出offset1/offset2的描述
         MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET1, &tmp_mask));
         MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET2, &tmp_mask));
     }
@@ -189,14 +195,23 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
     // 从 m_key_op_map 迭代处理
     map<string, key_op_t>::iterator it;
     term_map.clear();
+    mask_item_t weight_mask;
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_WEIGHT, &weight_mask));
     for (it=m_key_op_map.begin(); it!=m_key_op_map.end(); it++)
     {
         const char* strkey = it->first.c_str();
-        if (root[strkey].isNull() && !it->second.optional)
+        if (root[strkey].isNull())
         {
             // 这些字段是必须的
-            ALARM("jsonstr NOT contain '%s'.", strkey);
-            return -1;
+            if (it->second.optional)
+            {
+                continue;
+            }
+            else
+            {
+                ALARM("jsonstr NOT contain '%s'.", strkey);
+                return -1;
+            }
         }
         switch (it->second.op)
         {
@@ -225,6 +240,8 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                 }
                 else if (it->second.type == T_STR)
                 {
+                    // TODO 是否该考虑把这个文本也加入到倒排中
+                    // 比如是一个人名，搜索这个人名时，也许要这个结果出现呢
                     snprintf(tmpstr, sizeof(tmpstr), "%s%s", it->second.token, root[strkey].asCString());
                     term_info_t term_info = {tmpstr, 0, {0,0,0,0}};
                     if (term_map.find(tmpstr) == term_map.end())
@@ -261,6 +278,8 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                         ALARM("'%s' Not a list jsonstr[%s]", strkey, jsonstr);
                         return -1;
                     }
+                    // TODO 是否该考虑把这个文本也加入到倒排中
+                    // 比如是一个标签，搜索这个标签时，也许要这个结果出现呢
                     const uint32_t json_idlist_size = root[strkey].size();
                     for (uint32_t i=0; i<json_idlist_size; i++)
                     {
@@ -278,8 +297,6 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                 }
                 break;
             case OP_NLP:
-                // TODO 这里应该考虑有些field的文本需要存储offset
-                // offset 暂定只计算标题吧，这样计算的效率可以得到保证
                 if (root[strkey].isNull() || !root[strkey].isString())
                 {
                     ALARM("jsonstr NOT contain '%s' [%u].", strkey, root[strkey].isNull());
@@ -297,25 +314,87 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                             SEMANTIC_TOKEN|RETRIEVAL_TOKEN, "utf8");
                     TokenPtr token = tokens->first();
 
+                    // 保证该field内的term只增加一次hit_weight
+                    map<string, term_info_t> field_term_map;
                     while (token != NULL) {
                         //  printf("[%s] -> [%s]\n", root[strkey].asCString(), token->as_string().c_str());
-                        if (token->as_string().length() && term_map.find(token->as_string()) == term_map.end())
+                        if (token->as_string().length() && field_term_map.find(token->as_string()) == field_term_map.end())
                         {
                             term_info_t term_info = {token->as_string(), 0, {0,0,0,0}};
-                            term_map[token->as_string()] = term_info;
+                            // 是否配置了hit_field
+                            if (it->second.hit_weight)
+                            {
+                                _SET_SOLO_VALUE_(&(term_info.id), weight_mask, it->second.hit_weight);
+                                _SET_SOLO_VALUE_(&(term_info.id), it->second.key_mask, HIT);
+                            }
+                            // 是否需要记录offset
+                            if (it->second.position)
+                            {
+                                mask_item_t offset1_mask;
+                                MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET1, &offset1_mask));
+                                if (token->char_offset_ <= _MAX_VALUE_(offset1_mask))
+                                {
+                                    _SET_SOLO_VALUE_(&(term_info.id), offset1_mask, token->char_offset_);
+                                }
+                            }
+                            mask_item_t hit_count_mask;
+                            if (0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_HIT_COUNT, &hit_count_mask))
+                            {
+                                _INC_UTILL_MAX_SOLO_(&(term_info.id), hit_count_mask, HIT);
+                            }
+                            field_term_map[token->as_string()] = term_info;
+
                             TokenPtr son = token->sub_token_;
                             while (son != NULL) {
-                                if (son->as_string().length() && term_map.end() == term_map.find(son->as_string()))
+                                if (son->as_string().length() && field_term_map.end() == field_term_map.find(son->as_string()))
                                 {                   
                                     // printf("[%s] -> [%s] -> [%s]\n",
                                     // root[strkey].asCString(), token->as_string().c_str(), son->as_string().c_str());
                                     term_info_t sub_term_info = {son->as_string(), 0, {0,0,0,0}};
-                                    term_map[son->as_string()] = term_info;
+                                    // 是否配置了hit_field
+                                    if (it->second.hit_weight)
+                                    {
+                                        _SET_SOLO_VALUE_(&(sub_term_info.id), weight_mask, it->second.hit_weight);
+                                        _SET_SOLO_VALUE_(&(sub_term_info.id), it->second.key_mask, HIT);
+                                    }
+                                    // 是否需要记录offset
+                                    if (it->second.position)
+                                    {
+                                        mask_item_t offset1_mask;
+                                        MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET1, &offset1_mask));
+                                        if (son->char_offset_ <= _MAX_VALUE_(offset1_mask))
+                                        {
+                                            _SET_SOLO_VALUE_(&(sub_term_info.id), offset1_mask, son->char_offset_);
+                                        }
+                                    }
+                                    if (0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_HIT_COUNT, &hit_count_mask))
+                                    {
+                                        _INC_UTILL_MAX_SOLO_(&(sub_term_info.id), hit_count_mask, HIT);
+                                    }
+                                    field_term_map[son->as_string()] = sub_term_info;
                                 }                                           
                                 else
                                 {
                                     // TODO
-                                    // 重复的情况需要额外处理
+                                    // 重复的情况需要额外处理，记载出现次数和第二个位置(采用差分的方法记录第二次)
+                                    term_info_t sub_term_info = field_term_map[son->as_string()];
+                                    if (it->second.position)
+                                    {
+                                        mask_item_t offset1_mask;
+                                        mask_item_t offset2_mask;
+                                        MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET1, &offset1_mask));
+                                        MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET2, &offset2_mask));
+                                        uint32_t offset1 = _GET_SOLO_VALUE_(&(sub_term_info.id), offset1_mask);
+                                        if ((offset1 > 0) && (son->char_offset_ <= 2*_MAX_VALUE_(offset2_mask)))
+                                        {
+                                            _SET_SOLO_VALUE_(&(sub_term_info.id), offset2_mask, son->char_offset_ - offset1);
+                                        }
+                                    }
+                                    if (0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_HIT_COUNT, &hit_count_mask))
+                                    {
+                                        _INC_UTILL_MAX_SOLO_(&(sub_term_info.id), hit_count_mask, HIT);
+                                    }
+                                    field_term_map[son->as_string()] = sub_term_info;
                                 }
                                 // PRINT("son[%s]", son->as_string().c_str());
                                 son = son->next_;
@@ -326,8 +405,57 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                         {
                             // ranking同学请注意 TODO
                             // 如果重复了，这里需要另外的处理，比如设置hit_count，或者offset信息
+                            term_info_t term_info = field_term_map[token->as_string()];
+                            if (it->second.position)
+                            {
+                                mask_item_t offset1_mask;
+                                mask_item_t offset2_mask;
+                                MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET1, &offset1_mask));
+                                MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_OFFSET2, &offset2_mask));
+                                uint32_t offset1 = _GET_SOLO_VALUE_(&(term_info.id), offset1_mask);
+                                if ((offset1 > 0) && (token->char_offset_ <= 2*_MAX_VALUE_(offset2_mask)))
+                                {
+                                    _SET_SOLO_VALUE_(&(term_info.id), offset2_mask, token->char_offset_ - offset1);
+                                }
+                            }
+                            mask_item_t hit_count_mask;
+                            if (0 == mysecore->m_post_maskmap->get_mask_item(FLEXINDEX_KEY_HIT_COUNT, &hit_count_mask))
+                            {
+                                _INC_UTILL_MAX_SOLO_(&(term_info.id), hit_count_mask, HIT);
+                            }
+                            field_term_map[token->as_string()] = term_info;
                         }
                         token = token->next_;
+                    }
+
+                    // 把 field_term_map 与 term_map 合并
+                    // hit_count这些值是需要累加的
+                    // 而field_hit的为什么也可以累加是因为不同field之间，肯定不可能重复
+                    // 比如说title_hit只可能在title的流程中被设置
+                    //
+                    // TODO idf和tf可能需要单独处理一下
+                    map<string, term_info_t>::iterator iit;
+                    for (iit=field_term_map.begin(); iit!=field_term_map.end(); iit++)
+                    {
+                        if (term_map.end() == term_map.find(iit->first))
+                        {
+                            term_map[iit->first] = iit->second;
+                        }
+                        else
+                        {
+                            term_info_t term_info = term_map[iit->first];
+                            char tmpkey[128];
+                            mysecore->m_post_maskmap->begin();
+                            while(!mysecore->m_post_maskmap->is_end())
+                            {
+                                mask_item_t it_mask;
+                                MySuicideAssert(mysecore->m_post_maskmap->itget(tmpkey, sizeof(tmpkey), &it_mask));
+                                uint32_t inc = _GET_SOLO_VALUE_(&(iit->second.id), it_mask);
+                                _INC_UTILL_MAX_SOLO_(&(term_info.id), it_mask, inc);
+                                mysecore->m_post_maskmap->next();
+                            }
+                            term_map[iit->first]  = term_info;
+                        }
                     }
                 }
                 break;
@@ -337,13 +465,41 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
         }
     }
     // 看看都分啥了
-    //    map<string, term_info_t>::iterator iit;
-    //    for (iit=term_map.begin(); iit!=term_map.end(); iit++)
-    //    {
-    //        printf("<%s> ", iit->first.c_str());
-    //    }
-    //    printf("\n");
-    //    printf("[%s]\n", jsonstr);
+    mask_item_t id_mask;
+    mask_item_t title_hit_mask;
+    mask_item_t tag_hit_mask;
+    mask_item_t anchor_hit_mask;
+    mask_item_t hit_count_mask;
+    mask_item_t tf_mask;
+    mask_item_t idf_mask;
+    mask_item_t offset1_mask;
+    mask_item_t offset2_mask;
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("id",         &id_mask)        );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("title_hit",  &title_hit_mask) );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("tag_hit",    &tag_hit_mask)   );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("anchor_hit", &anchor_hit_mask));
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("hit_count",  &hit_count_mask) );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("tf",         &tf_mask)        );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("idf",        &idf_mask)       );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("offset1",    &offset1_mask)   );
+    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("offset2",    &offset2_mask)   );
+    map<string, term_info_t>::iterator iit;
+    for (iit=term_map.begin(); iit!=term_map.end(); iit++)
+    {
+        printf("- term: [%s] - doc_id: [%u] -------\n", iit->first.c_str(), doc_id);
+        printf("- item: [%12s] - [%8u]\n", "id",        _GET_SOLO_VALUE_(&(iit->second.id), id_mask        ));
+        printf("- item: [%12s] - [%8u]\n", "title_hit", _GET_SOLO_VALUE_(&(iit->second.id), title_hit_mask ));
+        printf("- item: [%12s] - [%8u]\n", "tag_hit",   _GET_SOLO_VALUE_(&(iit->second.id), tag_hit_mask   ));
+        printf("- item: [%12s] - [%8u]\n", "anchor_hit",_GET_SOLO_VALUE_(&(iit->second.id), anchor_hit_mask));
+        printf("- item: [%12s] - [%8u]\n", "hit_count", _GET_SOLO_VALUE_(&(iit->second.id), hit_count_mask ));
+        printf("- item: [%12s] - [%8u]\n", "tf",        _GET_SOLO_VALUE_(&(iit->second.id), tf_mask        ));
+        printf("- item: [%12s] - [%8u]\n", "idf",       _GET_SOLO_VALUE_(&(iit->second.id), idf_mask       ));
+        printf("- item: [%12s] - [%8u]\n", "offset1",   _GET_SOLO_VALUE_(&(iit->second.id), offset1_mask   ));
+        printf("- item: [%12s] - [%8u]\n", "offset2",   _GET_SOLO_VALUE_(&(iit->second.id), offset2_mask   ));
+        printf("- item: [%12s] - [%8u]\n", "weight",    _GET_SOLO_VALUE_(&(iit->second.id), weight_mask    ));
+        printf("-----------------------------------\n");
+    }
+    printf("============================================================\n");
 
     // 迭代 m_attr_maskmap , 保存文档属性的数据
     char key[128];
