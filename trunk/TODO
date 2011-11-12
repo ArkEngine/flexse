@@ -1,4 +1,4 @@
-[H] [TODO] mylog的坑爹不报警
+[H] [TODO] mylog的编译坑爹不报警
 [L] [DONE] merger执行时对各个indexer进行判空，避免空merge
 [M] [DONE] disk_indexer中加入对index_block的缓存(没有内置的cache库)
 [H] [DONE] query服务实现
@@ -7,11 +7,13 @@
 [H] [TODO] 整理系统的限制说明:
     [DONE] -1- diskv的最大文档长度是32M，postinglist和detail不得超过这个长度
     [DONE] -2- hash的冲突率(最好用实际的文本term测试)
+    [TODO] -3- 当拉链超长时，merge的问题
+    [TODO] -4- 当postinglist_cell的长度超过mem_link_t时。。
 [H] [DONE] NLP集成
 [H] [DONE] 灵活索引的实现
-[H] [TODO] 灵活查询的实现
+[H] [TODO] 灵活查询的实现 + 对postinglist的灵活过滤，如只搜标题
     [TODO] 变长索引的实现
-    [TODO] 索引中，第一个INT默认是ID，第二个INT中分配默认值，存放分词算法支持的属性和后面变长的offset信息
+    [DONE] 索引中，第一个INT默认是ID，第二个INT中分配默认值，存放分词算法支持的属性和后面变长的offset信息
 [H] [DONE] 过滤算法集成
 [H] [DONE] 调权算法集成(attr/term/offset)
 [H] [DONE] 增加index_group的快速建库模式
@@ -36,3 +38,6 @@
     在加上拉链递增的条件，使得我们可以从大到小枚举j，记录过程中的b[i-1][x]最小值。显然每次可以利用上一次的结果，
     因此b数组也只要扫一次。
     容易看出，只要拉链长度之和复杂度的运算，就能得到最优解。
+[H] [TODO] 停用词，一般限制标点
+[H] [TODO] 输出用bson
+[H] [TODO] 通用的groupby算法

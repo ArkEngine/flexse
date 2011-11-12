@@ -9,13 +9,15 @@
 class flexse_plugin
 {
     private:
+        static const uint32_t HIT = 1;
+
         static const char* const CONFIGCATEGORY_FLEXINDEX;
         static const char* const FLEXINDEX_KEY_OP;
         static const char* const FLEXINDEX_KEY_TYPE;
         static const char* const FLEXINDEX_KEY_TOKEN;
         static const char* const FLEXINDEX_KEY_FIELD;
         static const char* const FLEXINDEX_KEY_WEIGHT;
-        static const char* const FLEXINDEX_KEY_OFFSET_COUNT;
+        static const char* const FLEXINDEX_KEY_HIT_COUNT;
         static const char* const FLEXINDEX_KEY_OFFSET1;
         static const char* const FLEXINDEX_KEY_OFFSET2;
         static const char* const FLEXINDEX_KEY_OPTIONAL;
@@ -58,6 +60,13 @@ class flexse_plugin
             char        token[32];         ///< 字段名称
             mask_item_t key_mask;          ///< 在postinglist中的structmask描述
         };
+        struct term_desc_t
+        {
+            string      field_name;        ///< posting_list中的field_name
+            uint32_t    value;             ///< field_hit的权重是多少
+            mask_item_t key_mask;          ///< 在postinglist中的structmask描述
+        };
+
         map <string, key_op_t> m_key_op_map;
 
         structmask* m_post_maskmap;
