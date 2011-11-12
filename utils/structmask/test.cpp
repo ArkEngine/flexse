@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include "mylog.h"
+#include <string.h>
 #include "MyException.h"
 
 struct test
@@ -49,14 +50,66 @@ int main(int argc, char** argv) try
     for(mymask.begin(); !mymask.is_end(); mymask.next())
     {
         assert(mymask.itget(key, sizeof(key), &key_mask));
-        printf("key[%s] uint_off[%u] item_mask[0x%08x] move_count[%02u] uint32_count[%02u]\n",
+        printf("key[%s] uint_off[%u] item_mask[0x%08x] move_count[%02u] uint32_count[%02u] max[%x]\n",
                 key,
                 key_mask.uint_offset, 
                 key_mask.item_mask,
                 key_mask.move_count,
-                key_mask.uint32_count);
+                key_mask.uint32_count,
+                _MAX_VALUE_(key_mask));
     }
     printf("--------it end---------\n");
+
+    // INC SOLO TEST
+    mask_item_t tt_mask;
+    const char* strKey = "id1";
+    mymask.get_mask_item(strKey, &tt_mask);
+    uint64_t tt = 0;
+    test* ptt = (test*)&tt;
+    uint32_t orig = 100;
+    ptt->id1 = orig;
+    assert(orig == _GET_SOLO_VALUE_(&tt, tt_mask));
+    assert (0 == ptt->id0 && 0 == ptt->id2 && 0 == ptt->id3 && 0 == ptt->id4 && 0 == ptt->id5);
+    _INC_UTILL_MAX_SOLO_(&tt, tt_mask, 10);
+    assert(orig+10 == _GET_SOLO_VALUE_(&tt, tt_mask));
+    assert (0 == ptt->id0 && 0 == ptt->id2 && 0 == ptt->id3 && 0 == ptt->id4 && 0 == ptt->id5);
+    _INC_UTILL_MAX_SOLO_(&tt, tt_mask, 10);
+    assert(orig+20 == _GET_SOLO_VALUE_(&tt, tt_mask));
+    assert (0 == ptt->id0 && 0 == ptt->id2 && 0 == ptt->id3 && 0 == ptt->id4 && 0 == ptt->id5);
+    _INC_UTILL_MAX_SOLO_(&tt, tt_mask, 10);
+    assert(_MAX_VALUE_(tt_mask) == _GET_SOLO_VALUE_(&tt, tt_mask));
+    assert (0 == ptt->id0 && 0 == ptt->id2 && 0 == ptt->id3 && 0 == ptt->id4 && 0 == ptt->id5);
+    _INC_UTILL_MAX_SOLO_(&tt, tt_mask, 10);
+    assert(_MAX_VALUE_(tt_mask) == _GET_SOLO_VALUE_(&tt, tt_mask));
+    assert (0 == ptt->id0 && 0 == ptt->id2 && 0 == ptt->id3 && 0 == ptt->id4 && 0 == ptt->id5);
+
+    // INC LIST TEST
+    uint64_t ttlist[10];
+    memset(ttlist, 0, sizeof(ttlist));
+    for (int i=0; i<10; i++)
+    {
+        test* pttt = (test*)&ttlist[i];
+        pttt->id1 = orig;
+    }
+
+    for (int i=0; i<10; i++)
+    {
+        test* pttt = (test*)&ttlist[i];
+        assert(orig == _GET_LIST_VALUE_(ttlist, i, tt_mask));
+        assert (0 == pttt->id0 && 0 == pttt->id2 && 0 == pttt->id3 && 0 == pttt->id4 && 0 == pttt->id5);
+        _INC_UTILL_MAX_LIST_(ttlist, i, tt_mask, 10);
+        assert(orig+10 == _GET_LIST_VALUE_(ttlist, i, tt_mask));
+        assert (0 == pttt->id0 && 0 == pttt->id2 && 0 == pttt->id3 && 0 == pttt->id4 && 0 == pttt->id5);
+        _INC_UTILL_MAX_LIST_(ttlist, i, tt_mask, 10);
+        assert(orig+20 == _GET_LIST_VALUE_(ttlist, i, tt_mask));
+        assert (0 == pttt->id0 && 0 == pttt->id2 && 0 == pttt->id3 && 0 == pttt->id4 && 0 == pttt->id5);
+        _INC_UTILL_MAX_LIST_(ttlist, i, tt_mask, 10);
+        assert(_MAX_VALUE_(tt_mask) == _GET_LIST_VALUE_(ttlist, i, tt_mask));
+        assert (0 == pttt->id0 && 0 == pttt->id2 && 0 == pttt->id3 && 0 == pttt->id4 && 0 == pttt->id5);
+        _INC_UTILL_MAX_LIST_(ttlist, i, tt_mask, 10);
+        assert(_MAX_VALUE_(tt_mask) == _GET_LIST_VALUE_(ttlist, i, tt_mask));
+        assert (0 == pttt->id0 && 0 == pttt->id2 && 0 == pttt->id3 && 0 == pttt->id4 && 0 == pttt->id5);
+    }
 
     mask_item_t* mask_item = (mask_item_t*)malloc(mymask.get_segment_size()*sizeof(mask_item_t));
     const char* keylist[] = {"id0", "id1", "id2", "id3", "id4", "id5"};

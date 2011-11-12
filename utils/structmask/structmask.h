@@ -1,6 +1,30 @@
 #ifndef  __STRUCTMASK_H_
 #define  __STRUCTMASK_H_
 
+#define _MAX_VALUE_(mask_item) \
+                ((mask_item.item_mask) >> (mask_item.move_count))
+
+#define _INC_UTILL_MAX_SOLO_(puint,mask_item,inc) \
+                if (inc + (_GET_SOLO_VALUE_(puint,mask_item)) <= _MAX_VALUE_(mask_item))\
+                {\
+                    (((uint32_t*)puint)[mask_item.uint_offset] += ((inc)<<(mask_item.move_count)));\
+                }\
+                else\
+                { \
+                    _SET_SOLO_VALUE_(puint,mask_item,_MAX_VALUE_(mask_item));\
+                }
+
+#define _INC_UTILL_MAX_LIST_(puint,index,mask_item,inc) \
+                if (inc + (_GET_LIST_VALUE_(puint,index,mask_item)) <= _MAX_VALUE_(mask_item))\
+                {\
+                    ((uint32_t*)puint)[(index)*mask_item.uint32_count+mask_item.uint_offset] += ((inc)<<(mask_item.move_count));\
+                }\
+                else\
+                { \
+                    _SET_LIST_VALUE_(puint,index,mask_item,_MAX_VALUE_(mask_item));\
+                }
+
+
 #define _GET_SOLO_VALUE_(puint,mask_item) \
                 (((((uint32_t*)puint)[mask_item.uint_offset]) & (mask_item.item_mask)) >> (mask_item.move_count))
 
