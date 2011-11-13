@@ -476,6 +476,97 @@ bool compare_result(const result_pair_t &left, const result_pair_t &right)
  * @return the result posting number stored in posting-list if OK, else -1.
  */
 
+uint32_t or_merge(
+        const vector<list_info_t>& terminfo_list,
+        const mask_item_t id_mask,
+        void* result_list,
+        const uint32_t result_list_size
+        )
+{
+    const uint32_t list_size = (uint32_t)terminfo_list.size();
+    uint32_t finish_term_num = 0;
+    int current_pointer_list[list_size];
+    for(uint32_t i=0;i<list_size;i++)
+    {
+        if(terminfo_list[i].list_size == 0)
+        {
+            finish_term_num ++;
+            current_pointer_list[i] = -1;
+        }
+        else
+        {
+            current_pointer_list[i] = 0;
+        }
+    }
+
+    uint32_t* puint    = (uint32_t*)result_list;
+    uint32_t  leftsize = result_list_size;
+    uint32_t  count = 0;
+
+    while(finish_term_num < list_size && leftsize >= id_mask.uint32_count)
+    {
+        int32_t max_id = -1;
+        for(uint32_t i=0; i<list_size; i++)
+        {
+            int32_t& current_offset = current_pointer_list[i];
+            if(current_offset>=0)
+            {
+                int32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
+                // TODO: Here can do something to filter field_hit.
+                if (true)
+                {
+                    max_id = (max_id > id) ? max_id : id;
+                }
+                else
+                {
+                    current_offset ++;
+                    if(current_offset == (int32_t)terminfo_list[i].list_size)
+                    {
+                        current_offset = -1;
+                        finish_term_num ++;                    
+                    }
+                }
+            }
+        }
+
+        if (max_id == -1)
+        {
+            continue;
+        }
+
+        bool has_copyed = false;
+        for(uint32_t i=0; i<list_size; i++)
+        {
+            int32_t& current_offset = current_pointer_list[i];
+            if(current_offset >= 0)
+            {
+                if(max_id ==  (int32_t)_GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask))
+                {
+                    if (! has_copyed)
+                    {
+                        void* pdst = ((uint32_t*)(terminfo_list[i].posting_list)) + (current_offset*id_mask.uint32_count);
+                        memmove(puint, pdst, id_mask.uint32_count*sizeof(uint32_t));
+                        puint += id_mask.uint32_count;
+                        leftsize -= id_mask.uint32_count;
+                        count++;
+                        has_copyed = true;
+                    }
+
+                    current_offset ++;
+                    if(current_offset == (int32_t)terminfo_list[i].list_size)
+                    {
+                        current_offset = -1;
+                        finish_term_num ++;                    
+                    }
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
+
 void weight_merge(
         const vector<list_info_t>& terminfo_list,
         const mask_item_t id_mask,
@@ -486,12 +577,10 @@ void weight_merge(
 {
     result_pair_list.clear();
     const uint32_t list_size = (uint32_t)terminfo_list.size();
-    uint32_t finish_term_num = 0;    ///< 有多少个term遍历完了
-    int current_pointer_list[list_size];   ///< 每个term的拉链，当前指向的位置
-    uint32_t result_guess_size = 0;
+    uint32_t finish_term_num = 0;
+    int current_pointer_list[list_size];
     for(uint32_t i=0;i<list_size;i++)
     {
-        result_guess_size = (terminfo_list[i].list_size > result_guess_size) ? terminfo_list[i].list_size : result_guess_size;
         if(terminfo_list[i].list_size == 0)
         {
             finish_term_num ++;
@@ -505,40 +594,55 @@ void weight_merge(
 
     while(finish_term_num < list_size)
     {
-        ///< 先找到，当前每个拉链中指针指向位置中的最大的id
-        uint32_t max_id = 0x0;
+        int32_t max_id = -1;
         for(unsigned int i=0;i<list_size;i++)
         {
-            int32_t current_offset = current_pointer_list[i];
-            if(current_offset>=0)  ///< 这个拉链还没有遍历完毕
+            int32_t& current_offset = current_pointer_list[i];
+            if(current_offset>=0)
             {
-                uint32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
-                max_id = (max_id > id) ? max_id : id;
+                int32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
+                // TODO: Here can do something to filter field_hit.
+                if (true)
+                {
+                    max_id = (max_id > id) ? max_id : id;
+                }
+                else
+                {
+                    current_offset ++;
+                    if(current_offset == (int32_t)terminfo_list[i].list_size)
+                    {
+                        current_offset = -1;
+                        finish_term_num ++;                    
+                    }
+                }
             }
         }
 
-        ///< 把等于最大id的，算出它的weight，然后把对应的指针往下移动
+        if (max_id == -1)
+        {
+            continue;
+        }
+
         uint32_t weight = 0;
 
         for(uint32_t i=0; i<list_size; i++)
         {
             int32_t& current_offset = current_pointer_list[i];
-            if(current_offset >= 0)  ///<  这个拉链还没有遍历完毕
+            if(current_offset >= 0)
             {
-                uint32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
-                if(max_id == id) ///< 对应最小id
+                int32_t id = _GET_LIST_VALUE_(terminfo_list[i].posting_list, current_offset, id_mask);
+                if(max_id == id)
                 {
                     uint32_t t_weight = _GET_LIST_VALUE_(terminfo_list[i].posting_list,
                             current_offset, wt_mask);
-                    // 如果非0，则相乘, 如果为0，则变成1
                     if (t_weight == 0)
                     {
                         t_weight = 1;
                     }
                     weight += terminfo_list[i].weight * t_weight;
 
-                    current_offset ++;     ///< 指针向下移动一个
-                    if(current_offset == (int32_t)terminfo_list[i].list_size)  ///< 拉链遍历完了
+                    current_offset ++;
+                    if(current_offset == (int32_t)terminfo_list[i].list_size)
                     {
                         current_offset = -1;
                         finish_term_num ++;                    
@@ -550,13 +654,10 @@ void weight_merge(
         temp_result.id     = max_id;
         temp_result.weight = weight;
         result_pair_list.push_back(temp_result);
-
-//        printf("--------in: %u %u\n", max_id, weight);
     }
 
-    ///< 2. 对所有可能的结果尽心排序，得到最多MAX_RESULT_NUM个结果
     int32_t result_num = 0;
-    if(result_pair_list.size() <= result_list_size)   ///< 整个vector完整排序一遍
+    if(result_pair_list.size() <= result_list_size)
     {
         result_num = (uint32_t)result_pair_list.size();
         sort(result_pair_list.begin(),result_pair_list.end(),compare_result);
@@ -578,10 +679,10 @@ void heap_adjust(uint32_t* list, const int32_t nLength, int32_t k, const mask_it
     memmove(tmpbuff, list + i*key_mask.uint32_count, key_mask.uint32_count*sizeof(uint32_t));
     uint32_t nTemp;
 
-//    printf("[%u]-[%u] 2*i+1:[%u] vs l:%u\n", k, _GET_LIST_VALUE_(list, i, key_mask), 2*i+1, nLength);
+    //    printf("[%u]-[%u] 2*i+1:[%u] vs l:%u\n", k, _GET_LIST_VALUE_(list, i, key_mask), 2*i+1, nLength);
     for (nTemp = _GET_LIST_VALUE_(list, i, key_mask); 2*i+1 < nLength; i = nChild)
     {
-//        printf("[%u]+[%u]\n", k, _GET_LIST_VALUE_(list, i, key_mask));
+        //        printf("[%u]+[%u]\n", k, _GET_LIST_VALUE_(list, i, key_mask));
         nChild = 2*i+1;
 
         if ((nChild != nLength - 1)
@@ -593,7 +694,7 @@ void heap_adjust(uint32_t* list, const int32_t nLength, int32_t k, const mask_it
         if (nTemp < _GET_LIST_VALUE_(list, nChild, key_mask))
         {
             memmove(list + i*key_mask.uint32_count, list + nChild*key_mask.uint32_count, key_mask.uint32_count*sizeof(uint32_t));
-//            printf("[%u] [%u]\n", k, _GET_LIST_VALUE_(list, i, key_mask));
+            //            printf("[%u] [%u]\n", k, _GET_LIST_VALUE_(list, i, key_mask));
         }
         else
         {
@@ -612,10 +713,10 @@ void field_partial_sort(void* base, const uint32_t size, const mask_item_t key_m
         heap_adjust(list, size, i, key_mask);
     }
 
-//    for (uint32_t i=0; i<size; i++)
-//    {
-//        printf ("-- %u --\n", _GET_LIST_VALUE_(list, i, key_mask));
-//    }
+    //    for (uint32_t i=0; i<size; i++)
+    //    {
+    //        printf ("-- %u --\n", _GET_LIST_VALUE_(list, i, key_mask));
+    //    }
 
     char tmpbuff[key_mask.uint32_count*sizeof(uint32_t)];
     int32_t stop = size - 1 - partial_size;
@@ -657,7 +758,7 @@ void group_count(
 {
     group_count_map.clear();
     const uint32_t* puint = (uint32_t*)base;
-	for (uint32_t i=0; i<nmemb; i++)
+    for (uint32_t i=0; i<nmemb; i++)
     {
         uint32_t group_id = _GET_SOLO_VALUE_(puint, key_mask);
         if (group_count_map.find(group_id) == group_count_map.end())
@@ -671,4 +772,5 @@ void group_count(
         puint += key_mask.uint32_count;
     }
 }
+
 

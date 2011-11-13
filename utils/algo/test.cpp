@@ -144,6 +144,51 @@ int main(int argc, char** argv)
         }
     }
 
+    // OR_MERGE
+    { 
+        const uint32_t SS = 10000;
+        memset (attr_list_org, 0, SS * attr_uint_count * sizeof(uint32_t));
+        memset (post_list_org, 0, SS * post_uint_count * sizeof(uint32_t));
+        uint32_t* om_list_org = (uint32_t*)malloc(SIZE * post_uint_count * sizeof(uint32_t));
+        uint32_t* attr_list = attr_list_org;
+        uint32_t* post_list = post_list_org;
+        const char* strIdKey = "doc_id";
+        const char* strUnusedKey = "unused";
+        mask_item_t id_key_mask;
+        mask_item_t us_key_mask;
+        assert (0 == post_mask_map.get_mask_item(strIdKey, &id_key_mask));
+        assert (0 == post_mask_map.get_mask_item(strUnusedKey, &us_key_mask));
+        // set the lists
+        vector<list_info_t> or_list;
+        for (uint32_t i=0; i<SS; i++)
+        {
+            _SET_LIST_VALUE_(attr_list, i, id_key_mask, SS-i);
+            _SET_LIST_VALUE_(attr_list, i, us_key_mask, 555);
+        }
+        uint32_t SSS = 2*SS;
+        for (uint32_t i=0; i<SSS; i++)
+        {
+            _SET_LIST_VALUE_(post_list, i, id_key_mask, SSS-i);
+            _SET_LIST_VALUE_(post_list, i, us_key_mask, 666);
+        }
+        list_info_t list_info1 = {attr_list_org, SS, 0};
+        or_list.push_back(list_info1);
+        list_info_t list_info2 = {post_list_org, SSS, 0};
+        or_list.push_back(list_info2);
+
+        gettimeofday(&bbtv, NULL); 
+        uint32_t count = or_merge(or_list, id_key_mask, om_list_org, (uint32_t)(SIZE * post_uint_count * sizeof(uint32_t)));
+        gettimeofday(&eetv, NULL); 
+        printf ("list-size: %u or_merge-time-consumed: %lu us\n", SS,
+                (eetv.tv_sec - bbtv.tv_sec)*1000000+(eetv.tv_usec - bbtv.tv_usec));
+        assert(count > 0);
+//        for (uint32_t i=0; i<count; i++)
+//        {
+//            printf("id: %08u us: %08u\n",
+//                    _GET_LIST_VALUE_(om_list_org, i, id_key_mask), _GET_LIST_VALUE_(om_list_org, i, us_key_mask));
+//        }
+    }
+
     // BIGGER
     if (0 == strcmp(argv[1], "BIGGER")||0 == strcmp(argv[1], "ALL"))
     {

@@ -132,14 +132,13 @@ int32_t ranking(
 /**
  * @brief : merge the posting-list in 'weight' way.
  *
- * @param terminfo_list    : bench of posting-lists
- * @param terminfo_size    : number of posting-list
+ * @param terminfo_list    : vector of posting-lists
  * @param id_mask          : the 'id' mask
  * @param wt_mask          : the 'weight' mask
  * @param result_list      : result_pair stored here
  * @param result_list_size : the size of result_list
  *                                      
- * @return the result posting number stored in posting-list if OK, else -1.
+ * @return void
  */
 
 void weight_merge(
@@ -147,6 +146,24 @@ void weight_merge(
         const mask_item_t id_mask,
         const mask_item_t wt_mask,
         vector<result_pair_t>& result_pair_list,
+        const uint32_t result_list_size
+        );
+
+/**
+ * @brief : merge the posting-list in 'or' way.
+ *
+ * @param terminfo_list    : batch of posting-lists
+ * @param id_mask          : the 'id' mask
+ * @param result_list      : result_pair stored here
+ * @param result_list_size : the size of result_list
+ *                                      
+ * @return void
+ */
+
+uint32_t or_merge(
+        const vector<list_info_t>& terminfo_list,
+        const mask_item_t id_mask,
+        void* result_list,
         const uint32_t result_list_size
         );
 
