@@ -27,6 +27,16 @@ int get_term_list(
         vector<list_info_t>& term_vector
         )
 {
+    // term的数据格式
+    // {
+    //   "a" : {"weight": 80, ["A", "A'"]},
+    //   "b" : {"weight": 20, ["B"]}
+    // }
+    // 处理结果是一个vector<list_info_t>
+    // 第0个list_info_t中，weight是80，postinglist是(a|A|A')
+    // 第1个list_info_t中，weight是20，postinglist是(b|B)
+    // 在执行(a|A|A')的过程中，遇到重复的保留前面的元素
+
     // 用'id'的structmask得到单位index_t的大小，用于copy内存
     mask_item_t doc_id_mask;
 
@@ -63,11 +73,7 @@ int get_term_list(
                     tmpBuff,
                     tmpBuffSize);
             term_info.list_size = list_num <= 0? 0 : list_num;
-            if ( term_info.list_size == 0)
-            {
-                term_info.posting_list = NULL;
-            }
-            else
+            if ( term_info.list_size > 0)
             {
                 char* dst_index_buff = (char*) malloc(term_info.list_size*doc_id_mask.uint32_count*sizeof(uint32_t));
                 if (dst_index_buff == NULL)
@@ -80,9 +86,9 @@ int get_term_list(
                 {
                     memmove(dst_index_buff, tmpBuff, term_info.list_size * doc_id_mask.uint32_count * sizeof(uint32_t));
                     term_info.posting_list = dst_index_buff;
+                    term_vector.push_back(term_info);
                 }
             }
-            term_vector.push_back(term_info);
             PRINT("term[%s] weight[%u] list_num[%d]",
                     term[QUERY_KEY_TERMLIST_TERM].asCString(), term_info.weight, list_num);
             iter++;
@@ -190,30 +196,32 @@ int ServiceApp(thread_data_t* ptd)
         return 0;
     }
 
-    query_param.offset =  0;
-    query_param.size   = 2000;
-    if (root["offset"].isInt())
+    query_param.all_num = 0;
+    query_param.offset  = 0;
+    query_param.size    = 2000;
+    if (root[QUERY_KEY_OFFSET].isInt())
     {
-        query_param.offset = root["offset"].asInt() >= 0 && root["offset"].asInt() <= 2000 ? root["offset"].asInt() : query_param.offset;
+        // 如果非法就直接置成0
+        int32_t offset = root[QUERY_KEY_OFFSET].asInt();
+        query_param.offset = (offset >= 0 && offset <= 2000) ?  offset : query_param.offset;
     }
-    if (root["size"].isInt())
+    if (root[QUERY_KEY_SIZE].isInt())
     {
-        query_param.size = root["size"].asInt() > 0 && root["size"].asInt() <= 2000 ? root["size"].asInt() : query_param.size;
+        uint32_t size = root[QUERY_KEY_SIZE].asInt();
+        query_param.size = size > 0 && size <= 2000 ? size : query_param.size;
     }
-    if (root["orderby"].isString())
+    if (root[QUERY_KEY_ORDERBY].isString())
     {
-        query_param.orderby = root["orderby"].asString();
-    }
-
-    if (0 != get_term_list(root, ptd->plugin->mysecore, dststr, ptd->SendBuffSize - sizeof(xhead_t), query_param.term_vector)
-            || 0 != get_filt_list(root, ptd->plugin->mysecore, query_param.filt_vector))
-    {
-        // 对query的分析过程出现了错误
-        return 0;
+        query_param.orderby = root[QUERY_KEY_ORDERBY].asString();
     }
 
-    flexse_plugin* pflexse_plugin = ptd->plugin;
-    int ret = pflexse_plugin->query(&query_param, dststr, ptd->SendBuffSize - sizeof(xhead_t));
+    if (0 == get_term_list(root, ptd->plugin->mysecore, ptd->SendHead, ptd->SendBuffSize, query_param.term_vector)
+            && 0 == get_filt_list(root, ptd->plugin->mysecore, query_param.filt_vector))
+    {
+        flexse_plugin* pflexse_plugin = ptd->plugin;
+        int ret = pflexse_plugin->query(&query_param, dststr, ptd->SendBuffSize - sizeof(xhead_t));
+        ptd->SendHead->detail_len = (ret <= 0)? 0 : ret;
+    }
 
     // 释放posting-list的临时内存
     for (uint32_t i=0; i<query_param.term_vector.size(); i++)
@@ -223,21 +231,20 @@ int ServiceApp(thread_data_t* ptd)
     } 
 
     ptd->SendHead->all_num = query_param.all_num;
-    ptd->SendHead->detail_len = ret <= 0? 0 : ret;
     gettimeofday(&tv2, NULL );
     uint32_t timecost = TIME_US_COST(tv1, tv2);
     ROUTN( "log_id[%u] name[%s] cltip[%s] "
-           "offset[%u] size[%u] timecost_us[%u] "
-           "query[%s] detail_len[%d]",
-           ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip,
-           query_param.offset, query_param.size, timecost,
-           jsonstr, ptd->SendHead->detail_len);
+            "offset[%u] size[%u] timecost_us[%u] "
+            "query[%s] detail_len[%d]",
+            ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip,
+            query_param.offset, query_param.size, timecost,
+            jsonstr, ptd->SendHead->detail_len);
     PRINT( "log_id[%u] name[%s] cltip[%s] "
-           "offset[%u] size[%u] timecost_us[%u] "
-           "query[%s] detail_len[%d]",
-           ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip,
-           query_param.offset, query_param.size, timecost,
-           jsonstr, ptd->SendHead->detail_len);
+            "offset[%u] size[%u] timecost_us[%u] "
+            "query[%s] detail_len[%d]",
+            ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip,
+            query_param.offset, query_param.size, timecost,
+            jsonstr, ptd->SendHead->detail_len);
 
     return 0;
 }
