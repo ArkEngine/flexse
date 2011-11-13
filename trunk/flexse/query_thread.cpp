@@ -29,8 +29,8 @@ int get_term_list(
 {
     // term的数据格式
     // {
-    //   "a" : {"weight": 80, ["A", "A'"]},
-    //   "b" : {"weight": 20, ["B"]}
+    //   ["term" : "a", "weight": 80, "synonyms": ["A", "A'"]],
+    //   ["term" : "b", "weight": 20, "synonyms": ["B"]]
     // }
     // 处理结果是一个vector<list_info_t>
     // 第0个list_info_t中，weight是80，postinglist是(a|A|A')
@@ -78,7 +78,10 @@ int get_term_list(
                 char* dst_index_buff = (char*) malloc(term_info.list_size*doc_id_mask.uint32_count*sizeof(uint32_t));
                 if (dst_index_buff == NULL)
                 {
-                    FATAL("malloc failed.");
+                    FATAL("malloc for index[%s] [%u] failed.",
+                            term[QUERY_KEY_TERMLIST_TERM].asCString(),
+                            term_info.list_size*doc_id_mask.uint32_count*sizeof(uint32_t)
+                            );
                     term_info.posting_list = NULL;
                     term_info.list_size = 0;
                 }
@@ -86,9 +89,83 @@ int get_term_list(
                 {
                     memmove(dst_index_buff, tmpBuff, term_info.list_size * doc_id_mask.uint32_count * sizeof(uint32_t));
                     term_info.posting_list = dst_index_buff;
-                    term_vector.push_back(term_info);
                 }
             }
+            // 处理同义词，把所有同义词的postinglist全部以or的方式merge起来
+            if (term[QUERY_KEY_SYNONYMS_LIST].isArray())
+            {
+                Json::Value synonymslist = root[QUERY_KEY_SYNONYMS_LIST];
+                Json::Value::const_iterator synonyms_iter = synonymslist.begin();
+                vector<list_info_t> list_info;
+                // 先把第一个放入vector中
+                list_info_t li = {term_info.posting_list, term_info.list_size, 0};
+                list_info.push_back(li);
+                // 记住总长度，便于后面分配内存
+                uint32_t list_size_count = term_info.list_size;
+                for (uint32_t s=0; s<synonymslist.size() && s < 3; s++)
+                {
+                    if (synonymslist[s].isString())
+                    {
+                        // 重复的代码，shit
+                        int slist_num = myIndexGroup->get_posting_list(
+                                synonymslist[s].asCString(),
+                                tmpBuff,
+                                tmpBuffSize);
+                        PRINT("org-term[%s] synonyms-term[%s] weight[%u] slist_num[%d]",
+                                term[QUERY_KEY_TERMLIST_TERM].asCString(), synonymslist[s].asCString(),
+                                term_info.weight, slist_num);
+                        li.list_size = slist_num <= 0? 0 : slist_num;
+                        if ( li.list_size > 0)
+                        {
+                            char* dst_index_buff = (char*) malloc(li.list_size*doc_id_mask.uint32_count*sizeof(uint32_t));
+                            if (dst_index_buff == NULL)
+                            {
+                                FATAL("malloc for index[%s] [%u] failed.",
+                                        synonymslist[s].asCString(),
+                                        li.list_size*doc_id_mask.uint32_count*sizeof(uint32_t)
+                                     );
+                                li.posting_list = NULL;
+                                li.list_size = 0;
+                            }
+                            else
+                            {
+                                memmove(dst_index_buff, tmpBuff, li.list_size * doc_id_mask.uint32_count * sizeof(uint32_t));
+                                li.posting_list = dst_index_buff;
+                                list_info.push_back(li);
+                                list_size_count += li.list_size;
+                            }
+                        }
+                    }
+                    synonyms_iter++;
+                }
+                if (1 < list_info.size())
+                {
+                    // 需要执行or_merge操作
+                    uint32_t buffsize = (uint32_t) list_size_count * doc_id_mask.uint32_count * sizeof(uint32_t);
+                    char* dst_index_buff = (char*) malloc(buffsize);
+                    if (dst_index_buff == NULL)
+                    {
+                        FATAL("malloc for or-index[%s] size[%u] failed.", 
+                                term[QUERY_KEY_TERMLIST_TERM].asCString(), buffsize);
+                        // 第一个就别释放了
+                        for (uint32_t k=1; k<list_info.size(); k++)
+                        {
+                            free(list_info[k].posting_list);
+                        }
+                    }
+                    else
+                    {
+                        uint32_t or_merged_count = or_merge(list_info, doc_id_mask, dst_index_buff, buffsize);
+                        for (uint32_t k=0; k<list_info.size(); k++)
+                        {
+                            free(list_info[k].posting_list);
+                        }
+                        term_info.posting_list   = dst_index_buff;
+                        term_info.list_size      = or_merged_count;
+                    }
+                }
+            }
+            term_vector.push_back(term_info);
             PRINT("term[%s] weight[%u] list_num[%d]",
                     term[QUERY_KEY_TERMLIST_TERM].asCString(), term_info.weight, list_num);
             iter++;
