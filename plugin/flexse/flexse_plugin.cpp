@@ -1,11 +1,13 @@
 #include "flexse_plugin.h"
 #include "MyException.h"
 #include "algo.h"
+#include "bson.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <string.h>
 using namespace std;
+using namespace bson;
 
 const char* const flexse_plugin:: CONFIGCATEGORY_FLEXINDEX      = "FLEXINDEX";
 const char* const flexse_plugin:: FLEXINDEX_KEY_OP              = "op";
@@ -465,41 +467,41 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
         }
     }
     // 看看都分啥了
-    mask_item_t id_mask;
-    mask_item_t title_hit_mask;
-    mask_item_t tag_hit_mask;
-    mask_item_t anchor_hit_mask;
-    mask_item_t hit_count_mask;
-    mask_item_t tf_mask;
-    mask_item_t idf_mask;
-    mask_item_t offset1_mask;
-    mask_item_t offset2_mask;
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("id",         &id_mask)        );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("title_hit",  &title_hit_mask) );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("tag_hit",    &tag_hit_mask)   );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("anchor_hit", &anchor_hit_mask));
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("hit_count",  &hit_count_mask) );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("tf",         &tf_mask)        );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("idf",        &idf_mask)       );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("offset1",    &offset1_mask)   );
-    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("offset2",    &offset2_mask)   );
-    map<string, term_info_t>::iterator iit;
-    for (iit=term_map.begin(); iit!=term_map.end(); iit++)
-    {
-        printf("- term: [%s] - doc_id: [%u] -------\n", iit->first.c_str(), doc_id);
-        printf("- item: [%12s] - [%8u]\n", "id",        _GET_SOLO_VALUE_(&(iit->second.id), id_mask        ));
-        printf("- item: [%12s] - [%8u]\n", "title_hit", _GET_SOLO_VALUE_(&(iit->second.id), title_hit_mask ));
-        printf("- item: [%12s] - [%8u]\n", "tag_hit",   _GET_SOLO_VALUE_(&(iit->second.id), tag_hit_mask   ));
-        printf("- item: [%12s] - [%8u]\n", "anchor_hit",_GET_SOLO_VALUE_(&(iit->second.id), anchor_hit_mask));
-        printf("- item: [%12s] - [%8u]\n", "hit_count", _GET_SOLO_VALUE_(&(iit->second.id), hit_count_mask ));
-        printf("- item: [%12s] - [%8u]\n", "tf",        _GET_SOLO_VALUE_(&(iit->second.id), tf_mask        ));
-        printf("- item: [%12s] - [%8u]\n", "idf",       _GET_SOLO_VALUE_(&(iit->second.id), idf_mask       ));
-        printf("- item: [%12s] - [%8u]\n", "offset1",   _GET_SOLO_VALUE_(&(iit->second.id), offset1_mask   ));
-        printf("- item: [%12s] - [%8u]\n", "offset2",   _GET_SOLO_VALUE_(&(iit->second.id), offset2_mask   ));
-        printf("- item: [%12s] - [%8u]\n", "weight",    _GET_SOLO_VALUE_(&(iit->second.id), weight_mask    ));
-        printf("-----------------------------------\n");
-    }
-    printf("============================================================\n");
+//    mask_item_t id_mask;
+//    mask_item_t title_hit_mask;
+//    mask_item_t tag_hit_mask;
+//    mask_item_t anchor_hit_mask;
+//    mask_item_t hit_count_mask;
+//    mask_item_t tf_mask;
+//    mask_item_t idf_mask;
+//    mask_item_t offset1_mask;
+//    mask_item_t offset2_mask;
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("id",         &id_mask)        );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("title_hit",  &title_hit_mask) );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("tag_hit",    &tag_hit_mask)   );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("anchor_hit", &anchor_hit_mask));
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("hit_count",  &hit_count_mask) );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("tf",         &tf_mask)        );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("idf",        &idf_mask)       );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("offset1",    &offset1_mask)   );
+//    MySuicideAssert(0 == mysecore->m_post_maskmap->get_mask_item("offset2",    &offset2_mask)   );
+//    map<string, term_info_t>::iterator iit;
+//    for (iit=term_map.begin(); iit!=term_map.end(); iit++)
+//    {
+//        printf("- term: [%s] - doc_id: [%u] -------\n", iit->first.c_str(), doc_id);
+//        printf("- item: [%12s] - [%8u]\n", "id",        _GET_SOLO_VALUE_(&(iit->second.id), id_mask        ));
+//        printf("- item: [%12s] - [%8u]\n", "title_hit", _GET_SOLO_VALUE_(&(iit->second.id), title_hit_mask ));
+//        printf("- item: [%12s] - [%8u]\n", "tag_hit",   _GET_SOLO_VALUE_(&(iit->second.id), tag_hit_mask   ));
+//        printf("- item: [%12s] - [%8u]\n", "anchor_hit",_GET_SOLO_VALUE_(&(iit->second.id), anchor_hit_mask));
+//        printf("- item: [%12s] - [%8u]\n", "hit_count", _GET_SOLO_VALUE_(&(iit->second.id), hit_count_mask ));
+//        printf("- item: [%12s] - [%8u]\n", "tf",        _GET_SOLO_VALUE_(&(iit->second.id), tf_mask        ));
+//        printf("- item: [%12s] - [%8u]\n", "idf",       _GET_SOLO_VALUE_(&(iit->second.id), idf_mask       ));
+//        printf("- item: [%12s] - [%8u]\n", "offset1",   _GET_SOLO_VALUE_(&(iit->second.id), offset1_mask   ));
+//        printf("- item: [%12s] - [%8u]\n", "offset2",   _GET_SOLO_VALUE_(&(iit->second.id), offset2_mask   ));
+//        printf("- item: [%12s] - [%8u]\n", "weight",    _GET_SOLO_VALUE_(&(iit->second.id), weight_mask    ));
+//        printf("-----------------------------------\n");
+//    }
+//    printf("============================================================\n");
 
     // 迭代 m_attr_maskmap , 保存文档属性的数据
     char key[128];
@@ -655,6 +657,9 @@ int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint
         puint += mysecore->m_docattr_bitlist->m_cellsize;
         ret_count ++;
     }
+
+    bo empty;
+    cout << "empty: " << empty << endl;
 
     return (int32_t)(ret_count*attr_cell_char_size);
 }

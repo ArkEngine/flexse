@@ -91,11 +91,15 @@ int get_term_list(
                     term_info.posting_list = dst_index_buff;
                 }
             }
+            PRINT("term[%s] has SYNONYMS[%u] isNull[%u]",
+                    term[QUERY_KEY_TERMLIST_TERM].asCString(),
+                    term[QUERY_KEY_SYNONYMS_LIST].isArray(),
+                    term[QUERY_KEY_SYNONYMS_LIST].isNull());
             // 处理同义词，把所有同义词的postinglist全部以or的方式merge起来
-            if (term[QUERY_KEY_SYNONYMS_LIST].isArray())
+            if (!term[QUERY_KEY_SYNONYMS_LIST].isNull() && term[QUERY_KEY_SYNONYMS_LIST].isArray())
             {
-                Json::Value synonymslist = root[QUERY_KEY_SYNONYMS_LIST];
-                Json::Value::const_iterator synonyms_iter = synonymslist.begin();
+                Json::Value synonymslist = term[QUERY_KEY_SYNONYMS_LIST];
+                Json::Value::iterator synonyms_iter = synonymslist.begin();
                 vector<list_info_t> list_info;
                 // 先把第一个放入vector中
                 list_info_t li = {term_info.posting_list, term_info.list_size, 0};
@@ -166,8 +170,8 @@ int get_term_list(
                 }
             }
             term_vector.push_back(term_info);
-            PRINT("term[%s] weight[%u] list_num[%d]",
-                    term[QUERY_KEY_TERMLIST_TERM].asCString(), term_info.weight, list_num);
+            PRINT("term[%s] weight[%u] list_num[%d] or_merged_count[%u]",
+                    term[QUERY_KEY_TERMLIST_TERM].asCString(), term_info.weight, list_num, term_info.list_size);
             iter++;
         }
     }
@@ -292,7 +296,7 @@ int ServiceApp(thread_data_t* ptd)
         query_param.orderby = root[QUERY_KEY_ORDERBY].asString();
     }
 
-    if (0 == get_term_list(root, ptd->plugin->mysecore, ptd->SendHead, ptd->SendBuffSize, query_param.term_vector)
+    if (0 == get_term_list(root, ptd->plugin->mysecore, (char*)ptd->SendHead, ptd->SendBuffSize, query_param.term_vector)
             && 0 == get_filt_list(root, ptd->plugin->mysecore, query_param.filt_vector))
     {
         flexse_plugin* pflexse_plugin = ptd->plugin;
