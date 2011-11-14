@@ -26,6 +26,8 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/indexer/base_indexer/include/ \
 	  -I ../../utils/indexer/index_group/include/ \
 	  -I ../../opensrc/jsoncpp/include/ \
+	  -I ../../opensrc/bson/ \
+	  -I ../../opensrc/bson/src/ \
 
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
