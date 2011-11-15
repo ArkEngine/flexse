@@ -28,10 +28,10 @@ int get_term_list(
         )
 {
     // term的数据格式
-    // {
+    // [
     //   ["term" : "a", "weight": 80, "synonyms": ["A", "A'"]],
     //   ["term" : "b", "weight": 20, "synonyms": ["B"]]
-    // }
+    // ]
     // 处理结果是一个vector<list_info_t>
     // 第0个list_info_t中，weight是80，postinglist是(a|A|A')
     // 第1个list_info_t中，weight是20，postinglist是(b|B)
@@ -41,7 +41,7 @@ int get_term_list(
     mask_item_t doc_id_mask;
 
     MySuicideAssert( 0 == mysecore->m_post_maskmap->get_mask_item("id", &doc_id_mask));
-    if (!root[QUERY_KEY_TERMLIST].isArray() || root[QUERY_KEY_TERMLIST].size() <= 0)
+    if (root[QUERY_KEY_TERMLIST].isNull() || !root[QUERY_KEY_TERMLIST].isArray() || root[QUERY_KEY_TERMLIST].size() <= 0)
     {
         // 不是数组，或者数组为空
         ALARM("termlist is empty.");
@@ -57,7 +57,8 @@ int get_term_list(
         for (uint32_t i=0; i<termlist.size(); i++)
         {
             Json::Value term = termlist[i];
-            if (!term[QUERY_KEY_TERMLIST_TERM].isString() || !term[QUERY_KEY_TERMLIST_WEIGHT].isInt())
+            if (term[QUERY_KEY_TERMLIST_TERM].isNull() || !term[QUERY_KEY_TERMLIST_TERM].isString()
+                    || term[QUERY_KEY_TERMLIST_WEIGHT].isNull() || !term[QUERY_KEY_TERMLIST_WEIGHT].isInt())
             {
                 ALARM("termlist[%u] error.", i);
                 return -1;
@@ -73,6 +74,8 @@ int get_term_list(
                     tmpBuff,
                     tmpBuffSize);
             term_info.list_size = list_num <= 0? 0 : list_num;
+            // 没初始化有个崩溃的bug，要初始化啊!!!
+            term_info.posting_list = NULL;
             if ( term_info.list_size > 0)
             {
                 char* dst_index_buff = (char*) malloc(term_info.list_size*doc_id_mask.uint32_count*sizeof(uint32_t));
@@ -105,10 +108,11 @@ int get_term_list(
                 list_info_t li = {term_info.posting_list, term_info.list_size, 0};
                 list_info.push_back(li);
                 // 记住总长度，便于后面分配内存
+                PRINT("synonymslist.size: %u", synonymslist.size());
                 uint32_t list_size_count = term_info.list_size;
                 for (uint32_t s=0; s<synonymslist.size() && s < 3; s++)
                 {
-                    if (synonymslist[s].isString())
+                    if (!synonymslist[s].isNull() && synonymslist[s].isString())
                     {
                         // 重复的代码，shit
                         int slist_num = myIndexGroup->get_posting_list(
@@ -119,6 +123,7 @@ int get_term_list(
                                 term[QUERY_KEY_TERMLIST_TERM].asCString(), synonymslist[s].asCString(),
                                 term_info.weight, slist_num);
                         li.list_size = slist_num <= 0? 0 : slist_num;
+                        li.posting_list = NULL;
                         if ( li.list_size > 0)
                         {
                             char* dst_index_buff = (char*) malloc(li.list_size*doc_id_mask.uint32_count*sizeof(uint32_t));
@@ -169,7 +174,10 @@ int get_term_list(
                     }
                 }
             }
-            term_vector.push_back(term_info);
+            if (term_info.posting_list != NULL && term_info.list_size > 0)
+            {
+                term_vector.push_back(term_info);
+            }
             PRINT("term[%s] weight[%u] list_num[%d] or_merged_count[%u]",
                     term[QUERY_KEY_TERMLIST_TERM].asCString(), term_info.weight, list_num, term_info.list_size);
             iter++;
@@ -190,7 +198,8 @@ int get_filt_list(Json::Value root, secore* mysecore, vector<filter_logic_t>& fi
         for (uint32_t i=0; i<filtlist.size(); i++)
         {
             Json::Value filt = filtlist[i];
-            if (!filt[QUERY_KEY_FILTLIST_FIELD].isString() || !filt[QUERY_KEY_FILTLIST_METHOD].isInt())
+            if (filt[QUERY_KEY_FILTLIST_FIELD].isNull() || !filt[QUERY_KEY_FILTLIST_FIELD].isString()
+                    || filt[QUERY_KEY_FILTLIST_METHOD].isNull() || filt[QUERY_KEY_FILTLIST_METHOD].isInt())
             {
                 ALARM("filtlist[%u] error.", i);
                 return -1;
@@ -280,18 +289,18 @@ int ServiceApp(thread_data_t* ptd)
     query_param.all_num = 0;
     query_param.offset  = 0;
     query_param.size    = 2000;
-    if (root[QUERY_KEY_OFFSET].isInt())
+    if (!root[QUERY_KEY_OFFSET].isNull() && root[QUERY_KEY_OFFSET].isInt())
     {
         // 如果非法就直接置成0
         int32_t offset = root[QUERY_KEY_OFFSET].asInt();
         query_param.offset = (offset >= 0 && offset <= 2000) ?  offset : query_param.offset;
     }
-    if (root[QUERY_KEY_SIZE].isInt())
+    if (!root[QUERY_KEY_SIZE].isNull() && root[QUERY_KEY_SIZE].isInt())
     {
         uint32_t size = root[QUERY_KEY_SIZE].asInt();
         query_param.size = size > 0 && size <= 2000 ? size : query_param.size;
     }
-    if (root[QUERY_KEY_ORDERBY].isString())
+    if (!root[QUERY_KEY_ORDERBY].isNull() && root[QUERY_KEY_ORDERBY].isString())
     {
         query_param.orderby = root[QUERY_KEY_ORDERBY].asString();
     }
