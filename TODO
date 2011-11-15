@@ -40,4 +40,4 @@
     容易看出，只要拉链长度之和复杂度的运算，就能得到最优解。
 [H] [TODO] 停用词，一般限制标点
 [H] [TODO] 输出用bson
-[H] [TODO] 通用的groupby算法
+[H] [DONE] 通用的groupby算法
