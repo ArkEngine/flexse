@@ -109,7 +109,7 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
     uint32_t left_size = length;
     const uint32_t bucket_no = (uint32_t)(key & m_bucket_mask);
     uint32_t head_list_offset = m_bucket[bucket_no];
-    pthread_mutex_rdlock(&m_mutex);
+    pthread_rwlock_rdlock(&m_mutex);
     while(head_list_offset != END_OF_LIST)
     {
         term_head_t* phead = &m_headlist[head_list_offset];
@@ -142,7 +142,7 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
             head_list_offset = phead->next;
         }
     }
-    pthread_mutex_unlock(&m_mutex);
+    pthread_rwlock_unlock(&m_mutex);
 
     return result_num;
 }
@@ -185,7 +185,7 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                 // -2- 后面只有一块内存，无法继续合并(需要两块内存才能合并)，则申请一个最小单元的即可
 
                 bool has_copy = false;
-                pthread_mutex_wrlock(&m_mutex);
+                pthread_rwlock_wrlock(&m_mutex);
                 while ( (NULL != phead->mem_link->next)
                         && (phead->mem_link->self_size == phead->mem_link->next->self_size))
                 {
@@ -230,13 +230,13 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                         break;
                     }
                 }
-                pthread_mutex_unlock(&m_mutex);
+                pthread_rwlock_unlock(&m_mutex);
 
                 // 如果是无法继续合并了
-                if ( (NULL == phead->mem_link->next)
-                        || (phead->mem_link->self_size < phead->mem_link->next->self_size))
+                if (false == has_copy)
                 {
-                    assert(false == has_copy);
+                    assert ( (NULL == phead->mem_link->next)
+                            || (phead->mem_link->self_size < phead->mem_link->next->self_size));
                     // 申请 mem_link_t
                     mem_link_t* new_memlink = memlinknew(m_mem_base_size, phead->mem_link);
                     // set 数据
