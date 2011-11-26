@@ -206,7 +206,7 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                     memlinkcopy(merge_memlink, src, phead->mem_link->used_size);
 
                     // set 数据
-                    memlinkcopy(merge_memlink, buff, m_postinglist_cell_size);
+//                    memlinkcopy(merge_memlink, buff, m_postinglist_cell_size);
 
                     // 把新的mem_link接入headlist
                     mem_link_t* toBeFree = phead->mem_link;
