@@ -50,6 +50,8 @@ postinglist :: postinglist(
     // because of END_OF_LIST == 0xFFFFFFFF
     memset(m_bucket, 0xFF, m_bucket_size*sizeof(uint32_t));
     m_readonly = false;
+
+    pthread_rwlock_init(&m_mutex, NULL);
     ROUTN("cell_size[%u] bucket_size[%u] headlist_size[%u] "
             "memblocks_min[%u] memblocks_num[%u] mem_total_size[%u]",
             m_postinglist_cell_size, m_bucket_size, m_headlist_size,
@@ -107,6 +109,7 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
     uint32_t left_size = length;
     const uint32_t bucket_no = (uint32_t)(key & m_bucket_mask);
     uint32_t head_list_offset = m_bucket[bucket_no];
+    pthread_mutex_rdlock(&m_mutex);
     while(head_list_offset != END_OF_LIST)
     {
         term_head_t* phead = &m_headlist[head_list_offset];
@@ -139,6 +142,7 @@ int32_t postinglist :: get (const uint64_t& key, void* buff, const uint32_t leng
             head_list_offset = phead->next;
         }
     }
+    pthread_mutex_unlock(&m_mutex);
 
     return result_num;
 }
@@ -172,7 +176,17 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                 // 判断一下是否需要merge内存
                 // 执行merge之后，就不需要继续申请内存了，因为肯定空出来一个mem_link_t
                 // 新的数据就放在这个mem_link_t里好了。
-                if ( (NULL != phead->mem_link->next)
+                //
+                // 当 mem_link_t 可能小于 m_postinglist_cell_size 时，我们需要这么做
+                // 放入新元素时检查是否能放下，
+                // 如果能放下则是万幸
+                // 如果不能放下，则需要merge内存，这将是一个连续的操作直到触发如下条件
+                // -1- 合并后，已经能够放下 m_postinglist_cell_size 大小的数据
+                // -2- 后面只有一块内存，无法继续合并(需要两块内存才能合并)，则申请一个最小单元的即可
+
+                bool has_copy = false;
+                pthread_mutex_wrlock(&m_mutex);
+                while ( (NULL != phead->mem_link->next)
                         && (phead->mem_link->self_size == phead->mem_link->next->self_size))
                 {
                     mem_link_t* merge_memlink = memlinknew(phead->mem_link->self_size*2, phead->mem_link->next->next);
@@ -203,18 +217,35 @@ int32_t postinglist :: set (const uint64_t& key, const void* buff)
                     // 这些准备被释放的内存，可能正在被其他线程使用。
                     m_memblocks->FreeMem(toBeFree->next);
                     m_memblocks->FreeMem(toBeFree);
+
+                    // 如果合并后的内存块能放下 m_postinglist_cell_size 大小的数据，则退出merge
+                    uint32_t merged_left_size = phead->mem_link->self_size - phead->mem_link->used_size;
+                    // 继续去掉mem_link_t头部占用的大小
+                    merged_left_size -= (uint32_t)sizeof(mem_link_t);
+
+                    if (merged_left_size >= m_postinglist_cell_size)
+                    {
+                        memlinkcopy(phead->mem_link, buff, m_postinglist_cell_size);
+                        has_copy = true;
+                        break;
+                    }
                 }
-                else
+                pthread_mutex_unlock(&m_mutex);
+
+                // 如果是无法继续合并了
+                if ( (NULL == phead->mem_link->next)
+                        || (phead->mem_link->self_size < phead->mem_link->next->self_size))
                 {
+                    assert(false == has_copy);
                     // 申请 mem_link_t
                     mem_link_t* new_memlink = memlinknew(m_mem_base_size, phead->mem_link);
-
                     // set 数据
                     memlinkcopy(new_memlink, buff, m_postinglist_cell_size);
-
                     // 把新的mem_link接入headlist
                     phead->mem_link = new_memlink;
+                    has_copy = true;
                 }
+                assert(has_copy);
             }
             break;
         }
@@ -333,7 +364,7 @@ void postinglist :: clear()
 {
     // 调用者保证执行这段代码时，没有人读写这个对象
     // 在flexse中，当这个postinglist持久化之后，就不需要访问这个对象了，然后就reset掉好了。
-//    MyThrowAssert(0);
+    //    MyThrowAssert(0);
     // 遍历所有的memblocks，释放内存
     // 不能直接delete m_memblocks完事，因为可能存在额外malloc的内存
     for (uint32_t head_list_offset=0; head_list_offset<m_headlist_used; head_list_offset++)
