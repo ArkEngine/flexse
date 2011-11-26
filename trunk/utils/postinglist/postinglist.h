@@ -1,5 +1,10 @@
 #include <stdint.h>
+#include <pthread.h>
 #include "memblocks.h"
+
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500 /* 支持读写锁 */
+#endif
 
 class postinglist
 {
@@ -18,12 +23,14 @@ class postinglist
         uint32_t   m_bucket_mask;
         uint32_t   m_mem_base_size;
         bool       m_readonly;
+        pthread_rwlock_t   m_mutex;
 
 		struct mem_link_t
 		{
-			uint32_t    used_size; ///< 已经使用的内存大小，包括头部mem_link_t的大小
-			uint32_t    self_size; ///< 这个内存块本身大小
+			uint32_t    used_size;   ///< 已经使用的内存大小，包括头部mem_link_t的大小
+			uint32_t    self_size;   ///< 这个内存块本身大小
 			mem_link_t* next;
+//			uint32_t    reserved[3]; ///< 用来站位的，防止m_postinglist_cell_size超过mem_link_t，我知道这么做很愚蠢，这是暂时的。
 		};
 
 		struct term_head_t
