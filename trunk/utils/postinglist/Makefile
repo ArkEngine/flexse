@@ -13,7 +13,7 @@ MAINLIBS= -L ./lib/ -lpostinglist \
 		  -L ../structmask/lib/ -lstructmask \
 		  -L ../memblocks/lib/ -lmemblocks \
 		  -L ../../opensrc/jsoncpp/lib/ -ljson \
-		  -L ../mylog/lib/ -lmylog
+		  -L ../mylog/lib/ -lmylog \
 
 INCS= -I ../mylog/include/ \
 	  -I ../MyException/include \
@@ -46,7 +46,7 @@ clean:
 	rm -rf lib/ include/
 	rm test -f
 
-LDFLAGS=  -g $(MAINLIBS) 
+LDFLAGS=  -g $(MAINLIBS) -lpthread
 
 $(MAIN): $(MAINOBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
