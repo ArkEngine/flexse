@@ -20,9 +20,12 @@ int main(const int argc, char** argv)
         printf("./test KEYSIZE VALUESIZE\n");
         return 1;
     }
+
+    uint32_t vv[6];
+    const uint32_t post_cell_size = 5;
     const uint32_t KEYSIZE = atoi(argv[1]);
     const uint32_t VLUSIZE = atoi(argv[2]);
-    const uint32_t cell_size     = sizeof(uint32_t);
+    const uint32_t cell_size     = post_cell_size*sizeof(uint32_t);
     const uint32_t bucket_size   = 20;
     const uint32_t headlist_size = 0x1000000;
     uint32_t blocknum_list[8];
@@ -30,18 +33,20 @@ int main(const int argc, char** argv)
     {
         blocknum_list[i] = (i==0)? 1048576 : blocknum_list[i-1]/2;
     }
-    postinglist mypostinglist(cell_size, bucket_size, headlist_size, blocknum_list, 8);
+    postinglist mypostinglist(cell_size, bucket_size, headlist_size, blocknum_list, sizeof(blocknum_list)/sizeof(blocknum_list[0]));
 
     struct   timeval btv;
     struct   timeval etv;
     gettimeofday(&btv, NULL);
 
-    uint32_t* ubuff = (uint32_t*)malloc(VLUSIZE* 2 * sizeof(uint32_t));
+    uint32_t* ubuff = (uint32_t*)malloc(VLUSIZE * post_cell_size * sizeof(uint32_t));
+    const uint32_t ubuffsize = VLUSIZE * post_cell_size * sizeof(uint32_t);
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey+=2)
     {
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
-            mypostinglist.set(ukey, (char*)&i);
+            vv[0] = i;
+            mypostinglist.set(ukey, vv);
             //            int ret = mypostinglist.set(ukey, (char*)&i);
             //            printf("%d\n", ret);
         }
@@ -50,7 +55,8 @@ int main(const int argc, char** argv)
     {
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
-            mypostinglist.set(ukey, (char*)&i);
+            vv[0] = i;
+            mypostinglist.set(ukey, vv);
             //            int ret = mypostinglist.set(ukey, (char*)&i);
             //            printf("%d\n", ret);
         }
@@ -63,12 +69,12 @@ int main(const int argc, char** argv)
     gettimeofday(&btv, NULL);
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey++)
     {
-        int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, (uint32_t)(VLUSIZE * 2 * sizeof(uint32_t)));
+        int32_t rnum = mypostinglist.get(ukey, (char*)ubuff, ubuffsize);
 //        printf("%u - %u\n", rnum, VLUSIZE);
         assert ((uint32_t)rnum == VLUSIZE);
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
-            assert(ubuff[i] == (VLUSIZE - 1 - i));
+            assert(ubuff[i*post_cell_size] == (VLUSIZE - 1 - i));
         }
     }
     gettimeofday(&etv, NULL);
@@ -81,14 +87,14 @@ int main(const int argc, char** argv)
     while(!mypostinglist.is_end())
     {
         uint64_t ukey;
-        int32_t rnum = mypostinglist.itget(ukey, (char*)ubuff, (uint32_t)(VLUSIZE * 2 * sizeof(uint32_t)));
+        int32_t rnum = mypostinglist.itget(ukey, (char*)ubuff, ubuffsize);
         mypostinglist.next();
         assert(ukey == count);
         count ++;
         assert ((uint32_t)rnum == VLUSIZE);
         for (uint32_t i=0; i<VLUSIZE; i++)
         {
-            assert(ubuff[i] == (VLUSIZE - 1 - i));
+            assert(ubuff[i*post_cell_size] == (VLUSIZE - 1 - i));
         }
     }
     gettimeofday(&etv, NULL);

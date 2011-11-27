@@ -14,7 +14,7 @@ postinglist :: postinglist(
     // 以sizeof(u_char)为单位
     m_postinglist_cell_size = posting_cell_size;
     // merge内存块的前提，避免连续多次merge
-    MyThrowAssert(m_postinglist_cell_size <= sizeof(mem_link_t));
+//    MyThrowAssert(m_postinglist_cell_size <= sizeof(mem_link_t));
     MyThrowAssert(m_postinglist_cell_size > 0);
     // 初始化bucket
     m_bucket_size = 1;
