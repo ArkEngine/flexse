@@ -26,12 +26,12 @@ INCS= -I ../../utils/mylog/include/ \
 	  -I ../../utils/indexer/base_indexer/include/ \
 	  -I ../../utils/indexer/index_group/include/ \
 	  -I ../../opensrc/jsoncpp/include/ \
-	  -I ../../opensrc/bson/ \
-	  -I ../../opensrc/bson/src/ \
+	  -I ../../opensrc/bsoncpp/include/bson \
 
-CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
-		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
-		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
+CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall \
+		  #-Wshadow -Wreturn-type \
+		  #-Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
+		  #-Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
 all: clean $(LIB)

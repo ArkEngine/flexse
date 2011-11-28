@@ -8,17 +8,27 @@ LIBOBJ= creat_sign.o
 PYEXT= creat_sign.so
 PYEXTOBJ= creat_sign.o pycreat_sign.o
 
-MAIN= test
 MAINOBJ= test.o
 
-INCS= -I -fpic -I/usr/include/python2.7 
+INCS= -I /usr/include/python2.7
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 #	  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 #	  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-#all: clean $(LIB) $(PYEXT) $(MAIN)
-all: clean $(LIB) $(MAIN)
+LDFLAGS = -L ./lib/ -lcreat_sign
+
+# 用来控制是否执行代码覆盖率检查
+# 若想执行，在命令行中执行 export COVER=xxoo即可
+# 若不想执行，则在命令行中执行 unset COVER即可
+ifneq ($(origin COVER), undefined)
+LDFLAGS+= -L ../unittest/lib/ -lgcover
+CPPFLAGS+= -fprofile-arcs -ftest-coverage
+endif
+
+
+#all: clean $(LIB) $(PYEXT) test
+all: clean $(LIB) test
 	rm *.o -f
 
 $(LIB): $(LIBOBJ)
@@ -43,8 +53,6 @@ clean:
 	rm -rf lib/ include/
 	rm test -f
 
-LDFLAGS=  -g -L ./lib/ -lcreat_sign
-
-$(MAIN): $(MAINOBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
+test:
+	rm -f test
+	g++  -I ./inlcude/ $(CPPFLAGS) test.c -o test $(LDFLAGS)

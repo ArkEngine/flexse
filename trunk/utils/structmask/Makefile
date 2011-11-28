@@ -5,10 +5,9 @@ RANLIB=ranlib
 LIB= libstructmask.a
 LIBOBJ= structmask.o
 
-MAIN= test
 MAINOBJ= test.o
 
-MAINLIBS= -L ./lib/ -lstructmask \
+LDFLAGS= -L ./lib/ -lstructmask \
 	  -L ../../opensrc/jsoncpp/lib/ -ljson \
 	  -L ../MyException/lib/ -lMyException \
 	  -L ../mylog/lib/ -lmylog
@@ -20,7 +19,16 @@ CPPFLAGS= $(INCS) -O3 -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wno-sign-conversion \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB) $(MAIN)
+# 用来控制是否执行代码覆盖率检查
+# 若想执行，在命令行中执行 export COVER=xxoo即可
+# 若不想执行，则在命令行中执行 unset COVER即可
+ifneq ($(origin COVER), undefined)
+LDFLAGS+= -L ../unittest/lib/ -lgcover
+CPPFLAGS+= -fprofile-arcs -ftest-coverage
+endif
+
+
+all: clean $(LIB) test
 #all: clean $(LIB)
 	rm *.o -f
 
@@ -42,8 +50,6 @@ clean:
 	rm test -f
 	rm -rf lib/ include/
 
-LDFLAGS=  -g $(MAINLIBS) 
-
-$(MAIN): $(MAINOBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
+test:
+	rm -f test
+	g++ $(CPPFLAGS) test.cpp -o test $(LDFLAGS)

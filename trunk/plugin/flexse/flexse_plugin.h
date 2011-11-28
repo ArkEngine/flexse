@@ -5,6 +5,7 @@
 #include "structmask.h"
 #include "myutils.h"
 #include <json/json.h>
+#include <bson.h>
 
 class flexse_plugin
 {
@@ -80,12 +81,12 @@ class flexse_plugin
 
         flexse_plugin(const char* config_path, secore* insecore);
         ~flexse_plugin();
-        int add   (const char* jsonstr, uint32_t& doc_id,
+        int add   (const Json::Value& root, uint32_t& doc_id,
                 map<string, term_info_t> & term_map, vector<attr_field_t> & attrlist);
-        int mod   (const char* jsonstr, uint32_t& doc_id,
+        int mod   (const Json::Value& root, uint32_t& doc_id,
                 map<string, term_info_t> & term_map, vector<attr_field_t> & attrlist);
-        int del   (const char* jsonstr, vector<uint32_t> & id_list);
-        int undel (const char* jsonstr, vector<uint32_t> & id_list);
+        int del   (const Json::Value& root, vector<uint32_t> & id_list);
+        int undel (const Json::Value& root, vector<uint32_t> & id_list);
         int query ( query_param_t* query_param, char* retBuff, const uint32_t retBuffSize);
         // merger/filter/ranking的算法实现，参考algo.h
 };

@@ -20,7 +20,7 @@ void myfunc(const char* mychar, uint32_t count)
     int len = snprintf(str, sizeof(str), "%s[%u]", mychar, count);
     creat_sign_64(str, len, &uu.sign[0], &uu.sign[1]);
 //    printf("%llu %s\n", key, str);
-    printf("%llu\n", uu.key);
+    printf("key: %s - sign[%lu]\n", str, uu.key);
 }
 
 
