@@ -5,16 +5,13 @@ RANLIB=ranlib
 LIB= libdisk_indexer.a
 LIBOBJ= disk_indexer.o
 
-MAIN= test
-MAINOBJ= test.o
-
-MAINLIBS= -L ./lib/ -ldisk_indexer \
-		  -L ../base_indexer/lib/ -lbase_indexer \
-		  -L ../../fileblock/lib/ -lfileblock \
-		  -L ../../diskv/lib/ -ldiskv \
-		  -L ../../creat_sign/lib/ -lcreat_sign \
-		  -L ../../MyException/lib/ -lMyException \
-		  -L ../../mylog/lib/ -lmylog\
+LDFLAGS= -L ./lib/ -ldisk_indexer \
+		 -L ../base_indexer/lib/ -lbase_indexer \
+		 -L ../../fileblock/lib/ -lfileblock \
+		 -L ../../diskv/lib/ -ldiskv \
+		 -L ../../creat_sign/lib/ -lcreat_sign \
+		 -L ../../MyException/lib/ -lMyException \
+		 -L ../../mylog/lib/ -lmylog\
 
 INCS= -I ../../mylog/include/ \
 	  -I ../../creat_sign/include/ \
@@ -28,7 +25,16 @@ CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
 		  #			-Weffc++ \-Werror \
 
-all: clean $(LIB) $(MAIN)
+# 用来控制是否执行代码覆盖率检查
+# 若想执行，在命令行中执行 export COVER=xxoo即可
+# 若不想执行，则在命令行中执行 unset COVER即可
+ifneq ($(origin COVER), undefined)
+LDFLAGS+= -L ../../unittest/lib/ -lgcover
+CPPFLAGS+= -fprofile-arcs -ftest-coverage
+endif
+
+
+all: clean $(LIB) test
 	rm *.o -f
 	rm log -rf
 
@@ -50,8 +56,6 @@ clean:
 	rm test -f
 	rm -rf lib/ include/
 
-LDFLAGS=  -g $(MAINLIBS) 
-
-$(MAIN): $(MAINOBJ)
-	$(CC) -o $@ $^ $(LDFLAGS)
+test:
+	$(CC) test.cpp -o test $(CPPFLAGS) $(LDFLAGS)
 

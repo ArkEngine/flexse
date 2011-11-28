@@ -16,10 +16,10 @@ int main()
     // BUG HERE TODO
     ROUTN("this is int[%u] str[%s] ptr[%p] lol[%llu]", i, "hello");
     printf("ooxx\n");
-    for (uint32_t x=0; x<1000000; x++)
-    {
-        ROUTN("this is test.");
-        usleep(10000);
-    }
+//    for (uint32_t x=0; x<1000000; x++)
+//    {
+//        ROUTN("this is test.");
+//        usleep(10000);
+//    }
     return 0;
 }

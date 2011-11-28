@@ -305,7 +305,7 @@ int ServiceApp(thread_data_t* ptd)
         query_param.orderby = root[QUERY_KEY_ORDERBY].asString();
     }
 
-    if (0 == get_term_list(root, ptd->plugin->mysecore, (char*)ptd->SendHead, ptd->SendBuffSize, query_param.term_vector)
+    if (0 == get_term_list(root, ptd->plugin->mysecore, dststr, ptd->SendBuffSize-sizeof(xhead_t), query_param.term_vector)
             && 0 == get_filt_list(root, ptd->plugin->mysecore, query_param.filt_vector))
     {
         flexse_plugin* pflexse_plugin = ptd->plugin;
@@ -331,10 +331,10 @@ int ServiceApp(thread_data_t* ptd)
             jsonstr, ptd->SendHead->detail_len);
     PRINT( "log_id[%u] name[%s] cltip[%s] "
             "offset[%u] size[%u] timecost_us[%u] "
-            "query[%s] detail_len[%d]",
+            "query[%s] detail_len[%d] hname[%s]",
             ptd->RecvHead->log_id, ptd->RecvHead->srvname, ptd->cltip,
             query_param.offset, query_param.size, timecost,
-            jsonstr, ptd->SendHead->detail_len);
+            jsonstr, ptd->SendHead->detail_len, ptd->SendHead->srvname);
 
     return 0;
 }

@@ -31,6 +31,7 @@ INCS= -I ../utils/mylog/include/ \
 	  -I ../utils/indexer/mem_indexer/include/ \
 	  -I ../ciqueue/sender/ \
 	  -I ../opensrc/jsoncpp/include/ \
+	  -I ../opensrc/bsoncpp/include/bson \
 	  -I ../plugin/flexse/include/ \
 	  -I ../../code/nlp/wordseg2/trunk/release/ \
 
@@ -60,11 +61,12 @@ LDFLAGS= -L ../opensrc/jsoncpp/lib/            -ljson \
 		 -L ../../code/nlp/wordseg2/trunk/public/clib/lib/ -lclib \
 		 -L ../utils/mylog/lib/                -lmylog \
 		 -L ../utils/MyException/lib/          -lMyException \
-		 -L /usr/lib/gcc/x86_64-redhat-linux/4.4.4/          -lgcov \
+		 -L ../utils/unittest/lib/             -lgcov \
 
-CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall -Wshadow -Wreturn-type \
-		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror \
- 	          -fprofile-arcs -ftest-coverage
+CPPFLAGS= $(DEBUG) $(INCS) $(VERINFO) -g  -pipe  -W -Wall \
+		  -fprofile-arcs -ftest-coverage \
+		  #-Wshadow -Wreturn-type \
+		  #-Wtrigraphs -Wformat -Wparentheses -Wpointer-arith  -Werror \
 
 all: client $(MAIN) 
 	rm *.o -rf

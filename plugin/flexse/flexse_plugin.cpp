@@ -181,17 +181,9 @@ flexse_plugin:: ~flexse_plugin()
 // doc_id赋值为外部ID
 // termlist中存放倒排索引描述信息，也就是分词之后的term及term描述信息列表
 // attrlist中存放文档属性信息
-int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
+int flexse_plugin:: add(const Json::Value& root, uint32_t& doc_id,
         map<string, term_info_t> & term_map, vector<attr_field_t>& attrlist)
 {
-    Json::Value root;
-    Json::Reader reader;
-    if (! reader.parse(jsonstr, root))
-    {
-        ALARM("jsonstr format error. [%s]", jsonstr);
-        return -1;
-    }
-
     doc_id = 0;
 
     // 从 m_key_op_map 迭代处理
@@ -259,7 +251,7 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                 {
                     if( root[strkey].isNull() || !root[strkey].isArray())
                     {
-                        ALARM("'%s' Not a list jsonstr[%s]", strkey, jsonstr);
+                        ALARM("'%s' Not a list", strkey);
                         return -1;
                     }
                     const uint32_t json_idlist_size = root[strkey].size();
@@ -277,7 +269,7 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
                 {
                     if( root[strkey].isNull() || !root[strkey].isArray())
                     {
-                        ALARM("'%s' Not a list jsonstr[%s]", strkey, jsonstr);
+                        ALARM("'%s' Not a list", strkey);
                         return -1;
                     }
                     // TODO 是否该考虑把这个文本也加入到倒排中
@@ -318,7 +310,8 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
 
                     // 保证该field内的term只增加一次hit_weight
                     map<string, term_info_t> field_term_map;
-                    while (token != NULL) {
+                    while (token != NULL)
+                    {
                         //  printf("[%s] -> [%s]\n", root[strkey].asCString(), token->as_string().c_str());
                         if (token->as_string().length() && field_term_map.find(token->as_string()) == field_term_map.end())
                         {
@@ -528,28 +521,20 @@ int flexse_plugin:: add(const char* jsonstr, uint32_t& doc_id,
     return 0;
 }
 
-int flexse_plugin:: mod(const char* jsonstr, uint32_t& doc_id,
+int flexse_plugin:: mod(const Json::Value& root, uint32_t& doc_id,
         map<string, term_info_t> & term_map, vector<attr_field_t>& attrlist)
 {
-    return add(jsonstr, doc_id, term_map, attrlist);
+    return add(root, doc_id, term_map, attrlist);
 }
 
 // 取得外部ID列表即可，剩下的置位操作交给框架
-int flexse_plugin:: del(const char* jsonstr, vector<uint32_t> & id_list)
+int flexse_plugin:: del(const Json::Value& root, vector<uint32_t> & id_list)
 {
-    Json::Value root;
-    Json::Reader reader;
-    if (! reader.parse(jsonstr, root))
-    {
-        ALARM("jsonstr format error. [%s]", jsonstr);
-        return -1;
-    }
-
     id_list.clear();
     Json::Value json_idlist = root[secore::m_StrInsideKey_DocIDList];
     if(json_idlist.isNull() || !json_idlist.isArray())
     {
-        ALARM("Not a list jsonstr[%s]", jsonstr);
+        ALARM("jsonstr is Not a list");
         return -1;
     }
     const uint32_t json_idlist_size = json_idlist.size();
@@ -560,9 +545,9 @@ int flexse_plugin:: del(const char* jsonstr, vector<uint32_t> & id_list)
 
     return 0;
 }
-int flexse_plugin:: undel(const char* jsonstr, vector<uint32_t> & id_list)
+int flexse_plugin:: undel(const Json::Value& root, vector<uint32_t> & id_list)
 {
-    return del(jsonstr, id_list);
+    return del(root, id_list);
 }
 
 int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint32_t retBuffSize)
@@ -580,6 +565,11 @@ int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint
     vector<result_pair_t> merged_vector;
     // 保留term归并时权重最高的2000个结果
     const uint32_t MAX_MERGE_KEEP_NUM = 2000;
+    if (query_param->offset + query_param->size > MAX_MERGE_KEEP_NUM)
+    {
+        query_param->offset = 0;
+        query_param->size   = MAX_MERGE_KEEP_NUM;
+    }
     weight_merge(query_param->term_vector, doc_id_mask, weight_mask,
             merged_vector, MAX_MERGE_KEEP_NUM);
     int32_t merge_rst_num = (int32_t)merged_vector.size();
@@ -612,7 +602,7 @@ int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint
     // algo中提供了ranking的灵活算法实现，可以对(等于/小于/大于/区间/集合)的情况进行加权
 
     // -5- 其他算法
-    //     [1] gourp by field，暂未实现
+    //     [1] gourp by field，已经实现
     //     [2] order by field，algo中提供了按照某个属性选取TOP-N的排序结果的算法实现
     //     [3] limit begin, end
     // -6- 把文档属性复制到返回结果数组中
@@ -646,8 +636,8 @@ int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint
         }
     }
 
-    uint32_t begin_no = query_param->offset;
-    uint32_t end_no = begin_no + query_param->size;
+    uint32_t begin_no  = query_param->offset;
+    uint32_t end_no    = begin_no + query_param->size;
     uint32_t ret_count = 0;
     puint = (uint32_t*)retBuff;
     for (uint32_t i=begin_no; i<end_no && i<query_param->all_num; i++)
@@ -658,8 +648,15 @@ int flexse_plugin:: query (query_param_t* query_param, char* retBuff, const uint
         ret_count ++;
     }
 
-    bo empty;
-    cout << "empty: " << empty << endl;
 
-    return (int32_t)(ret_count*attr_cell_char_size);
+    // bson object builder
+    bob b;
+    b.append("all_num", query_param->all_num);
+    b.appendBinData("doc_list", (int)(ret_count*attr_cell_char_size), BinDataGeneral, (char*)retBuff);
+    bo mybo = b.obj();
+    uint32_t retSize = mybo.objsize();
+    memmove(retBuff, mybo.objdata(), retSize);
+
+
+    return retSize;
 }

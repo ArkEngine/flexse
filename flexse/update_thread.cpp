@@ -122,7 +122,7 @@ void* update_thread(void* args)
             const char* str_operation = root["OPERATION"].asCString();
             if (0 == strcmp(str_operation, "INSERT"))
             {
-                if (0 != add(recv_head->file_no, recv_head->block_id, pflexse_plugin, jsonstr))
+                if (0 != add(recv_head->file_no, recv_head->block_id, pflexse_plugin, root))
                 {
                     break;
                 }
@@ -130,21 +130,21 @@ void* update_thread(void* args)
             else if (0 == strcmp(str_operation, "UPDATE"))
             {
                 // add 和 mod 一回事
-                if (0 != add(recv_head->file_no, recv_head->block_id, pflexse_plugin, jsonstr))
+                if (0 != add(recv_head->file_no, recv_head->block_id, pflexse_plugin, root))
                 {
                     break;
                 }
             }
             else if (0 == strcmp(str_operation, "DELETE"))
             {
-                if (0 != del(pflexse_plugin, jsonstr))
+                if (0 != del(pflexse_plugin, root))
                 {
                     break;
                 }
             }
             else if (0 == strcmp(str_operation, "RESTORE"))
             {
-                if (0 != undel(pflexse_plugin, jsonstr))
+                if (0 != undel(pflexse_plugin, root))
                 {
                     break;
                 }
@@ -184,12 +184,12 @@ void* update_thread(void* args)
 }
 
 int add(const uint32_t file_no, const uint32_t block_id,
-        flexse_plugin* pflexse_plugin, const char* jsonstr)
+        flexse_plugin* pflexse_plugin, const Json::Value& root)
 {
     map<string, term_info_t> term_map;
     vector<attr_field_t> attrlist;
     uint32_t             doc_id;
-    int retp = pflexse_plugin->add(jsonstr, doc_id, term_map, attrlist);
+    int retp = pflexse_plugin->add(root, doc_id, term_map, attrlist);
     if (retp != 0)
     {
         return -1;
@@ -249,10 +249,10 @@ int add(const uint32_t file_no, const uint32_t block_id,
 
 // 对得到的外部列表进行内部ID查询
 // 然后对内部ID对应的bitset进行置位
-int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
+int del(flexse_plugin* pflexse_plugin, const Json::Value& root)
 {
     vector<uint32_t> id_list;
-    int retp = pflexse_plugin->del(jsonstr, id_list);
+    int retp = pflexse_plugin->del(root, id_list);
     if (retp != 0)
     {
         return -1;
@@ -276,10 +276,10 @@ int del(flexse_plugin* pflexse_plugin, const char* jsonstr)
 
 // 对得到的外部列表进行内部ID查询
 // 然后对内部ID对应的bitset进行反置位
-int undel(flexse_plugin* pflexse_plugin, const char* jsonstr)
+int undel(flexse_plugin* pflexse_plugin, const Json::Value& root)
 {
     vector<uint32_t> id_list;
-    int retp = pflexse_plugin->undel(jsonstr, id_list);
+    int retp = pflexse_plugin->undel(root, id_list);
     if (retp != 0)
     {
         return -1;
