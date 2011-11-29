@@ -12,7 +12,6 @@ INCS= -I ../mylog/include/
 CPPFLAGS= $(INCS) -g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type \
 		  -Wtrigraphs -Wformat -Wparentheses -Wpointer-arith \
 		  -Wwrite-strings -Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder \
-		  -fprofile-arcs -ftest-coverage \
 		  #			-Weffc++ \-Werror \
 
 # 用来控制是否执行代码覆盖率检查

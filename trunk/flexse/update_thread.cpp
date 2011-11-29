@@ -72,9 +72,6 @@ void* update_thread(void* args)
         {
             if (need_roll_back)
             {
-                // 数据回滚时的几个特殊case
-                // file_no = 0, block_id = 0，表示从消息的第一个消息开始放数据
-                // file_no > 0, block_id > 0, 表示要file_no && block_id更大的消息，这可能触发消息队列切换文件的
                 send_head.status   = ROLL_BACK;
                 send_head.file_no  = last_file_no; // 告诉消息队列成功接受的节点，让其发送下一个
                 send_head.block_id = last_block_id;
