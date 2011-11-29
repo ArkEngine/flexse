@@ -56,5 +56,5 @@ clean:
 	rm -rf lib/ include/
 
 test:
-	$(CC) test.cpp -o test $(CPPFLAGS) $(LDFLAGS)
+	$(CC) test.cpp -o test $(CPPFLAGS) $(LDFLAGS) -lpthread
 

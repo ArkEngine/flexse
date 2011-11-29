@@ -40,7 +40,7 @@ int main(const int argc, char** argv)
     gettimeofday(&btv, NULL);
 
     uint32_t* ubuff = (uint32_t*)malloc(VLUSIZE * post_cell_size * sizeof(uint32_t));
-    const uint32_t ubuffsize = VLUSIZE * post_cell_size * sizeof(uint32_t);
+    const uint32_t ubuffsize = (uint32_t)(VLUSIZE * post_cell_size * sizeof(uint32_t));
     for (uint32_t ukey=0; ukey<KEYSIZE; ukey+=2)
     {
         for (uint32_t i=0; i<VLUSIZE; i++)
