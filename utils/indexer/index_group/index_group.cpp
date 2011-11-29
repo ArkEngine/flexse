@@ -92,6 +92,7 @@ index_group :: ~index_group()
 
 mem_indexer* index_group :: swap_mem_indexer()
 {
+    // 外面有锁，这个设计不是很好。。
     // 阻塞于等待 m_index_list[1]清空
     while(m_index_list[MEM1] != NULL)
     {
@@ -110,8 +111,12 @@ mem_indexer* index_group :: swap_mem_indexer()
 void index_group :: _swap_mem_indexer()
 {
     // 设置为只读状态
-    // TODO如果你这时候设置的话，可能会导致update线程中正在使用的MEM0变成只读的了。
+    // 因为修改m_index_list[MEM1]的swap_mem_indexer()已经被m_mutex保护
+    // m_index_list[MEM1] == NULL是恒成立的。
+    // 但是m_index_list[MEM0]->empty()这个条件却可能在m_mutex保护期间改变
+    // 因为更新线程可能时刻在向MEM0中插入数据
     pthread_rwlock_wrlock(&m_list_rwlock);
+    MySuicideAssert(NULL == m_index_list[MEM1]);
     m_index_list[MEM1] = m_index_list[MEM0];
     m_index_list[MEM1]->set_readonly();
     m_index_list[MEM0] = new mem_indexer(m_cell_size, m_bucket_size, m_headlist_size,
@@ -138,7 +143,7 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
     {
         int32_t num1 = src1_indexer->itget(key1.sign64, src1_list, length);
         int32_t num2 = src2_indexer->itget(key2.sign64, src2_list, length);
-//        ROUTN("num1[%u] num2[%u] key1[%llu] key2[%llu]", num1, num2, key1.sign64, key2.sign64);
+        //        ROUTN("num1[%u] num2[%u] key1[%llu] key2[%llu]", num1, num2, key1.sign64, key2.sign64);
         MyThrowAssert (num1 > 0 && num2 > 0);
         if (key1.sign64 < key2.sign64)
         {
@@ -160,8 +165,10 @@ uint32_t index_group :: merger(base_indexer* src1_indexer, base_indexer*
         }
         else
         {
-            memmove(&(((char*)src1_list)[num1*m_cell_size]), src2_list, num2*m_cell_size);
-            dest_indexer->set_posting_list(id, key1, src1_list, (num1+num2)*m_cell_size);
+            // 要考虑到截断
+            int32_t left_num = MAX_POSTINGLIST_SIZE < (num1 + num2)? MAX_POSTINGLIST_SIZE - num1 : num2;
+            memmove(&(((char*)src1_list)[num1*m_cell_size]), src2_list, left_num*m_cell_size);
+            dest_indexer->set_posting_list(id, key1, src1_list, (num1+left_num)*m_cell_size);
             id++;
             src1_indexer->next();
             src2_indexer->next();
@@ -226,13 +233,18 @@ void index_group :: update_day_indexer()
     struct timespec timeout;           //定义时间点
     timeout.tv_sec = time(NULL) + m_daydump_interval; //time(0) 代表的是当前时间 而tv_sec 是指的是秒
     timeout.tv_nsec = 0;               //tv_nsec 代表的是纳秒时间
-    // 等到m_index_list[1]不为NULL时，且这个dst_indexer(disk)为空闲时，执行合并过程
     int ret = 0;
+    // 有两个条件可以跳出这个while，进入merge阶段
+    // a) m_index_list[MEM1] != NULL 更新线程把MEM0塞满了，
+    //    更新线程调用了swap_mem_indexer()函数，这样原来塞满的MEM0就变成了MEM1，且MEM1不为NULL
+    // b) ret == ETIMEDOUT，day_merger线程在pthread_cond_timedwait中，一个时间段(m_daydump_interval)后，
+    //    需要定期dump数据
     while(m_index_list[MEM1] == NULL && ret != ETIMEDOUT)
     {
         ret = pthread_cond_timedwait(&m_mem_dump_cond, &m_mutex, &timeout);
     }
 
+    // m_index_list[MEM0]是不可能为NULL的
     if (ret == ETIMEDOUT && m_index_list[MEM0]->empty())
     {
         // 既然MEM0是空的，那还merge个毛
@@ -243,17 +255,14 @@ void index_group :: update_day_indexer()
     if (ret == ETIMEDOUT)
     {
         // 表示过了时间间隔了，需要dump了
-        // 因为修改m_index_list[MEM1]的swap_mem_indexer已经被m_mutex保护
-        // m_index_list[MEM1] == NULL是恒成立的。
-        // 但是m_index_list[MEM0]->empty()这个条件却可能在m_mutex保护期间改变
-        // 因为更新线程可能时刻在向MEM0中插入数据
-        PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] ------",
+        PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] DUMP INTERVAL",
                 ret, ETIMEDOUT, m_index_list[MEM0]->empty());
         _swap_mem_indexer();
     }
     else
     {
-        PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] ++++++",
+        // m_index_list[MEM1] != NULL
+        PRINT("ret[%d] ETIMEDOUT[%d] empty[%d] DUMP WHEN FULL",
                 ret, ETIMEDOUT, m_index_list[MEM0]->empty());
     }
     m_dump_file_no  = m_file_no;
@@ -263,7 +272,7 @@ void index_group :: update_day_indexer()
     // 合并过程:
     // -1- 设置当前的disk_indexer和空闲的disk_indexer
     disk_indexer* psrc_indexer = dynamic_cast<disk_indexer*>(m_index_list[DAY]);
-    // 当前时间为指定的时间区域时dump到day的2目录，并以条件变量通知his_merger_thread
+    // 当前时间为指定的时间区域时dump到day的2目录，并以变量m_his_merge_ready通知his_merger_thread
     // 如果不是特定的时间区域，则正常的dump到0/1目录中
     // dump到day2时，要检查day2是否是空的
     bool dumpToday2 = need_to_dump_day2();
@@ -383,12 +392,12 @@ int32_t index_group :: get_posting_list(const char* strTerm, void* buff, const u
             {
                 lstnum += tmpnum;
                 offset = lstnum * m_cell_size;
-//                printf("-- index_no[%u] lstnum[%u] --\n", i, tmpnum);
-//                for (int32_t k=0; k<lstnum; k++)
-//                {
-//                    printf("[%u] ", ((uint32_t*)buff)[k]);
-//                }
-//                printf("\n");
+                //                printf("-- index_no[%u] lstnum[%u] --\n", i, tmpnum);
+                //                for (int32_t k=0; k<lstnum; k++)
+                //                {
+                //                    printf("[%u] ", ((uint32_t*)buff)[k]);
+                //                }
+                //                printf("\n");
             }
         }
     }
@@ -417,7 +426,7 @@ int32_t index_group :: set_posting_list(const uint32_t file_no, const uint32_t b
         // &(term_map[i].id) 表示从id的地址开始，拷贝postlist_cell_size个大小的内存
         // 不是仅仅拷贝id
         int setret = pindexer->set_posting_list(it->first.c_str(), &(it->second.id));
-//        PRINT("term[%s] innerid[%u]", it->first.c_str(), it->second.id);
+        //        PRINT("term[%s] innerid[%u]", it->first.c_str(), it->second.id);
         if (postinglist::FULL == setret)
         {
             ALARM( "SET POSTING LIST ERROR. LIST FULL, GO TO SWITCH. ID[%u]", it->second.id);
