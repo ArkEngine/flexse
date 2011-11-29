@@ -298,14 +298,13 @@ bool postinglist :: iswritable()
 
 int postinglist::key_compare(const void *p1, const void *p2)
 {
-    int64_t value = ((term_head_t*)p1)->sign64 - ((term_head_t*)p2)->sign64;
-    if (value < 0)
-    {
-        return -1;
-    }
-    else if (value > 0)
+    if (((term_head_t*)p1)->sign64 > ((term_head_t*)p2)->sign64)
     {
         return 1;
+    }
+    else if (((term_head_t*)p1)->sign64 < ((term_head_t*)p2)->sign64)
+    {
+        return -1;
     }
     else
     {
