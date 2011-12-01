@@ -59,3 +59,25 @@ clean:
 test:
 	$(CC) test.cpp -o test $(CPPFLAGS) $(LDFLAGS)
 
+diskIndexReader:
+	g++ diskIndexReader.cpp -o diskIndexReader \
+		-I ../../mylog/include/ \
+		-I ../../creat_sign/include/ \
+		-I ../../MyException/include/ \
+		-I ../../structmask/include/ \
+		-I ../../../opensrc/jsoncpp/include/ \
+		-I ../../fileblock/include/ \
+		-I ../../diskv/include/ \
+		-I ../base_indexer/include \
+		-g -pipe -fPIC -W -Wall -Wshadow -Wreturn-type -Wtrigraphs \
+		-Wformat -Wparentheses -Wpointer-arith -Wwrite-strings \
+		-Wswitch -Wconversion -Wsign-promo -Wredundant-decls -Wreorder  \
+		-L ./lib/ -ldisk_indexer \
+		-L ../base_indexer/lib/ -lbase_indexer \
+		-L ../../fileblock/lib/ -lfileblock \
+		-L ../../diskv/lib/ -ldiskv \
+		-L ../../creat_sign/lib/ -lcreat_sign \
+		-L ../../structmask/lib/ -lstructmask \
+		-L ../../../opensrc/jsoncpp/lib/ -ljson \
+		-L ../../MyException/lib/ -lMyException \
+		-L ../../mylog/lib/ -lmylog
