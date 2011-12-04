@@ -7,6 +7,7 @@
 int main()
 {
     printf("hello world\n");
+    printf("MAX_DATA_SIZE[%u]\n", diskv::MAX_DATA_SIZE);
     diskv dv("./data/", "test");
     diskv :: diskv_idx_t idx;
     const uint32_t SIZE = 16*1024*1024;

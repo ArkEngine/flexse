@@ -1,6 +1,7 @@
 #include "mylog.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 int main()
 {
@@ -15,7 +16,12 @@ int main()
     ROUTN("this is message");
     // BUG HERE TODO
     ROUTN("this is int[%u] str[%s] ptr[%p] lol[%llu]", i, "hello");
-    printf("ooxx\n");
+    char str[2000];
+    memset(str, 'A', sizeof(str));
+    str[1999] = 0;
+    printf("%s\n", str);
+    ROUTN("this is [%s]", str);
+    ROUTN("this is message");
 //    for (uint32_t x=0; x<1000000; x++)
 //    {
 //        ROUTN("this is test.");

@@ -44,6 +44,7 @@ $(LIB): $(LIBOBJ)
 clean:
 	rm $(LIB) -f
 	rm *.o -f
+	rm test -f
 	rm -rf lib/ include/
 
 test:

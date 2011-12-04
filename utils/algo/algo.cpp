@@ -575,6 +575,8 @@ void weight_merge(
         const uint32_t result_list_size
         )
 {
+    // TODO
+    // ¿¿¿¿¿¿¿¿¿¿¿
     result_pair_list.clear();
     const uint32_t list_size = (uint32_t)terminfo_list.size();
     uint32_t finish_term_num = 0;
@@ -650,6 +652,11 @@ void weight_merge(
                 }
             }
         }
+        // ¿¿¿¿¿weight¿¿¿¿¿¿¿¿ TODO
+        // <term, weight_percentage>: <a, 30>, <b, 30>, <c, 20>, <d, 10>, <e, 10>
+        // ¿¿¿¿¿¿¿¿¿¿(¿¿)70¿¿¿¿¿¿¿¿¿
+        // (a,b,c)|(a,b,d)|(a,c,d,e)¿¿¿¿¿¿¿¿¿¿¿
+        // ¿(a,b)¿¿¿¿¿¿¿¿¿¿¿¿¿¿60¿¿
         result_pair_t temp_result;
         temp_result.id     = max_id;
         temp_result.weight = weight;

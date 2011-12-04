@@ -1,0 +1,22 @@
+# this is a api
+/*
+ * this is a comment
+ */
+// this is a comment, too
+
+class Video
+{
+    method Insert(
+        string   OPERATION == default("INSERT"),
+        string   title,
+        uint32_t vid,
+    );
+    method Delete(
+        string OPERATION == default("DELETE"),
+        uint32_t id_list[100],
+    );
+    method Restore(
+        string OPERATION == default("RESTORE"),
+        uint32_t id_list[100],
+    );
+};
