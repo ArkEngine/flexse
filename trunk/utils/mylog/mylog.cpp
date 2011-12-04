@@ -87,10 +87,12 @@ void mylog :: WriteLog(const uint32_t mylevel, const char* file,
             LevelTag[level], GetTimeNow(), pthread_self(), file, line, func);
     va_list args;
     va_start(args, format);
-    pos += vsnprintf(&buff[pos], LogContentMaxLen-pos-2, format, args);
+    pos += vsnprintf(&buff[pos], LogContentMaxLen-pos-1, format, args);
     va_end(args);
+    pos = (pos > (LogContentMaxLen - 2)) ? LogContentMaxLen - 2 : pos;
     buff[pos] = '\n';
     buff[++pos] = '\0';
+    MySuicideAssert(pos < LogContentMaxLen);
 //    fprintf(stdout, "%s", buff);
     if (mylevel == PRINT)
     {
