@@ -1,0 +1,21 @@
+(1) 灌库脚本
+    -1- single_client.py把从hbase下载的抽取结果批量的灌入doc-processor中
+    -2- single_client.py有失败重试的机制，直到doc-processor返回OK，才会发送下一个。
+    -3- mutil.sh可以同时启动多个single_client.py脚本，每个脚本负责一定范围的文件，实现并发的导入。
+    -4- 
+(2) doc-processor
+    -1- doc-processor接受来自single_client.py的数据，处理后写入消息队列。
+    -2- 处理包括: NLP处理/计算playurl的md5和imgurl的md5。
+    -3- doc-processor中的分词器每个线程独立，这是为了增强分词的并发性能
+    -4- doc-processor按照playurl的creat_sign64签名对shard_num取模后来进行数据分片，目前为4片数据，分别对应于./data/video[0-3]/
+(3) sender
+    -1- 读取doc-processor写下的消息队列，向flexse和mongodb更新。
+    -2- 每个更新线程互相独立，各自有自己的进度，互不干扰
+    -3- 每个更新线程的进度保存于./offset/$name.offset中，(file_no, block_id)表示已经成功发送，offset为磁盘上的物理位置
+    -4- 对flexse和mongodb更新时，如果遇到错误，会一直重试数据，直至成功
+    -5- 为了减轻发送带宽，为每个发送频道设置了过滤的key列表，sender会把json数据中的这些key删除后发送
+(4) flexse
+    -1- 搜索引擎中search-leaf的承担者。
+    -2- 同时负责实时建库。
+(6) mongo
+    -1- 存储视频库的摘要信息
