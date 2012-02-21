@@ -22,6 +22,8 @@ class bitmap
         static const uint32_t MAX_FILENAME_LENGTH = 128;
         int m_fd;
         int m_filesize;
+        int m_prot;
+        int m_flags;
         bitmap();
         bitmap(const bitmap&);
 
@@ -31,6 +33,7 @@ class bitmap
 
     public:
         bitmap(const char* dir, const char* file, const uint32_t filesize);
+        bitmap(int fd, int prot, int flags);
         ~bitmap();
 };
 
