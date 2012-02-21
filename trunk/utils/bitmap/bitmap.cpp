@@ -3,6 +3,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "mylog.h"
 #include "bitmap.h"
 #include "MyException.h"
@@ -21,20 +24,54 @@ bitmap :: bitmap (const char* dir, const char* file, const uint32_t filesize)
     if (1 != read(m_fd, &tmpchar, 1))
     {
         MySuicideAssert ( 1 == write(m_fd, "", 1));
-        printf("char[null]\n");
     }
     else
     {
         MySuicideAssert (-1 != lseek(m_fd, filesize-1, SEEK_SET));
         MySuicideAssert ( 1 == write(m_fd, &tmpchar, 1));
-        printf("char[%c]\n", tmpchar);
+    }
+    m_prot = PROT_READ | PROT_WRITE;
+    m_flags = MAP_SHARED;
+    MySuicideAssert (MAP_FAILED != (puint = (uint32_t*)mmap(0, m_filesize,
+                    m_prot, m_flags, m_fd, 0)));
+}
+
+/* fd 要可写，因此需要使用O_RDWR打开 */
+bitmap :: bitmap(int fd, int prot, int flags)
+{
+    m_fd = -1;
+    m_prot = prot;
+    m_flags = flags;
+    struct stat fs;
+    MySuicideAssert ( 0 == fstat(fd, &fs));
+    MySuicideAssert(fs.st_size > 0);
+    m_filesize = (uint32_t)(fs.st_size);
+    MySuicideAssert (-1 != lseek(fd, m_filesize-1, SEEK_SET));
+    char tmpchar;
+    if (1 != read(fd, &tmpchar, 1))
+    {
+        MySuicideAssert ( 1 == write(fd, "", 1));
+    }
+    else
+    {
+        MySuicideAssert (-1 != lseek(fd, m_filesize-1, SEEK_SET));
+        MySuicideAssert ( 1 == write(fd, &tmpchar, 1));
     }
     MySuicideAssert (MAP_FAILED != (puint = (uint32_t*)mmap(0, m_filesize,
-                    PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, 0)));
+                    m_prot, m_flags, fd, 0)));
+
 }
 
 bitmap :: ~bitmap()
 {
-    msync(puint, m_filesize, MS_SYNC);
-    close(m_fd);
+    if (PROT_WRITE & m_prot)
+    {
+        msync(puint, m_filesize, MS_SYNC);
+    }
+    if (m_fd != -1)
+    {
+        close(m_fd);
+        m_fd = -1;
+    }
+    munmap(puint, m_filesize);
 }
