@@ -27,16 +27,18 @@ int main(int argc, char** argv)
 
     ConnectManager* cm = new ConnectManager(root);
     MyThrowAssert(NULL != cm);
-    int sock[100];
-    for (uint32_t i=0; i<50; i++)
-    {
-        sock[i] = cm->FetchSocket("leaf0", argv[1]);
-        PRINT("sock: %d", sock[i]);
-    }
-    for (uint32_t i=0; i<50; i++)
-    {
-        MyThrowAssert(0 == cm->FreeSocket(sock[i], false));
-    }
+    //int sock[100];
+    //for (uint32_t i=0; i<50; i++)
+    //{
+    //    sock[i] = cm->FetchSocket("leaf0", argv[1]);
+    //    PRINT("sock: %d", sock[i]);
+    //}
+    //for (uint32_t i=0; i<50; i++)
+    //{
+    //    MyThrowAssert(0 == cm->FreeSocket(sock[i], false));
+    //}
+    int sockfd = cm->FetchSocket("leaf0", argv[1]);
+    MyThrowAssert(0 == cm->FreeSocket(sockfd, false));
 
     return 0;
 }

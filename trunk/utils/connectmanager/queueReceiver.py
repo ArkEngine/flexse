@@ -20,10 +20,12 @@ sockobj.bind((myHost, myPort))
 sockobj.listen(100)
 
 #直到进程结束时才结束循环
+count = 1
 while True:
     #等待下一个客户端连结
     connection, address = sockobj.accept()
     #连结是一个新的socket
-    print 'Server connected by', address
+    print count, 'Server connected by ', address
+    count += 1
     if not longconnect:
         connection.close()
