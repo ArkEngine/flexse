@@ -23,7 +23,6 @@
             "name"          : "leaf0",
             "ip"            : "127.0.0.1",
             "port"          : 11111,
-            "priority"      : 1,
             "longconnect"   : 1,
             "sockperserver" : 30
         },
@@ -31,17 +30,15 @@
             "name"          : "leaf0",
             "ip"            : "127.0.0.1",
             "port"          : 11112,
-            "priority"      : 1,
             "longconnect"   : 1,
             "sockperserver" : 30
-        },
-        {
-            "name"          : "leaf0",
-            "ip"            : "127.0.0.1",
-            "port"          : 11113,
-            "priority"      : 1,
-            "longconnect"   : 1,
-            "sockperserver" : 30
-        }
+        }//,
+        //{
+        //    "name"          : "leaf0",
+        //    "ip"            : "127.0.0.1",
+        //    "port"          : 11113,
+        //    "longconnect"   : 1,
+        //    "sockperserver" : 30
+        //}
     ]
 }

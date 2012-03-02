@@ -386,6 +386,6 @@ void ConnectManager::CarpCalculate(module_info_t* server,
                 server[i].host, server[i].port, strbalance, server[i].carpvalue, sign1, sign2);
     }
     // 按照优先级pri和carp值进行排序, 优先级高的放在前面，然后同一优先级的carp值大的放在前面
-    qsort(&server, servernum, sizeof(module_info_t), Compare_Carp);
+    qsort(server, servernum, sizeof(module_info_t), Compare_Carp);
     return;
 }
